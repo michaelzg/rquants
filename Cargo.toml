@@ -1,0 +1,26 @@
+[package]
+name = "rquants"
+version = "0.1.0"
+edition = "2021"
+description = "A Rust library for quantities, units of measure, and dimensional analysis"
+license = "Apache-2.0"
+repository = "https://github.com/your-org/rquants"
+keywords = ["units", "quantities", "dimensional-analysis", "physics", "measurement"]
+categories = ["science", "mathematics"]
+
+[dependencies]
+thiserror = "1.0"
+rust_decimal = "1.36"
+lazy_static = "1.5"
+
+[dev-dependencies]
+proptest = "1.5"
+
+[features]
+default = []
+serde = ["dep:serde", "rust_decimal/serde"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
