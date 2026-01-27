@@ -29,10 +29,15 @@
 //!
 //! - [`core`] - Core traits and types (Quantity, UnitOfMeasure, Dimension)
 //! - [`systems`] - Metric and binary prefix systems
+//! - [`time`] - Time and frequency quantities
+//! - [`space`] - Length, area, volume, and angle quantities
 
 pub mod core;
+pub mod mass;
 pub mod prelude;
+pub mod space;
 pub mod systems;
+pub mod time;
 
 // Re-export commonly used items at crate root
 pub use crate::core::error::{QuantityError, QuantityParseError};

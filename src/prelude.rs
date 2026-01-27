@@ -17,3 +17,28 @@ pub use crate::core::error::{QuantityError, QuantityParseError};
 // Metric and binary prefixes
 pub use crate::systems::binary::*;
 pub use crate::systems::metric::*;
+
+// Time quantities
+pub use crate::time::time::TimeConversions;
+pub use crate::time::{Frequency, FrequencyUnit, Time, TimeUnit};
+
+// Space quantities
+pub use crate::space::angle::AngleConversions;
+pub use crate::space::area::AreaConversions;
+pub use crate::space::length::LengthConversions;
+pub use crate::space::volume::VolumeConversions;
+pub use crate::space::{
+    Angle, AngleUnit, Area, AreaUnit, Length, LengthUnit, SolidAngle, SolidAngleUnit, Volume,
+    VolumeUnit,
+};
+
+// Mass quantities
+pub use crate::mass::area_density::AreaDensityConversions;
+pub use crate::mass::chemical_amount::ChemicalAmountConversions;
+pub use crate::mass::density::DensityConversions;
+pub use crate::mass::mass::MassConversions;
+pub use crate::mass::moment_of_inertia::MomentOfInertiaConversions;
+pub use crate::mass::{
+    AreaDensity, AreaDensityUnit, ChemicalAmount, ChemicalAmountUnit, Density, DensityUnit, Mass,
+    MassUnit, MomentOfInertia, MomentOfInertiaUnit,
+};
