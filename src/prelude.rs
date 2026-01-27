@@ -11,6 +11,10 @@ pub use crate::core::Dimension;
 pub use crate::core::Quantity;
 pub use crate::core::UnitOfMeasure;
 
+// Dimensionless
+pub use crate::core::dimensionless::DimensionlessConversions;
+pub use crate::core::{Dimensionless, DimensionlessUnit};
+
 // Error types
 pub use crate::core::error::{QuantityError, QuantityParseError};
 
