@@ -46,3 +46,14 @@ pub use crate::mass::{
     AreaDensity, AreaDensityUnit, ChemicalAmount, ChemicalAmountUnit, Density, DensityUnit, Mass,
     MassUnit, MomentOfInertia, MomentOfInertiaUnit,
 };
+
+// Motion quantities
+pub use crate::motion::acceleration::AccelerationConversions;
+pub use crate::motion::force::ForceConversions;
+pub use crate::motion::momentum::MomentumConversions;
+pub use crate::motion::pressure::PressureConversions;
+pub use crate::motion::velocity::VelocityConversions;
+pub use crate::motion::{
+    Acceleration, AccelerationUnit, Force, ForceUnit, Momentum, MomentumUnit, Pressure,
+    PressureUnit, Velocity, VelocityUnit,
+};

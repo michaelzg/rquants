@@ -34,6 +34,7 @@
 
 pub mod core;
 pub mod mass;
+pub mod motion;
 pub mod prelude;
 pub mod space;
 pub mod systems;
