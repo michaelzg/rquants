@@ -47,6 +47,20 @@ pub use crate::mass::{
     MassUnit, MomentOfInertia, MomentOfInertiaUnit,
 };
 
+// Energy quantities
+pub use crate::energy::energy::EnergyConversions;
+pub use crate::energy::energy_density::EnergyDensityConversions;
+pub use crate::energy::molar_energy::MolarEnergyConversions;
+pub use crate::energy::power::PowerConversions;
+pub use crate::energy::power_density::PowerDensityConversions;
+pub use crate::energy::power_ramp::PowerRampConversions;
+pub use crate::energy::specific_energy::SpecificEnergyConversions;
+pub use crate::energy::{
+    Energy, EnergyDensity, EnergyDensityUnit, EnergyUnit, MolarEnergy, MolarEnergyUnit, Power,
+    PowerDensity, PowerDensityUnit, PowerRamp, PowerRampUnit, PowerUnit, SpecificEnergy,
+    SpecificEnergyUnit,
+};
+
 // Motion quantities
 pub use crate::motion::acceleration::AccelerationConversions;
 pub use crate::motion::force::ForceConversions;

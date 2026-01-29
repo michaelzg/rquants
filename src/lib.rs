@@ -33,6 +33,7 @@
 //! - [`space`] - Length, area, volume, and angle quantities
 
 pub mod core;
+pub mod energy;
 pub mod mass;
 pub mod motion;
 pub mod prelude;
