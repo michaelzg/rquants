@@ -61,6 +61,11 @@ pub use crate::energy::{
     SpecificEnergyUnit,
 };
 
+// Thermal quantities
+pub use crate::thermal::temperature::TemperatureConversions;
+pub use crate::thermal::thermal_capacity::ThermalCapacityConversions;
+pub use crate::thermal::{Temperature, TemperatureScale, ThermalCapacity, ThermalCapacityUnit};
+
 // Motion quantities
 pub use crate::motion::acceleration::AccelerationConversions;
 pub use crate::motion::force::ForceConversions;

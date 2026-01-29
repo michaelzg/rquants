@@ -39,6 +39,7 @@ pub mod motion;
 pub mod prelude;
 pub mod space;
 pub mod systems;
+pub mod thermal;
 pub mod time;
 
 // Re-export commonly used items at crate root
