@@ -76,3 +76,24 @@ pub use crate::motion::{
     Acceleration, AccelerationUnit, Force, ForceUnit, Momentum, MomentumUnit, Pressure,
     PressureUnit, Velocity, VelocityUnit,
 };
+
+// Electro quantities
+pub use crate::electro::capacitance::CapacitanceConversions;
+pub use crate::electro::conductivity::ConductivityConversions;
+pub use crate::electro::electric_charge::ElectricChargeConversions;
+pub use crate::electro::electric_current::ElectricCurrentConversions;
+pub use crate::electro::electric_potential::ElectricPotentialConversions;
+pub use crate::electro::electrical_conductance::ElectricalConductanceConversions;
+pub use crate::electro::electrical_resistance::ElectricalResistanceConversions;
+pub use crate::electro::inductance::InductanceConversions;
+pub use crate::electro::magnetic_flux::MagneticFluxConversions;
+pub use crate::electro::magnetic_flux_density::MagneticFluxDensityConversions;
+pub use crate::electro::resistivity::ResistivityConversions;
+pub use crate::electro::{
+    Capacitance, CapacitanceUnit, Conductivity, ConductivityUnit, ElectricCharge,
+    ElectricChargeUnit, ElectricCurrent, ElectricCurrentUnit, ElectricPotential,
+    ElectricPotentialUnit, ElectricalConductance, ElectricalConductanceUnit,
+    ElectricalResistance, ElectricalResistanceUnit, Inductance, InductanceUnit, MagneticFlux,
+    MagneticFluxDensity, MagneticFluxDensityUnit, MagneticFluxUnit, Resistivity,
+    ResistivityUnit,
+};
