@@ -61,6 +61,11 @@ pub use crate::energy::{
     SpecificEnergyUnit,
 };
 
+// Information quantities
+pub use crate::information::data_rate::DataRateConversions;
+pub use crate::information::information::InformationConversions;
+pub use crate::information::{DataRate, DataRateUnit, Information, InformationUnit};
+
 // Thermal quantities
 pub use crate::thermal::temperature::TemperatureConversions;
 pub use crate::thermal::thermal_capacity::ThermalCapacityConversions;
@@ -96,4 +101,19 @@ pub use crate::electro::{
     ElectricalResistance, ElectricalResistanceUnit, Inductance, InductanceUnit, MagneticFlux,
     MagneticFluxDensity, MagneticFluxDensityUnit, MagneticFluxUnit, Resistivity,
     ResistivityUnit,
+};
+
+// Radio quantities
+pub use crate::radio::activity::ActivityConversions;
+pub use crate::radio::dose::DoseConversions;
+pub use crate::radio::irradiance::IrradianceConversions;
+pub use crate::radio::particle_flux::ParticleFluxConversions;
+pub use crate::radio::radiance::RadianceConversions;
+pub use crate::radio::radiant_intensity::RadiantIntensityConversions;
+pub use crate::radio::spectral_irradiance::SpectralIrradianceConversions;
+pub use crate::radio::spectral_power::SpectralPowerConversions;
+pub use crate::radio::{
+    Activity, ActivityUnit, Dose, DoseUnit, Irradiance, IrradianceUnit, ParticleFlux,
+    ParticleFluxUnit, Radiance, RadianceUnit, RadiantIntensity, RadiantIntensityUnit,
+    SpectralIrradiance, SpectralIrradianceUnit, SpectralPower, SpectralPowerUnit,
 };

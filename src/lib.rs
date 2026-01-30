@@ -35,9 +35,11 @@
 pub mod core;
 pub mod electro;
 pub mod energy;
+pub mod information;
 pub mod mass;
 pub mod motion;
 pub mod prelude;
+pub mod radio;
 pub mod space;
 pub mod systems;
 pub mod thermal;
