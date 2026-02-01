@@ -4,8 +4,18 @@ Runnable examples showing every module in action with real-world scenarios.
 
 ## Running
 
+Run a single example:
+
 ```bash
-cargo run --example <name>
+cargo run --example basic_usage
+```
+
+Run all examples:
+
+```bash
+for ex in basic_usage physics_calculations financial_calculations space_and_mass information_and_data thermal radiation_and_light; do
+  echo "=== $ex ===" && cargo run --example "$ex" && echo
+done
 ```
 
 ## Examples
