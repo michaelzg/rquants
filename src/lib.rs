@@ -45,7 +45,7 @@
 //! - **Extensive unit coverage**: 200+ units across all domains
 //! - **Approximate equality**: `approx_eq` for floating-point comparisons
 //! - **Temperature**: Special scale vs. degree conversions (Kelvin, Celsius, Fahrenheit, Rankine)
-//! - **Financial**: Money, Currency, Exchange Rates, and generic Price<Q>
+//! - **Financial**: Money, Currency, Exchange Rates, and generic `Price<Q>`
 //!
 //! ## Modules
 //!
@@ -62,6 +62,10 @@
 //! - [`radio`] - Activity, dose, irradiance, radiance, spectral power, particle flux
 //! - [`photo`] - Luminous intensity, flux, illuminance, luminance, luminous energy
 //! - [`market`] - Money, currency, exchange rates, generic Price&lt;Q&gt;
+
+// Module names intentionally mirror their parent (e.g., energy::energy, mass::mass)
+// to match the Scala squants source structure.
+#![allow(clippy::module_inception)]
 
 pub mod core;
 pub mod electro;

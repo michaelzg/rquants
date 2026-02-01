@@ -108,9 +108,10 @@ impl Money {
     pub fn to_formatted_string(&self) -> String {
         let decimals = self.currency.format_decimals();
         format!(
-            "{}{}",
+            "{}{:.decimals$}",
             self.currency.symbol(),
-            format!("{:.decimals$}", self.amount, decimals = decimals as usize)
+            self.amount,
+            decimals = decimals as usize
         )
     }
 
