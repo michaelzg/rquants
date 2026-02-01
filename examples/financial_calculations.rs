@@ -1,4 +1,6 @@
-//! Financial calculation examples using the market module.
+//! Financial calculations — shopping, travel money, and pricing anything.
+//!
+//! Run with: `cargo run --example financial_calculations`
 
 use rquants::market::currency::Currency;
 use rquants::market::exchange_rate::CurrencyExchangeRate;
@@ -7,94 +9,136 @@ use rquants::market::price::Price;
 use rquants::prelude::*;
 
 fn main() {
-    println!("=== Money Basics ===");
+    println!("==========================================");
+    println!("  RQuants Finance — Money Talks Edition");
+    println!("==========================================\n");
+
     money_basics();
-
-    println!("\n=== Exchange Rates ===");
     exchange_rates();
-
-    println!("\n=== Pricing ===");
-    pricing();
+    pricing_anything();
 }
 
+/// Money: add, subtract, multiply, like a calculator that knows currencies
 fn money_basics() {
-    let price = Money::usd(29.99);
-    let quantity = 3.0;
-    let total = price * quantity;
-    println!("Item: {}, Qty: {}, Total: {}", price, quantity, total);
+    println!("--- Money Basics ---\n");
 
-    let subtotal = Money::usd(100.0);
-    let discount = Money::usd(15.0);
-    let final_price = subtotal - discount;
-    println!("Subtotal: {}, Discount: {}, Final: {}", subtotal, discount, final_price);
+    // Concert ticket math
+    let ticket = Money::usd(95.00);
+    let fees = Money::usd(23.50);
+    let total = ticket + fees;
+    println!("Concert ticket: {} + {} fees = {}", ticket, fees, total);
+
+    // Group dinner: split the bill
+    let dinner = Money::usd(186.40);
+    let people = 4.0;
+    let per_person = dinner / people;
+    println!(
+        "Dinner for 4: {} / {} = {} each",
+        dinner, people, per_person
+    );
+
+    // Sale: 30% off a PS5
+    let ps5 = Money::usd(499.99);
+    let discount = ps5 * 0.30;
+    let sale_price = ps5 - discount;
+    println!(
+        "PS5 on sale: {} - 30% ({}) = {}",
+        ps5, discount, sale_price
+    );
+
+    // Saving up: $50/week for 52 weeks
+    let weekly = Money::usd(50.0);
+    let annual = weekly * 52.0;
+    println!("Save {} per week = {} per year", weekly, annual);
+
+    println!();
 }
 
+/// Exchange rates: converting money between currencies
 fn exchange_rates() {
-    // USD to EUR
-    let usd_eur = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.92);
-    let dollars = Money::usd(1000.0);
-    match usd_eur.convert(dollars) {
-        Ok(euros) => println!("{} = {}", dollars, euros),
+    println!("--- Exchange Rates ---\n");
+
+    // Summer trip to Tokyo: USD to JPY
+    let usd_jpy = CurrencyExchangeRate::new(Currency::USD, Currency::JPY, 155.0);
+    let budget = Money::usd(2000.0);
+    match usd_jpy.convert(budget) {
+        Ok(yen) => println!("Tokyo trip: {} = {} (ramen for days)", budget, yen),
         Err(e) => println!("Error: {}", e),
     }
 
-    // JPY to USD
-    let jpy_usd = CurrencyExchangeRate::new(Currency::JPY, Currency::USD, 0.0067);
-    let yen = Money::new(10000.0, Currency::JPY);
-    match jpy_usd.convert(yen) {
-        Ok(dollars) => println!("{} = {}", yen, dollars),
+    // Study abroad in London: USD to GBP
+    let usd_gbp = CurrencyExchangeRate::new(Currency::USD, Currency::GBP, 0.79);
+    let rent = Money::usd(1500.0);
+    match usd_gbp.convert(rent) {
+        Ok(pounds) => println!("London rent: {} = {}", rent, pounds),
         Err(e) => println!("Error: {}", e),
     }
 
-    // Reverse conversion
-    let usd_amount = Money::usd(100.0);
-    match usd_eur.convert(usd_amount) {
-        Ok(eur) => {
-            println!("{} = {}", usd_amount, eur);
-        }
+    // Freelance gig paid in EUR, you need USD
+    let eur_usd = CurrencyExchangeRate::new(Currency::EUR, Currency::USD, 1.08);
+    let payment = Money::new(3500.0, Currency::EUR);
+    match eur_usd.convert(payment) {
+        Ok(dollars) => println!("Freelance pay: {} = {}", payment, dollars),
         Err(e) => println!("Error: {}", e),
     }
+
+    // Bitcoin price check
+    let btc_usd = CurrencyExchangeRate::new(Currency::BTC, Currency::USD, 100_000.0);
+    let holdings = Money::new(0.05, Currency::BTC);
+    match btc_usd.convert(holdings) {
+        Ok(value) => println!("Crypto portfolio: {} = {}", holdings, value),
+        Err(e) => println!("Error: {}", e),
+    }
+
+    println!();
 }
 
-fn pricing() {
-    // Price per unit of energy
-    let electricity_cost = Money::usd(0.12);
-    let per_kwh = Energy::kilowatt_hours(1.0);
-    let price = Price::new(electricity_cost, per_kwh);
+/// Price<Q>: attach a dollar amount to any physical quantity
+fn pricing_anything() {
+    println!("--- Pricing Anything ---\n");
 
-    let monthly_usage = Energy::kilowatt_hours(900.0);
-    let monthly_bill = price * monthly_usage;
+    // Electricity bill: $0.15 per kWh
+    let rate = Price::new(Money::usd(0.15), Energy::kilowatt_hours(1.0));
+    let summer_usage = Energy::kilowatt_hours(1200.0);
+    let bill = rate * summer_usage;
     println!(
-        "Electricity: {} per kWh, usage: {:.0} kWh, bill: {}",
-        price.money(),
-        monthly_usage.to_kilowatt_hours(),
-        monthly_bill
+        "Summer electric bill: {} per kWh x {:.0} kWh = {}",
+        rate.money(),
+        summer_usage.to_kilowatt_hours(),
+        bill
     );
 
-    // Price per unit of mass
-    let gold_price = Money::usd(65.0);
-    let per_gram = Mass::grams(1.0);
-    let gold = Price::new(gold_price, per_gram);
-
-    let bar = Mass::kilograms(1.0);
-    let bar_value = gold * bar;
+    // Gas station: $3.89 per gallon
+    let gas_price = Price::new(Money::usd(3.89), Volume::us_gallons(1.0));
+    let fill_up = Volume::us_gallons(14.0);
+    let cost = gas_price * fill_up;
     println!(
-        "Gold: {} per gram, 1 kg bar: {}",
+        "Fill-up: {} per gal x {:.0} gal = {}",
+        gas_price.money(),
+        fill_up.to_us_gallons(),
+        cost
+    );
+
+    // Gold: ~$65 per gram
+    let gold = Price::new(Money::usd(65.0), Mass::grams(1.0));
+    let chain = Mass::grams(30.0);
+    let chain_value = gold * chain;
+    println!(
+        "Gold chain ({:.0}g): {} per gram = {}",
+        chain.to_grams(),
         gold.money(),
-        bar_value
+        chain_value
     );
 
-    // Price per unit of volume (fuel)
-    let fuel_price = Money::usd(3.50);
-    let per_gallon = Volume::us_gallons(1.0);
-    let fuel = Price::new(fuel_price, per_gallon);
-
-    let tank = Volume::us_gallons(15.0);
-    let fill_up = fuel * tank;
+    // Cloud storage: $0.023 per GB per month
+    let cloud = Price::new(Money::usd(0.023), Information::gigabytes(1.0));
+    let storage = Information::terabytes(5.0);
+    let monthly = cloud * storage;
     println!(
-        "Fuel: {} per gallon, fill {:.0} gal: {}",
-        fuel.money(),
-        tank.to_us_gallons(),
-        fill_up
+        "5 TB cloud storage: {} per GB = {} per month",
+        cloud.money(),
+        monthly
     );
+
+    println!("\nAll financial examples done!");
 }

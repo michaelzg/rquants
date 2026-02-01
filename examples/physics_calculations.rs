@@ -1,210 +1,256 @@
-//! Physics calculation examples demonstrating cross-quantity operations.
+//! Physics calculations — rockets, sports cars, and skydiving.
+//!
+//! Run with: `cargo run --example physics_calculations`
 
 use rquants::prelude::*;
 
 fn main() {
-    println!("=== Kinematics ===");
+    println!("==========================================");
+    println!("  RQuants Physics — Real-World Edition");
+    println!("==========================================\n");
+
     kinematics();
-
-    println!("\n=== Dynamics ===");
     dynamics();
-
-    println!("\n=== Energy ===");
     energy_calculations();
-
-    println!("\n=== Electromagnetism ===");
     electromagnetism();
-
-    println!("\n=== Dimensional Chain ===");
-    dimensional_chain();
+    pressure_scenarios();
 }
 
+/// Kinematics: how things move
 fn kinematics() {
-    // v = d / t
-    let distance = Length::kilometers(100.0);
-    let time = Time::hours(1.5);
-    let velocity = distance / time;
+    println!("--- Kinematics ---\n");
+
+    // Tesla Model S Plaid: 0-60 mph in ~2.0 seconds
+    let v0 = Velocity::miles_per_hour(0.0);
+    let v1 = Velocity::miles_per_hour(60.0);
+    let t = Time::seconds(2.0);
+    let accel = (v1 - v0) / t;
     println!(
-        "Average speed: {:.1} km/h = {:.1} mph",
-        velocity.to_kilometers_per_hour(),
-        velocity.to_miles_per_hour()
+        "Tesla Plaid 0-60 mph in 2s: {:.2} m/s² ({:.2} g's!)",
+        accel.to_meters_per_second_squared(),
+        accel.to_earth_gravities()
     );
 
-    // d = v * t (distance traveled)
-    let cruising_speed = Velocity::kilometers_per_hour(900.0);
-    let flight_time = Time::hours(5.0);
-    let flight_distance = cruising_speed * flight_time;
+    // SR-71 Blackbird cruising at Mach 3.2
+    let sr71 = Velocity::meters_per_second(343.0 * 3.2);
+    let flight_time = Time::hours(1.0);
+    let distance = sr71 * flight_time;
     println!(
-        "Flight distance: {:.0} km = {:.0} miles",
-        flight_distance.to_kilometers(),
-        flight_distance.to_miles()
+        "SR-71 in 1 hour: {:.0} km = {:.0} mi (Mach 3.2)",
+        distance.to_kilometers(),
+        distance.to_miles()
     );
 
-    // a = (v - v0) / t
-    let v0 = Velocity::meters_per_second(0.0);
-    let v1 = Velocity::kilometers_per_hour(100.0);
-    let accel_time = Time::seconds(8.0);
-    let acceleration = (v1 - v0) / accel_time;
+    // ISS orbital speed: ~27,600 km/h
+    let iss_speed = Velocity::kilometers_per_hour(27_600.0);
+    let orbit_circumference = Length::kilometers(42_600.0);
+    let orbit_time = Time::hours(orbit_circumference.to_kilometers() / iss_speed.to_kilometers_per_hour());
     println!(
-        "0-100 km/h in 8s: {:.2} m/s² ({:.2} g)",
-        acceleration.to_meters_per_second_squared(),
-        acceleration.to_earth_gravities()
+        "ISS orbits Earth: {:.0} km at {:.0} km/h = {:.0} min per orbit",
+        orbit_circumference.to_kilometers(),
+        iss_speed.to_kilometers_per_hour(),
+        orbit_time.to_minutes()
     );
+
+    // Peregrine falcon dive: 390 km/h
+    let falcon = Velocity::kilometers_per_hour(390.0);
+    println!(
+        "Peregrine falcon dive: {:.0} km/h = {:.0} mph (fastest animal alive)",
+        falcon.to_kilometers_per_hour(),
+        falcon.to_miles_per_hour()
+    );
+
+    println!();
 }
 
+/// Dynamics: forces, momentum, and Newton's laws
 fn dynamics() {
-    // F = ma
-    let mass = Mass::kilograms(1000.0); // Car
-    let acceleration = Acceleration::meters_per_second_squared(3.0);
-    let force = mass * acceleration;
+    println!("--- Dynamics ---\n");
+
+    // F = ma: Force to launch a SpaceX Falcon 9 (mass ~549,000 kg at liftoff)
+    let rocket_mass = Mass::kilograms(549_000.0);
+    let thrust_accel = Acceleration::meters_per_second_squared(12.0); // ~1.2g net
+    let force = rocket_mass * thrust_accel;
     println!(
-        "Force to accelerate {}: {:.0} N = {:.1} kgf",
-        mass,
+        "Falcon 9 thrust: {:.0} kg x {:.1} m/s² = {:.0} N = {:.0} kN",
+        rocket_mass.to_kilograms(),
+        thrust_accel.to_meters_per_second_squared(),
         force.to_newtons(),
-        force.to_kilogram_force()
+        force.to_newtons() / 1000.0
     );
 
-    // p = mv (momentum)
-    let velocity = Velocity::meters_per_second(30.0);
-    let momentum = mass * velocity;
+    // Momentum of a bowling ball vs a baseball
+    let bowling_ball = Mass::kilograms(6.35);
+    let bowling_speed = Velocity::meters_per_second(8.0);
+    let bowling_p = bowling_ball * bowling_speed;
+
+    let baseball = Mass::grams(145.0);
+    let pitch_speed = Velocity::miles_per_hour(100.0); // fastball
+    let baseball_p = baseball * pitch_speed;
+
     println!(
-        "Momentum: {} × {} = {:.0} kg·m/s",
-        mass,
-        velocity,
-        momentum.to_kilogram_meters_per_second()
+        "Bowling ball momentum: {:.1} kg·m/s",
+        bowling_p.to_kilogram_meters_per_second()
+    );
+    println!(
+        "100 mph fastball momentum: {:.1} kg·m/s",
+        baseball_p.to_kilogram_meters_per_second()
     );
 
-    // Pressure: P = F/A
-    let force = Force::newtons(500.0);
-    let area = Area::square_meters(0.01); // 100 cm²
-    let pressure = force / area;
+    // Weight of the heaviest deadlift ever (501 kg by Hafthor Bjornsson)
+    let deadlift = Mass::kilograms(501.0);
+    let g = Acceleration::meters_per_second_squared(9.80665);
+    let weight = deadlift * g;
     println!(
-        "Pressure: {} / {} = {:.0} Pa = {:.2} atm",
-        force,
-        area,
-        pressure.to_pascals(),
-        pressure.to_atmospheres()
+        "World record deadlift: {} = {:.0} N = {:.0} lbf",
+        deadlift,
+        weight.to_newtons(),
+        weight.to_pound_force()
     );
+
+    println!();
 }
 
+/// Energy and power in the real world
 fn energy_calculations() {
-    // Work = Force × Distance
-    let force = Force::newtons(100.0);
-    let distance = Length::meters(50.0);
-    let work = force.to_newtons() * distance.to_meters();
-    let energy = Energy::joules(work);
+    println!("--- Energy & Power ---\n");
+
+    // Tesla Powerwall: 13.5 kWh battery, 5 kW continuous output
+    let battery = Energy::kilowatt_hours(13.5);
+    let output = Power::kilowatts(5.0);
+    let runtime = battery / output;
     println!(
-        "Work done: {} × {} = {:.0} J = {:.4} kWh",
-        force,
-        distance,
-        energy.to_joules(),
-        energy.to_kilowatt_hours()
+        "Tesla Powerwall: {:.1} kWh / {:.0} kW = {:.1} hours of backup power",
+        battery.to_kilowatt_hours(),
+        output.to_kilowatts(),
+        runtime.to_hours()
     );
 
-    // Power = Energy / Time
-    let energy = Energy::kilowatt_hours(10.0);
-    let time = Time::hours(4.0);
-    let power = energy / time;
+    // Kinetic energy: Bugatti Chiron at top speed (490 km/h, 1995 kg)
+    let chiron_mass = Mass::kilograms(1995.0);
+    let chiron_speed = Velocity::kilometers_per_hour(490.0);
+    let ke = Energy::kinetic(chiron_mass, chiron_speed);
     println!(
-        "Average power: {:.0} kWh / {} = {:.1} kW",
-        energy.to_kilowatt_hours(),
-        time,
-        power.to_kilowatts()
-    );
-
-    // Kinetic energy: KE = 0.5 * m * v²
-    let mass = Mass::kilograms(1500.0);
-    let speed = Velocity::kilometers_per_hour(120.0);
-    let ke = Energy::kinetic(mass, speed);
-    println!(
-        "Kinetic energy at {}: {:.0} J = {:.3} kWh",
-        speed,
-        ke.to_joules(),
+        "Bugatti Chiron at {:.0} km/h: KE = {:.0} kJ = {:.2} kWh",
+        chiron_speed.to_kilometers_per_hour(),
+        ke.to_joules() / 1000.0,
         ke.to_kilowatt_hours()
     );
 
-    // Specific energy (energy per mass)
-    let battery_energy = Energy::kilowatt_hours(75.0); // Tesla battery
-    let battery_mass = Mass::kilograms(480.0);
-    let specific = battery_energy / battery_mass;
+    // Power: gaming PC under full load (~500W for 6 hours)
+    let gaming_power = Power::watts(500.0);
+    let session = Time::hours(6.0);
+    let energy_used = gaming_power * session;
     println!(
-        "Battery specific energy: {:.0} J/kg ({:.0} Wh/kg)",
-        specific.to_grays(),
-        specific.to_grays() / 3.6 // Convert J/kg to Wh/kg
+        "Gaming marathon (6h): {:.0} W x {} = {:.1} kWh",
+        gaming_power.to_watts(),
+        session,
+        energy_used.to_kilowatt_hours()
     );
+
+    // Calories: a Big Mac is about 550 kcal
+    let big_mac = Energy::kilocalories(550.0);
+    println!(
+        "Big Mac: {:.0} kcal = {:.0} kJ = {:.2} kWh (enough to power a lightbulb for {:.1}h)",
+        big_mac.to_kilocalories(),
+        big_mac.to_joules() / 1000.0,
+        big_mac.to_kilowatt_hours(),
+        (big_mac / Power::watts(60.0)).to_hours()
+    );
+
+    // 1.21 gigawatts! (Back to the Future)
+    let flux_capacitor = Power::gigawatts(1.21);
+    println!(
+        "Flux capacitor: {:.2} GW = {:.0} MW = {:.0} hp (Great Scott!)",
+        flux_capacitor.to_gigawatts(),
+        flux_capacitor.to_megawatts(),
+        flux_capacitor.to_horsepower()
+    );
+
+    println!();
 }
 
+/// Electricity: Ohm's law and everyday circuits
 fn electromagnetism() {
-    // Ohm's law: V = IR
-    let voltage = ElectricPotential::volts(230.0);
-    let resistance = ElectricalResistance::ohms(100.0);
-    let current = voltage / resistance;
-    println!(
-        "Ohm's law: {} / {} = {:.2} A",
-        voltage,
-        resistance,
-        current.to_amperes()
-    );
+    println!("--- Electromagnetism ---\n");
 
-    // Power: P = VI
+    // Phone charger: 5V, 2A (USB)
+    let voltage = ElectricPotential::volts(5.0);
+    let current = ElectricCurrent::amperes(2.0);
     let power = voltage * current;
     println!(
-        "Power: {} × {:.2} A = {:.1} W",
-        voltage,
-        current.to_amperes(),
+        "USB charger: {} x {} = {:.0} W",
+        voltage, current,
         power.to_watts()
     );
 
-    // Charge: Q = It
-    let current = ElectricCurrent::amperes(2.0);
-    let time = Time::hours(1.0);
-    let charge = current * time;
+    // Ohm's law: LED with 220 ohm resistor on 5V
+    let v = ElectricPotential::volts(5.0);
+    let r = ElectricalResistance::ohms(220.0);
+    let i = v / r;
     println!(
-        "Charge: {} × {} = {:.0} C = {:.1} Ah",
-        current,
-        time,
-        charge.to_coulombs(),
-        charge.to_amperehours()
+        "LED circuit: {} / {} = {:.1} mA",
+        v, r,
+        i.to_amperes() * 1000.0
     );
 
-    // Capacitance: C = Q/V
-    let charge = ElectricCharge::coulombs(0.001);
-    let voltage = ElectricPotential::volts(5.0);
-    let capacitance = charge / voltage;
+    // iPhone battery: ~3349 mAh at 3.83V
+    let charge = ElectricCharge::milliamperehours(3349.0);
+    let batt_voltage = ElectricPotential::volts(3.83);
+    let energy_wh = charge.to_amperehours() * batt_voltage.to_volts();
     println!(
-        "Capacitance: {} / {} = {:.0} µF",
-        charge,
-        voltage,
-        capacitance.to_microfarads()
+        "iPhone battery: {:.0} mAh at {:.2} V = {:.1} Wh",
+        charge.to_milliamperehours(),
+        batt_voltage.to_volts(),
+        energy_wh
     );
+
+    // Capacitor: camera flash capacitor ~200 µF at 300V
+    let cap = Capacitance::microfarads(200.0);
+    let cap_v = ElectricPotential::volts(300.0);
+    let stored = 0.5 * cap.to_farads() * cap_v.to_volts() * cap_v.to_volts();
+    println!(
+        "Camera flash capacitor: {:.0} µF at {:.0} V = {:.1} J (zap!)",
+        cap.to_microfarads(),
+        cap_v.to_volts(),
+        stored
+    );
+
+    println!();
 }
 
-fn dimensional_chain() {
-    // Demonstrate a chain of dimensional operations
-    println!("Position → Velocity → Acceleration chain:");
+/// Pressure: from tires to the deep ocean
+fn pressure_scenarios() {
+    println!("--- Pressure ---\n");
 
-    let pos1 = Length::meters(0.0);
-    let pos2 = Length::meters(100.0);
-    let t1 = Time::seconds(0.0);
-    let t2 = Time::seconds(10.0);
+    // Car tire pressure (~32 psi)
+    let tire = Pressure::psi(32.0);
+    println!(
+        "Car tire: {:.0} psi = {:.0} kPa = {:.1} bar",
+        tire.to_psi(),
+        tire.to_pascals() / 1000.0,
+        tire.to_bars()
+    );
 
-    let displacement = pos2 - pos1;
-    let duration = t2 - t1;
-    let avg_velocity = displacement / duration;
-    println!("  Displacement: {}", displacement);
-    println!("  Avg velocity: {:.1} m/s", avg_velocity.to_meters_per_second());
+    // Mariana Trench: ~1086 bar at the bottom
+    let mariana = Pressure::bars(1086.0);
+    println!(
+        "Mariana Trench: {:.0} bar = {:.0} atm = {:.0} psi (crushes submarines)",
+        mariana.to_bars(),
+        mariana.to_atmospheres(),
+        mariana.to_psi()
+    );
 
-    let v1 = Velocity::meters_per_second(0.0);
-    let v2 = avg_velocity;
-    let accel = (v2 - v1) / duration;
-    println!("  Acceleration: {:.1} m/s²", accel.to_meters_per_second_squared());
+    // Blood pressure: 120/80 mmHg
+    let systolic = Pressure::millimeters_of_mercury(120.0);
+    let diastolic = Pressure::millimeters_of_mercury(80.0);
+    println!(
+        "Blood pressure: {:.0}/{:.0} mmHg = {:.1}/{:.1} kPa",
+        systolic.to_millimeters_of_mercury(),
+        diastolic.to_millimeters_of_mercury(),
+        systolic.to_pascals() / 1000.0,
+        diastolic.to_pascals() / 1000.0
+    );
 
-    let force = Mass::kilograms(50.0) * accel;
-    println!("  Force on 50 kg: {:.1} N", force.to_newtons());
-
-    let work_energy = force.to_newtons() * displacement.to_meters();
-    let energy = Energy::joules(work_energy);
-    let power = energy / duration;
-    println!("  Energy: {:.0} J", energy.to_joules());
-    println!("  Power: {:.1} W", power.to_watts());
+    println!("\nAll physics examples done!");
 }
