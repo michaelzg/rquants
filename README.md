@@ -180,9 +180,9 @@ pub enum LengthUnit { Meters, Kilometers, Feet, ... }
 
 **Scala**: `Money` uses `BigDecimal` for arbitrary-precision arithmetic.
 
-**Rust**: `Money` uses `f64`. The `rust_decimal` crate is available as a dependency but not used for Money's internal representation.
+**Rust**: `Money` uses `f64`.
 
-**Why**: Keeping `Money` consistent with all other quantities (which use `f64`) simplifies the API. For applications requiring exact decimal arithmetic (e.g., financial accounting), users can convert to `rust_decimal::Decimal` at system boundaries. This is a pragmatic trade-off -- squants' `BigDecimal` usage was a Scala-specific pattern leveraging JVM's built-in `BigDecimal`.
+**Why**: Keeping `Money` consistent with all other quantities (which use `f64`) simplifies the API and allows the library to remain dependency-free. For applications requiring exact decimal arithmetic (e.g., financial accounting), users can convert to a decimal type at system boundaries.
 
 ### 4. No Implicit MoneyContext
 
@@ -281,11 +281,7 @@ Module names like `energy::energy`, `mass::mass`, `time::time` intentionally mir
 
 **Scala squants**: Extends `Serializable` (JVM serialization).
 
-**Rust rquants**: Serde support is available behind an optional `serde` feature flag.
-
-```toml
-rquants = { version = "0.1.0", features = ["serde"] }
-```
+**Rust rquants**: No built-in serialization. Users can implement serialization as needed for their use case.
 
 ### 14. Missing Quantities vs. Scala squants
 

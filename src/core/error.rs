@@ -1,36 +1,67 @@
 //! Error types for quantity operations.
 
-use thiserror::Error;
+use std::fmt;
 
 /// Errors that can occur when working with quantities.
-#[derive(Error, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum QuantityError {
     /// Error parsing a quantity from a string.
-    #[error("Failed to parse quantity: {0}")]
-    ParseError(#[from] QuantityParseError),
+    ParseError(QuantityParseError),
 
     /// Error when attempting an invalid unit conversion.
-    #[error("Invalid conversion: {0}")]
     ConversionError(String),
 
     /// Error when a range is invalid (e.g., lower >= upper).
-    #[error("Invalid range: {0}")]
     RangeError(String),
 
     /// Error for unsupported operations.
-    #[error("Unsupported operation: {0}")]
     UnsupportedOperation(String),
 }
 
+impl fmt::Display for QuantityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            QuantityError::ParseError(e) => write!(f, "Failed to parse quantity: {e}"),
+            QuantityError::ConversionError(msg) => write!(f, "Invalid conversion: {msg}"),
+            QuantityError::RangeError(msg) => write!(f, "Invalid range: {msg}"),
+            QuantityError::UnsupportedOperation(msg) => {
+                write!(f, "Unsupported operation: {msg}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for QuantityError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            QuantityError::ParseError(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<QuantityParseError> for QuantityError {
+    fn from(err: QuantityParseError) -> Self {
+        QuantityError::ParseError(err)
+    }
+}
+
 /// Error parsing a quantity from a string.
-#[derive(Error, Debug, Clone, PartialEq)]
-#[error("Unable to parse {dimension}: '{input}'")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct QuantityParseError {
     /// The dimension being parsed (e.g., "Length", "Mass").
     pub dimension: String,
     /// The input string that failed to parse.
     pub input: String,
 }
+
+impl fmt::Display for QuantityParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Unable to parse {}: '{}'", self.dimension, self.input)
+    }
+}
+
+impl std::error::Error for QuantityParseError {}
 
 impl QuantityParseError {
     /// Creates a new parse error.
