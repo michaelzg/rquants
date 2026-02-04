@@ -1,9 +1,8 @@
 //! Luminous flux quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div, Mul};
 
 /// Units of luminous flux measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl LuminousFluxUnit {
     pub const ALL: &'static [LuminousFluxUnit] = &[LuminousFluxUnit::Lumens];
 }
 
-impl fmt::Display for LuminousFluxUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(LuminousFluxUnit);
 
 impl UnitOfMeasure for LuminousFluxUnit {
     fn symbol(&self) -> &'static str {
@@ -83,99 +78,7 @@ impl LuminousFlux {
     }
 }
 
-impl fmt::Display for LuminousFlux {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for LuminousFlux {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for LuminousFlux {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for LuminousFlux {
-    type Unit = LuminousFluxUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for LuminousFlux {
-    type Output = LuminousFlux;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        LuminousFlux::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for LuminousFlux {
-    type Output = LuminousFlux;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        LuminousFlux::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for LuminousFlux {
-    type Output = LuminousFlux;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        LuminousFlux::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<LuminousFlux> for f64 {
-    type Output = LuminousFlux;
-
-    fn mul(self, rhs: LuminousFlux) -> Self::Output {
-        LuminousFlux::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for LuminousFlux {
-    type Output = LuminousFlux;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        LuminousFlux::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<LuminousFlux> for LuminousFlux {
-    type Output = f64;
-
-    fn div(self, rhs: LuminousFlux) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for LuminousFlux {
-    type Output = LuminousFlux;
-
-    fn neg(self) -> Self::Output {
-        LuminousFlux::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(LuminousFlux, LuminousFluxUnit);
 
 // Cross-quantity operations
 use super::illuminance::{Illuminance, IlluminanceUnit};
@@ -244,29 +147,14 @@ impl Mul<LuminousFlux> for Time {
     }
 }
 
-/// Dimension for LuminousFlux.
-pub struct LuminousFluxDimension;
-
-impl Dimension for LuminousFluxDimension {
-    type Quantity = LuminousFlux;
-    type Unit = LuminousFluxUnit;
-
-    fn name() -> &'static str {
-        "LuminousFlux"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        LuminousFluxUnit::Lumens
-    }
-
-    fn si_unit() -> Self::Unit {
-        LuminousFluxUnit::Lumens
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        LuminousFluxUnit::ALL
-    }
-}
+impl_dimension!(
+    LuminousFluxDimension,
+    LuminousFlux,
+    LuminousFluxUnit,
+    "LuminousFlux",
+    LuminousFluxUnit::Lumens,
+    LuminousFluxUnit::Lumens
+);
 
 /// Extension trait for creating LuminousFlux quantities from numeric types.
 pub trait LuminousFluxConversions {

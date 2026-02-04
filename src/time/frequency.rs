@@ -1,10 +1,8 @@
 //! Frequency quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::systems::metric::{GIGA, KILO, MEGA, TERA};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Units of frequency measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -35,11 +33,7 @@ impl FrequencyUnit {
     ];
 }
 
-impl fmt::Display for FrequencyUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(FrequencyUnit);
 
 impl UnitOfMeasure for FrequencyUnit {
     fn symbol(&self) -> &'static str {
@@ -170,123 +164,16 @@ impl Frequency {
     }
 }
 
-impl fmt::Display for Frequency {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Frequency, FrequencyUnit);
 
-impl PartialEq for Frequency {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Frequency {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Frequency {
-    type Unit = FrequencyUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Frequency {
-    type Output = Frequency;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Frequency::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Frequency {
-    type Output = Frequency;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Frequency::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Frequency {
-    type Output = Frequency;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Frequency::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Frequency> for f64 {
-    type Output = Frequency;
-
-    fn mul(self, rhs: Frequency) -> Self::Output {
-        Frequency::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Frequency {
-    type Output = Frequency;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Frequency::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Frequency> for Frequency {
-    type Output = f64;
-
-    fn div(self, rhs: Frequency) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Frequency {
-    type Output = Frequency;
-
-    fn neg(self) -> Self::Output {
-        Frequency::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Frequency.
-pub struct FrequencyDimension;
-
-impl Dimension for FrequencyDimension {
-    type Quantity = Frequency;
-    type Unit = FrequencyUnit;
-
-    fn name() -> &'static str {
-        "Frequency"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        FrequencyUnit::Hertz
-    }
-
-    fn si_unit() -> Self::Unit {
-        FrequencyUnit::Hertz
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        FrequencyUnit::ALL
-    }
-}
+impl_dimension!(
+    FrequencyDimension,
+    Frequency,
+    FrequencyUnit,
+    "Frequency",
+    FrequencyUnit::Hertz,
+    FrequencyUnit::Hertz
+);
 
 /// Extension trait for creating Frequency quantities from numeric types.
 pub trait FrequencyConversions {
@@ -324,8 +211,6 @@ impl FrequencyConversions for f64 {
         Frequency::rpm(self)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

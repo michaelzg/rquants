@@ -1,9 +1,8 @@
 //! Thermal capacity (entropy) quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of thermal capacity measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl ThermalCapacityUnit {
     pub const ALL: &'static [ThermalCapacityUnit] = &[ThermalCapacityUnit::JoulesPerKelvin];
 }
 
-impl fmt::Display for ThermalCapacityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ThermalCapacityUnit);
 
 impl UnitOfMeasure for ThermalCapacityUnit {
     fn symbol(&self) -> &'static str {
@@ -83,97 +78,7 @@ impl ThermalCapacity {
     }
 }
 
-impl fmt::Display for ThermalCapacity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ThermalCapacity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ThermalCapacity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ThermalCapacity {
-    type Unit = ThermalCapacityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-impl Add for ThermalCapacity {
-    type Output = ThermalCapacity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ThermalCapacity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ThermalCapacity {
-    type Output = ThermalCapacity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ThermalCapacity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ThermalCapacity {
-    type Output = ThermalCapacity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ThermalCapacity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ThermalCapacity> for f64 {
-    type Output = ThermalCapacity;
-
-    fn mul(self, rhs: ThermalCapacity) -> Self::Output {
-        ThermalCapacity::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ThermalCapacity {
-    type Output = ThermalCapacity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ThermalCapacity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ThermalCapacity> for ThermalCapacity {
-    type Output = f64;
-
-    fn div(self, rhs: ThermalCapacity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ThermalCapacity {
-    type Output = ThermalCapacity;
-
-    fn neg(self) -> Self::Output {
-        ThermalCapacity::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(ThermalCapacity, ThermalCapacityUnit);
 
 // Cross-quantity: ThermalCapacity * Temperature = Energy
 use super::temperature::Temperature;
@@ -188,29 +93,14 @@ impl Mul<Temperature> for ThermalCapacity {
     }
 }
 
-/// Dimension for ThermalCapacity.
-pub struct ThermalCapacityDimension;
-
-impl Dimension for ThermalCapacityDimension {
-    type Quantity = ThermalCapacity;
-    type Unit = ThermalCapacityUnit;
-
-    fn name() -> &'static str {
-        "ThermalCapacity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ThermalCapacityUnit::JoulesPerKelvin
-    }
-
-    fn si_unit() -> Self::Unit {
-        ThermalCapacityUnit::JoulesPerKelvin
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ThermalCapacityUnit::ALL
-    }
-}
+impl_dimension!(
+    ThermalCapacityDimension,
+    ThermalCapacity,
+    ThermalCapacityUnit,
+    "ThermalCapacity",
+    ThermalCapacityUnit::JoulesPerKelvin,
+    ThermalCapacityUnit::JoulesPerKelvin
+);
 
 /// Extension trait for creating ThermalCapacity quantities from numeric types.
 pub trait ThermalCapacityConversions {

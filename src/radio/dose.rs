@@ -1,9 +1,7 @@
 //! Dose quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 
 /// Units of radiation dose measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -22,11 +20,7 @@ impl DoseUnit {
 // Conversion factor
 const SIEVERT_TO_REM: f64 = 100.0;
 
-impl fmt::Display for DoseUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(DoseUnit);
 
 impl UnitOfMeasure for DoseUnit {
     fn symbol(&self) -> &'static str {
@@ -101,123 +95,16 @@ impl Dose {
     }
 }
 
-impl fmt::Display for Dose {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Dose, DoseUnit);
 
-impl PartialEq for Dose {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Dose {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Dose {
-    type Unit = DoseUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Dose {
-    type Output = Dose;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Dose::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Dose {
-    type Output = Dose;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Dose::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Dose {
-    type Output = Dose;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Dose::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Dose> for f64 {
-    type Output = Dose;
-
-    fn mul(self, rhs: Dose) -> Self::Output {
-        Dose::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Dose {
-    type Output = Dose;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Dose::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Dose> for Dose {
-    type Output = f64;
-
-    fn div(self, rhs: Dose) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Dose {
-    type Output = Dose;
-
-    fn neg(self) -> Self::Output {
-        Dose::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Dose.
-pub struct DoseDimension;
-
-impl Dimension for DoseDimension {
-    type Quantity = Dose;
-    type Unit = DoseUnit;
-
-    fn name() -> &'static str {
-        "Dose"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        DoseUnit::Sieverts
-    }
-
-    fn si_unit() -> Self::Unit {
-        DoseUnit::Sieverts
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        DoseUnit::ALL
-    }
-}
+impl_dimension!(
+    DoseDimension,
+    Dose,
+    DoseUnit,
+    "Dose",
+    DoseUnit::Sieverts,
+    DoseUnit::Sieverts
+);
 
 /// Extension trait for creating Dose quantities from numeric types.
 pub trait DoseConversions {

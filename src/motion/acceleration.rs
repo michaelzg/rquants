@@ -1,11 +1,10 @@
 //! Acceleration quantity and units.
 
 use super::velocity::{Velocity, VelocityUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::time::Time;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of acceleration measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -40,11 +39,7 @@ const MILE_PER_M: f64 = 1609.344;
 const SECONDS_PER_HOUR: f64 = 3600.0;
 const STANDARD_GRAVITY: f64 = 9.80665;
 
-impl fmt::Display for AccelerationUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(AccelerationUnit);
 
 impl UnitOfMeasure for AccelerationUnit {
     fn symbol(&self) -> &'static str {
@@ -165,75 +160,7 @@ impl Acceleration {
     }
 }
 
-impl fmt::Display for Acceleration {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Acceleration {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Acceleration {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Acceleration {
-    type Unit = AccelerationUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Acceleration {
-    type Output = Acceleration;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Acceleration::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Acceleration {
-    type Output = Acceleration;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Acceleration::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Acceleration {
-    type Output = Acceleration;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Acceleration::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Acceleration> for f64 {
-    type Output = Acceleration;
-
-    fn mul(self, rhs: Acceleration) -> Self::Output {
-        Acceleration::new(self * rhs.value, rhs.unit)
-    }
-}
+impl_quantity!(Acceleration, AccelerationUnit);
 
 // Acceleration * Time = Velocity
 impl Mul<Time> for Acceleration {
@@ -242,30 +169,6 @@ impl Mul<Time> for Acceleration {
     fn mul(self, rhs: Time) -> Self::Output {
         let mps = self.to_meters_per_second_squared() * rhs.to_seconds();
         Velocity::new(mps, VelocityUnit::MetersPerSecond)
-    }
-}
-
-impl Div<f64> for Acceleration {
-    type Output = Acceleration;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Acceleration::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Acceleration> for Acceleration {
-    type Output = f64;
-
-    fn div(self, rhs: Acceleration) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Acceleration {
-    type Output = Acceleration;
-
-    fn neg(self) -> Self::Output {
-        Acceleration::new(-self.value, self.unit)
     }
 }
 
@@ -288,29 +191,14 @@ impl Div<Acceleration> for Velocity {
     }
 }
 
-/// Dimension for Acceleration.
-pub struct AccelerationDimension;
-
-impl Dimension for AccelerationDimension {
-    type Quantity = Acceleration;
-    type Unit = AccelerationUnit;
-
-    fn name() -> &'static str {
-        "Acceleration"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        AccelerationUnit::MetersPerSecondSquared
-    }
-
-    fn si_unit() -> Self::Unit {
-        AccelerationUnit::MetersPerSecondSquared
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        AccelerationUnit::ALL
-    }
-}
+impl_dimension!(
+    AccelerationDimension,
+    Acceleration,
+    AccelerationUnit,
+    "Acceleration",
+    AccelerationUnit::MetersPerSecondSquared,
+    AccelerationUnit::MetersPerSecondSquared
+);
 
 /// Extension trait for creating Acceleration quantities from numeric types.
 pub trait AccelerationConversions {

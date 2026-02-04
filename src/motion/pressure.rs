@@ -1,11 +1,10 @@
 //! Pressure quantity and units.
 
 use super::force::{Force, ForceUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::space::area::{Area, AreaUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of pressure measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -53,11 +52,7 @@ const MMHG_TO_PA: f64 = 133.322387415;
 const INHG_TO_PA: f64 = 3386.389;
 const TORR_TO_PA: f64 = ATM_TO_PA / 760.0;
 
-impl fmt::Display for PressureUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(PressureUnit);
 
 impl UnitOfMeasure for PressureUnit {
     fn symbol(&self) -> &'static str {
@@ -224,75 +219,7 @@ impl Pressure {
     }
 }
 
-impl fmt::Display for Pressure {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Pressure {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Pressure {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Pressure {
-    type Unit = PressureUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Pressure {
-    type Output = Pressure;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Pressure::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Pressure {
-    type Output = Pressure;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Pressure::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Pressure {
-    type Output = Pressure;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Pressure::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Pressure> for f64 {
-    type Output = Pressure;
-
-    fn mul(self, rhs: Pressure) -> Self::Output {
-        Pressure::new(self * rhs.value, rhs.unit)
-    }
-}
+impl_quantity!(Pressure, PressureUnit);
 
 // Pressure * Area = Force
 impl Mul<Area> for Pressure {
@@ -301,30 +228,6 @@ impl Mul<Area> for Pressure {
     fn mul(self, rhs: Area) -> Self::Output {
         let newtons = self.to_pascals() * rhs.to_square_meters();
         Force::new(newtons, ForceUnit::Newtons)
-    }
-}
-
-impl Div<f64> for Pressure {
-    type Output = Pressure;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Pressure::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Pressure> for Pressure {
-    type Output = f64;
-
-    fn div(self, rhs: Pressure) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Pressure {
-    type Output = Pressure;
-
-    fn neg(self) -> Self::Output {
-        Pressure::new(-self.value, self.unit)
     }
 }
 
@@ -347,29 +250,14 @@ impl Div<Pressure> for Force {
     }
 }
 
-/// Dimension for Pressure.
-pub struct PressureDimension;
-
-impl Dimension for PressureDimension {
-    type Quantity = Pressure;
-    type Unit = PressureUnit;
-
-    fn name() -> &'static str {
-        "Pressure"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        PressureUnit::Pascals
-    }
-
-    fn si_unit() -> Self::Unit {
-        PressureUnit::Pascals
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        PressureUnit::ALL
-    }
-}
+impl_dimension!(
+    PressureDimension,
+    Pressure,
+    PressureUnit,
+    "Pressure",
+    PressureUnit::Pascals,
+    PressureUnit::Pascals
+);
 
 /// Extension trait for creating Pressure quantities from numeric types.
 pub trait PressureConversions {

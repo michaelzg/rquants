@@ -1,9 +1,7 @@
 //! Chemical amount (substance) quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 
 /// Units of chemical amount (substance) measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -26,11 +24,7 @@ impl ChemicalAmountUnit {
 // 1 lb-mol = 453.59237 mol (same as pounds to grams ratio)
 const POUND_MOLE_FACTOR: f64 = 453.59237;
 
-impl fmt::Display for ChemicalAmountUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ChemicalAmountUnit);
 
 impl UnitOfMeasure for ChemicalAmountUnit {
     fn symbol(&self) -> &'static str {
@@ -104,123 +98,16 @@ impl ChemicalAmount {
     }
 }
 
-impl fmt::Display for ChemicalAmount {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(ChemicalAmount, ChemicalAmountUnit);
 
-impl PartialEq for ChemicalAmount {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ChemicalAmount {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ChemicalAmount {
-    type Unit = ChemicalAmountUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ChemicalAmount {
-    type Output = ChemicalAmount;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ChemicalAmount::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ChemicalAmount {
-    type Output = ChemicalAmount;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ChemicalAmount::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ChemicalAmount {
-    type Output = ChemicalAmount;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ChemicalAmount::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ChemicalAmount> for f64 {
-    type Output = ChemicalAmount;
-
-    fn mul(self, rhs: ChemicalAmount) -> Self::Output {
-        ChemicalAmount::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ChemicalAmount {
-    type Output = ChemicalAmount;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ChemicalAmount::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ChemicalAmount> for ChemicalAmount {
-    type Output = f64;
-
-    fn div(self, rhs: ChemicalAmount) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ChemicalAmount {
-    type Output = ChemicalAmount;
-
-    fn neg(self) -> Self::Output {
-        ChemicalAmount::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for ChemicalAmount.
-pub struct ChemicalAmountDimension;
-
-impl Dimension for ChemicalAmountDimension {
-    type Quantity = ChemicalAmount;
-    type Unit = ChemicalAmountUnit;
-
-    fn name() -> &'static str {
-        "ChemicalAmount"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ChemicalAmountUnit::Moles
-    }
-
-    fn si_unit() -> Self::Unit {
-        ChemicalAmountUnit::Moles
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ChemicalAmountUnit::ALL
-    }
-}
+impl_dimension!(
+    ChemicalAmountDimension,
+    ChemicalAmount,
+    ChemicalAmountUnit,
+    "ChemicalAmount",
+    ChemicalAmountUnit::Moles,
+    ChemicalAmountUnit::Moles
+);
 
 /// Extension trait for creating ChemicalAmount quantities from numeric types.
 pub trait ChemicalAmountConversions {

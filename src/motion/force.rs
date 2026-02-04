@@ -1,11 +1,10 @@
 //! Force quantity and units.
 
 use super::acceleration::{Acceleration, AccelerationUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::mass::{Mass, MassUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of force measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -37,11 +36,7 @@ impl ForceUnit {
 const STANDARD_GRAVITY: f64 = 9.80665;
 const POUND_TO_KG: f64 = 0.45359237;
 
-impl fmt::Display for ForceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ForceUnit);
 
 impl UnitOfMeasure for ForceUnit {
     fn symbol(&self) -> &'static str {
@@ -160,91 +155,7 @@ impl Force {
     }
 }
 
-impl fmt::Display for Force {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Force {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Force {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Force {
-    type Unit = ForceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Force {
-    type Output = Force;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Force::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Force {
-    type Output = Force;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Force::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Force {
-    type Output = Force;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Force::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Force> for f64 {
-    type Output = Force;
-
-    fn mul(self, rhs: Force) -> Self::Output {
-        Force::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Force {
-    type Output = Force;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Force::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Force> for Force {
-    type Output = f64;
-
-    fn div(self, rhs: Force) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
+impl_quantity!(Force, ForceUnit);
 
 // Force / Mass = Acceleration
 impl Div<Mass> for Force {
@@ -266,14 +177,6 @@ impl Div<Acceleration> for Force {
     }
 }
 
-impl Neg for Force {
-    type Output = Force;
-
-    fn neg(self) -> Self::Output {
-        Force::new(-self.value, self.unit)
-    }
-}
-
 // Mass * Acceleration = Force
 impl Mul<Acceleration> for Mass {
     type Output = Force;
@@ -292,29 +195,14 @@ impl Mul<Mass> for Acceleration {
     }
 }
 
-/// Dimension for Force.
-pub struct ForceDimension;
-
-impl Dimension for ForceDimension {
-    type Quantity = Force;
-    type Unit = ForceUnit;
-
-    fn name() -> &'static str {
-        "Force"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ForceUnit::Newtons
-    }
-
-    fn si_unit() -> Self::Unit {
-        ForceUnit::Newtons
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ForceUnit::ALL
-    }
-}
+impl_dimension!(
+    ForceDimension,
+    Force,
+    ForceUnit,
+    "Force",
+    ForceUnit::Newtons,
+    ForceUnit::Newtons
+);
 
 /// Extension trait for creating Force quantities from numeric types.
 pub trait ForceConversions {

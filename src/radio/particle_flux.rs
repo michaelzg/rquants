@@ -1,9 +1,7 @@
 //! Particle flux quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 
 /// Units of particle flux measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -18,11 +16,7 @@ impl ParticleFluxUnit {
         &[ParticleFluxUnit::BecquerelsPerSquareMeterSecond];
 }
 
-impl fmt::Display for ParticleFluxUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ParticleFluxUnit);
 
 impl UnitOfMeasure for ParticleFluxUnit {
     fn symbol(&self) -> &'static str {
@@ -80,123 +74,16 @@ impl ParticleFlux {
     }
 }
 
-impl fmt::Display for ParticleFlux {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(ParticleFlux, ParticleFluxUnit);
 
-impl PartialEq for ParticleFlux {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ParticleFlux {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ParticleFlux {
-    type Unit = ParticleFluxUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ParticleFlux {
-    type Output = ParticleFlux;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ParticleFlux::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ParticleFlux {
-    type Output = ParticleFlux;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ParticleFlux::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ParticleFlux {
-    type Output = ParticleFlux;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ParticleFlux::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ParticleFlux> for f64 {
-    type Output = ParticleFlux;
-
-    fn mul(self, rhs: ParticleFlux) -> Self::Output {
-        ParticleFlux::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ParticleFlux {
-    type Output = ParticleFlux;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ParticleFlux::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ParticleFlux> for ParticleFlux {
-    type Output = f64;
-
-    fn div(self, rhs: ParticleFlux) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ParticleFlux {
-    type Output = ParticleFlux;
-
-    fn neg(self) -> Self::Output {
-        ParticleFlux::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for ParticleFlux.
-pub struct ParticleFluxDimension;
-
-impl Dimension for ParticleFluxDimension {
-    type Quantity = ParticleFlux;
-    type Unit = ParticleFluxUnit;
-
-    fn name() -> &'static str {
-        "ParticleFlux"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ParticleFluxUnit::BecquerelsPerSquareMeterSecond
-    }
-
-    fn si_unit() -> Self::Unit {
-        ParticleFluxUnit::BecquerelsPerSquareMeterSecond
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ParticleFluxUnit::ALL
-    }
-}
+impl_dimension!(
+    ParticleFluxDimension,
+    ParticleFlux,
+    ParticleFluxUnit,
+    "ParticleFlux",
+    ParticleFluxUnit::BecquerelsPerSquareMeterSecond,
+    ParticleFluxUnit::BecquerelsPerSquareMeterSecond
+);
 
 /// Extension trait for creating ParticleFlux quantities from numeric types.
 pub trait ParticleFluxConversions {

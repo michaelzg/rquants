@@ -1,10 +1,9 @@
 //! Molar energy quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::mass::ChemicalAmount;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Mul};
 
 /// Units of molar energy measurement (energy per chemical amount).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -23,11 +22,7 @@ impl MolarEnergyUnit {
     ];
 }
 
-impl fmt::Display for MolarEnergyUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(MolarEnergyUnit);
 
 impl UnitOfMeasure for MolarEnergyUnit {
     fn symbol(&self) -> &'static str {
@@ -96,97 +91,7 @@ impl MolarEnergy {
     }
 }
 
-impl fmt::Display for MolarEnergy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for MolarEnergy {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for MolarEnergy {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for MolarEnergy {
-    type Unit = MolarEnergyUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-impl Add for MolarEnergy {
-    type Output = MolarEnergy;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        MolarEnergy::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for MolarEnergy {
-    type Output = MolarEnergy;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        MolarEnergy::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for MolarEnergy {
-    type Output = MolarEnergy;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        MolarEnergy::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<MolarEnergy> for f64 {
-    type Output = MolarEnergy;
-
-    fn mul(self, rhs: MolarEnergy) -> Self::Output {
-        MolarEnergy::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for MolarEnergy {
-    type Output = MolarEnergy;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        MolarEnergy::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<MolarEnergy> for MolarEnergy {
-    type Output = f64;
-
-    fn div(self, rhs: MolarEnergy) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for MolarEnergy {
-    type Output = MolarEnergy;
-
-    fn neg(self) -> Self::Output {
-        MolarEnergy::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(MolarEnergy, MolarEnergyUnit);
 
 // Cross-quantity operations
 use super::energy::{Energy, EnergyUnit};
@@ -211,29 +116,14 @@ impl Mul<MolarEnergy> for ChemicalAmount {
     }
 }
 
-/// Dimension for MolarEnergy.
-pub struct MolarEnergyDimension;
-
-impl Dimension for MolarEnergyDimension {
-    type Quantity = MolarEnergy;
-    type Unit = MolarEnergyUnit;
-
-    fn name() -> &'static str {
-        "MolarEnergy"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MolarEnergyUnit::JoulesPerMole
-    }
-
-    fn si_unit() -> Self::Unit {
-        MolarEnergyUnit::JoulesPerMole
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MolarEnergyUnit::ALL
-    }
-}
+impl_dimension!(
+    MolarEnergyDimension,
+    MolarEnergy,
+    MolarEnergyUnit,
+    "MolarEnergy",
+    MolarEnergyUnit::JoulesPerMole,
+    MolarEnergyUnit::JoulesPerMole
+);
 
 /// Extension trait for creating MolarEnergy quantities from numeric types.
 pub trait MolarEnergyConversions {

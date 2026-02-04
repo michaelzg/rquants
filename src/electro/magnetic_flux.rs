@@ -1,9 +1,8 @@
 //! Magnetic flux quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div};
 
 /// Units of magnetic flux measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl MagneticFluxUnit {
     pub const ALL: &'static [MagneticFluxUnit] = &[MagneticFluxUnit::Webers];
 }
 
-impl fmt::Display for MagneticFluxUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(MagneticFluxUnit);
 
 impl UnitOfMeasure for MagneticFluxUnit {
     fn symbol(&self) -> &'static str {
@@ -90,99 +85,7 @@ impl MagneticFlux {
     }
 }
 
-impl fmt::Display for MagneticFlux {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for MagneticFlux {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for MagneticFlux {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for MagneticFlux {
-    type Unit = MagneticFluxUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for MagneticFlux {
-    type Output = MagneticFlux;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        MagneticFlux::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for MagneticFlux {
-    type Output = MagneticFlux;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        MagneticFlux::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for MagneticFlux {
-    type Output = MagneticFlux;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        MagneticFlux::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<MagneticFlux> for f64 {
-    type Output = MagneticFlux;
-
-    fn mul(self, rhs: MagneticFlux) -> Self::Output {
-        MagneticFlux::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for MagneticFlux {
-    type Output = MagneticFlux;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        MagneticFlux::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<MagneticFlux> for MagneticFlux {
-    type Output = f64;
-
-    fn div(self, rhs: MagneticFlux) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for MagneticFlux {
-    type Output = MagneticFlux;
-
-    fn neg(self) -> Self::Output {
-        MagneticFlux::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(MagneticFlux, MagneticFluxUnit);
 
 // Cross-quantity operations
 use super::electric_current::{ElectricCurrent, ElectricCurrentUnit};
@@ -252,29 +155,14 @@ impl Div<ElectricPotential> for MagneticFlux {
     }
 }
 
-/// Dimension for MagneticFlux.
-pub struct MagneticFluxDimension;
-
-impl Dimension for MagneticFluxDimension {
-    type Quantity = MagneticFlux;
-    type Unit = MagneticFluxUnit;
-
-    fn name() -> &'static str {
-        "MagneticFlux"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MagneticFluxUnit::Webers
-    }
-
-    fn si_unit() -> Self::Unit {
-        MagneticFluxUnit::Webers
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MagneticFluxUnit::ALL
-    }
-}
+impl_dimension!(
+    MagneticFluxDimension,
+    MagneticFlux,
+    MagneticFluxUnit,
+    "MagneticFlux",
+    MagneticFluxUnit::Webers,
+    MagneticFluxUnit::Webers
+);
 
 /// Extension trait for creating MagneticFlux quantities from numeric types.
 pub trait MagneticFluxConversions {

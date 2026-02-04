@@ -1,11 +1,10 @@
 //! Area density quantity and units (mass per area).
 
 use super::mass::{Mass, MassUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::space::area::{Area, AreaUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of area density measurement (mass per area).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -38,11 +37,7 @@ const G_PER_CM2_FACTOR: f64 = 10.0;
 // 1 lb ≈ 0.4536 kg, 1 acre ≈ 4046.86 m², so 1 lb/ac ≈ 0.000112 kg/m²
 const LB_PER_ACRE_FACTOR: f64 = 0.45359237 / 4046.8564224;
 
-impl fmt::Display for AreaDensityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(AreaDensityUnit);
 
 impl UnitOfMeasure for AreaDensityUnit {
     fn symbol(&self) -> &'static str {
@@ -149,75 +144,7 @@ impl AreaDensity {
     }
 }
 
-impl fmt::Display for AreaDensity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for AreaDensity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for AreaDensity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for AreaDensity {
-    type Unit = AreaDensityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for AreaDensity {
-    type Output = AreaDensity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        AreaDensity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for AreaDensity {
-    type Output = AreaDensity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        AreaDensity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for AreaDensity {
-    type Output = AreaDensity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        AreaDensity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<AreaDensity> for f64 {
-    type Output = AreaDensity;
-
-    fn mul(self, rhs: AreaDensity) -> Self::Output {
-        AreaDensity::new(self * rhs.value, rhs.unit)
-    }
-}
+impl_quantity!(AreaDensity, AreaDensityUnit);
 
 // AreaDensity * Area = Mass
 impl Mul<Area> for AreaDensity {
@@ -226,30 +153,6 @@ impl Mul<Area> for AreaDensity {
     fn mul(self, rhs: Area) -> Self::Output {
         let mass_kg = self.to_kilograms_per_square_meter() * rhs.to_square_meters();
         Mass::new(mass_kg, MassUnit::Kilograms)
-    }
-}
-
-impl Div<f64> for AreaDensity {
-    type Output = AreaDensity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        AreaDensity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<AreaDensity> for AreaDensity {
-    type Output = f64;
-
-    fn div(self, rhs: AreaDensity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for AreaDensity {
-    type Output = AreaDensity;
-
-    fn neg(self) -> Self::Output {
-        AreaDensity::new(-self.value, self.unit)
     }
 }
 
@@ -272,29 +175,14 @@ impl Div<AreaDensity> for Mass {
     }
 }
 
-/// Dimension for AreaDensity.
-pub struct AreaDensityDimension;
-
-impl Dimension for AreaDensityDimension {
-    type Quantity = AreaDensity;
-    type Unit = AreaDensityUnit;
-
-    fn name() -> &'static str {
-        "AreaDensity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        AreaDensityUnit::KilogramsPerSquareMeter
-    }
-
-    fn si_unit() -> Self::Unit {
-        AreaDensityUnit::KilogramsPerSquareMeter
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        AreaDensityUnit::ALL
-    }
-}
+impl_dimension!(
+    AreaDensityDimension,
+    AreaDensity,
+    AreaDensityUnit,
+    "AreaDensity",
+    AreaDensityUnit::KilogramsPerSquareMeter,
+    AreaDensityUnit::KilogramsPerSquareMeter
+);
 
 /// Extension trait for creating AreaDensity quantities from numeric types.
 pub trait AreaDensityConversions {

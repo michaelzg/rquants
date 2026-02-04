@@ -12,6 +12,7 @@
 pub mod dimension;
 pub mod dimensionless;
 pub mod error;
+pub(crate) mod macros;
 pub mod quantity;
 pub mod quantity_range;
 pub mod ratio;

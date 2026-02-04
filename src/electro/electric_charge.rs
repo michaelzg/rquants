@@ -1,9 +1,8 @@
 //! Electric charge quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div, Mul};
 
 /// Units of electric charge measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -25,11 +24,7 @@ impl ElectricChargeUnit {
     ];
 }
 
-impl fmt::Display for ElectricChargeUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ElectricChargeUnit);
 
 impl UnitOfMeasure for ElectricChargeUnit {
     fn symbol(&self) -> &'static str {
@@ -124,99 +119,7 @@ impl ElectricCharge {
     }
 }
 
-impl fmt::Display for ElectricCharge {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricCharge {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ElectricCharge {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ElectricCharge {
-    type Unit = ElectricChargeUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricCharge {
-    type Output = ElectricCharge;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricCharge::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricCharge {
-    type Output = ElectricCharge;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricCharge::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricCharge {
-    type Output = ElectricCharge;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricCharge::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricCharge> for f64 {
-    type Output = ElectricCharge;
-
-    fn mul(self, rhs: ElectricCharge) -> Self::Output {
-        ElectricCharge::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricCharge {
-    type Output = ElectricCharge;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricCharge::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricCharge> for ElectricCharge {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricCharge) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricCharge {
-    type Output = ElectricCharge;
-
-    fn neg(self) -> Self::Output {
-        ElectricCharge::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(ElectricCharge, ElectricChargeUnit);
 
 // Cross-quantity operations
 use super::capacitance::{Capacitance, CapacitanceUnit};
@@ -275,29 +178,14 @@ impl Mul<ElectricPotential> for ElectricCharge {
     }
 }
 
-/// Dimension for ElectricCharge.
-pub struct ElectricChargeDimension;
-
-impl Dimension for ElectricChargeDimension {
-    type Quantity = ElectricCharge;
-    type Unit = ElectricChargeUnit;
-
-    fn name() -> &'static str {
-        "ElectricCharge"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricChargeUnit::Coulombs
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricChargeUnit::Coulombs
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricChargeUnit::ALL
-    }
-}
+impl_dimension!(
+    ElectricChargeDimension,
+    ElectricCharge,
+    ElectricChargeUnit,
+    "ElectricCharge",
+    ElectricChargeUnit::Coulombs,
+    ElectricChargeUnit::Coulombs
+);
 
 /// Extension trait for creating ElectricCharge quantities from numeric types.
 pub trait ElectricChargeConversions {

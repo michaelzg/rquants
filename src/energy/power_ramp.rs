@@ -1,10 +1,9 @@
 //! Power ramp quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::time::Time;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Mul};
 
 /// Units of power ramp (rate of power change) measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -35,11 +34,7 @@ impl PowerRampUnit {
     ];
 }
 
-impl fmt::Display for PowerRampUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(PowerRampUnit);
 
 impl UnitOfMeasure for PowerRampUnit {
     fn symbol(&self) -> &'static str {
@@ -161,99 +156,7 @@ impl PowerRamp {
     }
 }
 
-impl fmt::Display for PowerRamp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for PowerRamp {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for PowerRamp {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for PowerRamp {
-    type Unit = PowerRampUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for PowerRamp {
-    type Output = PowerRamp;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        PowerRamp::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for PowerRamp {
-    type Output = PowerRamp;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        PowerRamp::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for PowerRamp {
-    type Output = PowerRamp;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        PowerRamp::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<PowerRamp> for f64 {
-    type Output = PowerRamp;
-
-    fn mul(self, rhs: PowerRamp) -> Self::Output {
-        PowerRamp::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for PowerRamp {
-    type Output = PowerRamp;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        PowerRamp::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<PowerRamp> for PowerRamp {
-    type Output = f64;
-
-    fn div(self, rhs: PowerRamp) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for PowerRamp {
-    type Output = PowerRamp;
-
-    fn neg(self) -> Self::Output {
-        PowerRamp::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(PowerRamp, PowerRampUnit);
 
 // Cross-quantity operations
 use super::power::{Power, PowerUnit};
@@ -281,29 +184,14 @@ impl Mul<PowerRamp> for Time {
 // PowerRamp / Power = 1/Time (returns frequency-like, but we return Time for simplicity)
 // Note: This is Power / PowerRamp = Time, implemented in power.rs
 
-/// Dimension for PowerRamp.
-pub struct PowerRampDimension;
-
-impl Dimension for PowerRampDimension {
-    type Quantity = PowerRamp;
-    type Unit = PowerRampUnit;
-
-    fn name() -> &'static str {
-        "PowerRamp"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        PowerRampUnit::WattsPerHour
-    }
-
-    fn si_unit() -> Self::Unit {
-        PowerRampUnit::WattsPerHour
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        PowerRampUnit::ALL
-    }
-}
+impl_dimension!(
+    PowerRampDimension,
+    PowerRamp,
+    PowerRampUnit,
+    "PowerRamp",
+    PowerRampUnit::WattsPerHour,
+    PowerRampUnit::WattsPerHour
+);
 
 /// Extension trait for creating PowerRamp quantities from numeric types.
 pub trait PowerRampConversions {

@@ -1,10 +1,8 @@
 //! Time quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::systems::metric::{MICRO, MILLI, NANO};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Time conversion constants.
 pub mod constants {
@@ -60,11 +58,7 @@ impl TimeUnit {
     ];
 }
 
-impl fmt::Display for TimeUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(TimeUnit);
 
 impl UnitOfMeasure for TimeUnit {
     fn symbol(&self) -> &'static str {
@@ -209,123 +203,16 @@ impl Time {
     }
 }
 
-impl fmt::Display for Time {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Time, TimeUnit);
 
-impl PartialEq for Time {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Time {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Time {
-    type Unit = TimeUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Time {
-    type Output = Time;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Time::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Time {
-    type Output = Time;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Time::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Time {
-    type Output = Time;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Time::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Time> for f64 {
-    type Output = Time;
-
-    fn mul(self, rhs: Time) -> Self::Output {
-        Time::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Time {
-    type Output = Time;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Time::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Time> for Time {
-    type Output = f64;
-
-    fn div(self, rhs: Time) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Time {
-    type Output = Time;
-
-    fn neg(self) -> Self::Output {
-        Time::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Time.
-pub struct TimeDimension;
-
-impl Dimension for TimeDimension {
-    type Quantity = Time;
-    type Unit = TimeUnit;
-
-    fn name() -> &'static str {
-        "Time"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        TimeUnit::Seconds
-    }
-
-    fn si_unit() -> Self::Unit {
-        TimeUnit::Seconds
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        TimeUnit::ALL
-    }
-}
+impl_dimension!(
+    TimeDimension,
+    Time,
+    TimeUnit,
+    "Time",
+    TimeUnit::Seconds,
+    TimeUnit::Seconds
+);
 
 /// Extension trait for creating Time quantities from numeric types.
 pub trait TimeConversions {
@@ -368,8 +255,6 @@ impl TimeConversions for f64 {
         Time::days(self)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

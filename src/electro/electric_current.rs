@@ -1,9 +1,8 @@
 //! Electric current quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of electric current measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -20,11 +19,7 @@ impl ElectricCurrentUnit {
         &[ElectricCurrentUnit::Amperes, ElectricCurrentUnit::Milliamperes];
 }
 
-impl fmt::Display for ElectricCurrentUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ElectricCurrentUnit);
 
 impl UnitOfMeasure for ElectricCurrentUnit {
     fn symbol(&self) -> &'static str {
@@ -107,99 +102,7 @@ impl ElectricCurrent {
     }
 }
 
-impl fmt::Display for ElectricCurrent {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricCurrent {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ElectricCurrent {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ElectricCurrent {
-    type Unit = ElectricCurrentUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricCurrent::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricCurrent::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricCurrent::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricCurrent> for f64 {
-    type Output = ElectricCurrent;
-
-    fn mul(self, rhs: ElectricCurrent) -> Self::Output {
-        ElectricCurrent::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricCurrent::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricCurrent> for ElectricCurrent {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricCurrent) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn neg(self) -> Self::Output {
-        ElectricCurrent::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(ElectricCurrent, ElectricCurrentUnit);
 
 // Cross-quantity operations
 use super::electric_charge::{ElectricCharge, ElectricChargeUnit};
@@ -268,29 +171,14 @@ impl Mul<ElectricCurrent> for ElectricPotential {
     }
 }
 
-/// Dimension for ElectricCurrent.
-pub struct ElectricCurrentDimension;
-
-impl Dimension for ElectricCurrentDimension {
-    type Quantity = ElectricCurrent;
-    type Unit = ElectricCurrentUnit;
-
-    fn name() -> &'static str {
-        "ElectricCurrent"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricCurrentUnit::Amperes
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricCurrentUnit::Amperes
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricCurrentUnit::ALL
-    }
-}
+impl_dimension!(
+    ElectricCurrentDimension,
+    ElectricCurrent,
+    ElectricCurrentUnit,
+    "ElectricCurrent",
+    ElectricCurrentUnit::Amperes,
+    ElectricCurrentUnit::Amperes
+);
 
 /// Extension trait for creating ElectricCurrent quantities from numeric types.
 pub trait ElectricCurrentConversions {

@@ -1,9 +1,7 @@
 //! Activity quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 
 /// Units of radioactivity measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -22,11 +20,7 @@ impl ActivityUnit {
 // Conversion factor
 const CURIE_TO_BECQUEREL: f64 = 3.7e10;
 
-impl fmt::Display for ActivityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ActivityUnit);
 
 impl UnitOfMeasure for ActivityUnit {
     fn symbol(&self) -> &'static str {
@@ -97,123 +91,16 @@ impl Activity {
     }
 }
 
-impl fmt::Display for Activity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Activity, ActivityUnit);
 
-impl PartialEq for Activity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Activity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Activity {
-    type Unit = ActivityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Activity {
-    type Output = Activity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Activity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Activity {
-    type Output = Activity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Activity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Activity {
-    type Output = Activity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Activity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Activity> for f64 {
-    type Output = Activity;
-
-    fn mul(self, rhs: Activity) -> Self::Output {
-        Activity::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Activity {
-    type Output = Activity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Activity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Activity> for Activity {
-    type Output = f64;
-
-    fn div(self, rhs: Activity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Activity {
-    type Output = Activity;
-
-    fn neg(self) -> Self::Output {
-        Activity::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Activity.
-pub struct ActivityDimension;
-
-impl Dimension for ActivityDimension {
-    type Quantity = Activity;
-    type Unit = ActivityUnit;
-
-    fn name() -> &'static str {
-        "Activity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ActivityUnit::Becquerels
-    }
-
-    fn si_unit() -> Self::Unit {
-        ActivityUnit::Becquerels
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ActivityUnit::ALL
-    }
-}
+impl_dimension!(
+    ActivityDimension,
+    Activity,
+    ActivityUnit,
+    "Activity",
+    ActivityUnit::Becquerels,
+    ActivityUnit::Becquerels
+);
 
 /// Extension trait for creating Activity quantities from numeric types.
 pub trait ActivityConversions {

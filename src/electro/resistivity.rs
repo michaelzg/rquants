@@ -1,9 +1,8 @@
 //! Resistivity quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div};
 
 /// Units of resistivity measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl ResistivityUnit {
     pub const ALL: &'static [ResistivityUnit] = &[ResistivityUnit::OhmMeters];
 }
 
-impl fmt::Display for ResistivityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ResistivityUnit);
 
 impl UnitOfMeasure for ResistivityUnit {
     fn symbol(&self) -> &'static str {
@@ -89,99 +84,7 @@ impl Resistivity {
     }
 }
 
-impl fmt::Display for Resistivity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Resistivity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Resistivity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Resistivity {
-    type Unit = ResistivityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Resistivity {
-    type Output = Resistivity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Resistivity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Resistivity {
-    type Output = Resistivity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Resistivity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Resistivity {
-    type Output = Resistivity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Resistivity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Resistivity> for f64 {
-    type Output = Resistivity;
-
-    fn mul(self, rhs: Resistivity) -> Self::Output {
-        Resistivity::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Resistivity {
-    type Output = Resistivity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Resistivity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Resistivity> for Resistivity {
-    type Output = f64;
-
-    fn div(self, rhs: Resistivity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Resistivity {
-    type Output = Resistivity;
-
-    fn neg(self) -> Self::Output {
-        Resistivity::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Resistivity, ResistivityUnit);
 
 // Cross-quantity operations
 use super::electrical_resistance::{ElectricalResistance, ElectricalResistanceUnit};
@@ -197,29 +100,14 @@ impl Div<Length> for Resistivity {
     }
 }
 
-/// Dimension for Resistivity.
-pub struct ResistivityDimension;
-
-impl Dimension for ResistivityDimension {
-    type Quantity = Resistivity;
-    type Unit = ResistivityUnit;
-
-    fn name() -> &'static str {
-        "Resistivity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ResistivityUnit::OhmMeters
-    }
-
-    fn si_unit() -> Self::Unit {
-        ResistivityUnit::OhmMeters
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ResistivityUnit::ALL
-    }
-}
+impl_dimension!(
+    ResistivityDimension,
+    Resistivity,
+    ResistivityUnit,
+    "Resistivity",
+    ResistivityUnit::OhmMeters,
+    ResistivityUnit::OhmMeters
+);
 
 /// Extension trait for creating Resistivity quantities from numeric types.
 pub trait ResistivityConversions {

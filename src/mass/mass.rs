@@ -1,10 +1,8 @@
 //! Mass quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::systems::metric::{KILO, MEGA, MICRO, MILLI, NANO};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Units of mass measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -88,11 +86,7 @@ const OUNCE_TO_GRAM: f64 = POUND_TO_GRAM / 16.0; // ~28.35 g
 const TROY_GRAIN_TO_GRAM: f64 = 0.06479891; // ~64.8 mg
 const DALTON_TO_GRAM: f64 = 1.66053906660e-24; // atomic mass unit
 
-impl fmt::Display for MassUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(MassUnit);
 
 impl UnitOfMeasure for MassUnit {
     fn symbol(&self) -> &'static str {
@@ -383,123 +377,16 @@ impl Mass {
     }
 }
 
-impl fmt::Display for Mass {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Mass, MassUnit);
 
-impl PartialEq for Mass {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Mass {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Mass {
-    type Unit = MassUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Mass {
-    type Output = Mass;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Mass::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Mass {
-    type Output = Mass;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Mass::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Mass {
-    type Output = Mass;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Mass::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Mass> for f64 {
-    type Output = Mass;
-
-    fn mul(self, rhs: Mass) -> Self::Output {
-        Mass::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Mass {
-    type Output = Mass;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Mass::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Mass> for Mass {
-    type Output = f64;
-
-    fn div(self, rhs: Mass) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Mass {
-    type Output = Mass;
-
-    fn neg(self) -> Self::Output {
-        Mass::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Mass.
-pub struct MassDimension;
-
-impl Dimension for MassDimension {
-    type Quantity = Mass;
-    type Unit = MassUnit;
-
-    fn name() -> &'static str {
-        "Mass"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MassUnit::Grams
-    }
-
-    fn si_unit() -> Self::Unit {
-        MassUnit::Kilograms
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MassUnit::ALL
-    }
-}
+impl_dimension!(
+    MassDimension,
+    Mass,
+    MassUnit,
+    "Mass",
+    MassUnit::Grams,
+    MassUnit::Kilograms
+);
 
 /// Extension trait for creating Mass quantities from numeric types.
 pub trait MassConversions {

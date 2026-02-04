@@ -1,9 +1,8 @@
 //! DataRate quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div, Mul};
 
 /// Units of data rate measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -43,11 +42,7 @@ impl DataRateUnit {
 // Conversion factors relative to BytesPerSecond
 const BITS_PER_BYTE: f64 = 8.0;
 
-impl fmt::Display for DataRateUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(DataRateUnit);
 
 impl UnitOfMeasure for DataRateUnit {
     fn symbol(&self) -> &'static str {
@@ -199,99 +194,7 @@ impl DataRate {
     }
 }
 
-impl fmt::Display for DataRate {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for DataRate {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for DataRate {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for DataRate {
-    type Unit = DataRateUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for DataRate {
-    type Output = DataRate;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        DataRate::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for DataRate {
-    type Output = DataRate;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        DataRate::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for DataRate {
-    type Output = DataRate;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        DataRate::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<DataRate> for f64 {
-    type Output = DataRate;
-
-    fn mul(self, rhs: DataRate) -> Self::Output {
-        DataRate::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for DataRate {
-    type Output = DataRate;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        DataRate::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<DataRate> for DataRate {
-    type Output = f64;
-
-    fn div(self, rhs: DataRate) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for DataRate {
-    type Output = DataRate;
-
-    fn neg(self) -> Self::Output {
-        DataRate::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(DataRate, DataRateUnit);
 
 // Cross-quantity operations
 use super::information::{Information, InformationUnit};
@@ -327,29 +230,14 @@ impl Div<DataRate> for Information {
     }
 }
 
-/// Dimension for DataRate.
-pub struct DataRateDimension;
-
-impl Dimension for DataRateDimension {
-    type Quantity = DataRate;
-    type Unit = DataRateUnit;
-
-    fn name() -> &'static str {
-        "DataRate"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        DataRateUnit::BytesPerSecond
-    }
-
-    fn si_unit() -> Self::Unit {
-        DataRateUnit::BytesPerSecond
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        DataRateUnit::ALL
-    }
-}
+impl_dimension!(
+    DataRateDimension,
+    DataRate,
+    DataRateUnit,
+    "DataRate",
+    DataRateUnit::BytesPerSecond,
+    DataRateUnit::BytesPerSecond
+);
 
 /// Extension trait for creating DataRate quantities from numeric types.
 pub trait DataRateConversions {

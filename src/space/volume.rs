@@ -1,10 +1,8 @@
 //! Volume quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::systems::metric::{CENTI, DECI, KILO, MILLI};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Units of volume measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -76,11 +74,7 @@ const US_PINT_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 8.0;
 const US_CUP_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 16.0;
 const US_FL_OZ_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 128.0;
 
-impl fmt::Display for VolumeUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(VolumeUnit);
 
 impl UnitOfMeasure for VolumeUnit {
     fn symbol(&self) -> &'static str {
@@ -304,123 +298,16 @@ impl Volume {
     }
 }
 
-impl fmt::Display for Volume {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Volume, VolumeUnit);
 
-impl PartialEq for Volume {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Volume {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Volume {
-    type Unit = VolumeUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Volume {
-    type Output = Volume;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Volume::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Volume {
-    type Output = Volume;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Volume::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Volume {
-    type Output = Volume;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Volume::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Volume> for f64 {
-    type Output = Volume;
-
-    fn mul(self, rhs: Volume) -> Self::Output {
-        Volume::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Volume {
-    type Output = Volume;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Volume::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Volume> for Volume {
-    type Output = f64;
-
-    fn div(self, rhs: Volume) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Volume {
-    type Output = Volume;
-
-    fn neg(self) -> Self::Output {
-        Volume::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Volume.
-pub struct VolumeDimension;
-
-impl Dimension for VolumeDimension {
-    type Quantity = Volume;
-    type Unit = VolumeUnit;
-
-    fn name() -> &'static str {
-        "Volume"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        VolumeUnit::CubicMeters
-    }
-
-    fn si_unit() -> Self::Unit {
-        VolumeUnit::CubicMeters
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        VolumeUnit::ALL
-    }
-}
+impl_dimension!(
+    VolumeDimension,
+    Volume,
+    VolumeUnit,
+    "Volume",
+    VolumeUnit::CubicMeters,
+    VolumeUnit::CubicMeters
+);
 
 /// Extension trait for creating Volume quantities from numeric types.
 pub trait VolumeConversions {

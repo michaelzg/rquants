@@ -1,9 +1,8 @@
 //! Luminous exposure quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div};
 
 /// Units of luminous exposure measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl LuminousExposureUnit {
     pub const ALL: &'static [LuminousExposureUnit] = &[LuminousExposureUnit::LuxSeconds];
 }
 
-impl fmt::Display for LuminousExposureUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(LuminousExposureUnit);
 
 impl UnitOfMeasure for LuminousExposureUnit {
     fn symbol(&self) -> &'static str {
@@ -82,99 +77,7 @@ impl LuminousExposure {
     }
 }
 
-impl fmt::Display for LuminousExposure {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for LuminousExposure {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for LuminousExposure {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for LuminousExposure {
-    type Unit = LuminousExposureUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for LuminousExposure {
-    type Output = LuminousExposure;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        LuminousExposure::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for LuminousExposure {
-    type Output = LuminousExposure;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        LuminousExposure::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for LuminousExposure {
-    type Output = LuminousExposure;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        LuminousExposure::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<LuminousExposure> for f64 {
-    type Output = LuminousExposure;
-
-    fn mul(self, rhs: LuminousExposure) -> Self::Output {
-        LuminousExposure::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for LuminousExposure {
-    type Output = LuminousExposure;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        LuminousExposure::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<LuminousExposure> for LuminousExposure {
-    type Output = f64;
-
-    fn div(self, rhs: LuminousExposure) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for LuminousExposure {
-    type Output = LuminousExposure;
-
-    fn neg(self) -> Self::Output {
-        LuminousExposure::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(LuminousExposure, LuminousExposureUnit);
 
 // Cross-quantity operations
 use super::illuminance::{Illuminance, IlluminanceUnit};
@@ -200,29 +103,14 @@ impl Div<Illuminance> for LuminousExposure {
     }
 }
 
-/// Dimension for LuminousExposure.
-pub struct LuminousExposureDimension;
-
-impl Dimension for LuminousExposureDimension {
-    type Quantity = LuminousExposure;
-    type Unit = LuminousExposureUnit;
-
-    fn name() -> &'static str {
-        "LuminousExposure"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        LuminousExposureUnit::LuxSeconds
-    }
-
-    fn si_unit() -> Self::Unit {
-        LuminousExposureUnit::LuxSeconds
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        LuminousExposureUnit::ALL
-    }
-}
+impl_dimension!(
+    LuminousExposureDimension,
+    LuminousExposure,
+    LuminousExposureUnit,
+    "LuminousExposure",
+    LuminousExposureUnit::LuxSeconds,
+    LuminousExposureUnit::LuxSeconds
+);
 
 /// Extension trait for creating LuminousExposure quantities from numeric types.
 pub trait LuminousExposureConversions {

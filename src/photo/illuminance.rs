@@ -1,9 +1,8 @@
 //! Illuminance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of illuminance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl IlluminanceUnit {
     pub const ALL: &'static [IlluminanceUnit] = &[IlluminanceUnit::Lux];
 }
 
-impl fmt::Display for IlluminanceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(IlluminanceUnit);
 
 impl UnitOfMeasure for IlluminanceUnit {
     fn symbol(&self) -> &'static str {
@@ -82,99 +77,7 @@ impl Illuminance {
     }
 }
 
-impl fmt::Display for Illuminance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Illuminance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Illuminance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Illuminance {
-    type Unit = IlluminanceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Illuminance {
-    type Output = Illuminance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Illuminance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Illuminance {
-    type Output = Illuminance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Illuminance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Illuminance {
-    type Output = Illuminance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Illuminance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Illuminance> for f64 {
-    type Output = Illuminance;
-
-    fn mul(self, rhs: Illuminance) -> Self::Output {
-        Illuminance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Illuminance {
-    type Output = Illuminance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Illuminance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Illuminance> for Illuminance {
-    type Output = f64;
-
-    fn div(self, rhs: Illuminance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Illuminance {
-    type Output = Illuminance;
-
-    fn neg(self) -> Self::Output {
-        Illuminance::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Illuminance, IlluminanceUnit);
 
 // Cross-quantity operations
 use super::luminous_exposure::{LuminousExposure, LuminousExposureUnit};
@@ -222,29 +125,14 @@ impl Mul<Illuminance> for Time {
     }
 }
 
-/// Dimension for Illuminance.
-pub struct IlluminanceDimension;
-
-impl Dimension for IlluminanceDimension {
-    type Quantity = Illuminance;
-    type Unit = IlluminanceUnit;
-
-    fn name() -> &'static str {
-        "Illuminance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        IlluminanceUnit::Lux
-    }
-
-    fn si_unit() -> Self::Unit {
-        IlluminanceUnit::Lux
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        IlluminanceUnit::ALL
-    }
-}
+impl_dimension!(
+    IlluminanceDimension,
+    Illuminance,
+    IlluminanceUnit,
+    "Illuminance",
+    IlluminanceUnit::Lux,
+    IlluminanceUnit::Lux
+);
 
 /// Extension trait for creating Illuminance quantities from numeric types.
 pub trait IlluminanceConversions {

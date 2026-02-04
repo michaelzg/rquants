@@ -1,9 +1,8 @@
 //! Energy density quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of energy density measurement (energy per unit volume).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl EnergyDensityUnit {
     pub const ALL: &'static [EnergyDensityUnit] = &[EnergyDensityUnit::JoulesPerCubicMeter];
 }
 
-impl fmt::Display for EnergyDensityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(EnergyDensityUnit);
 
 impl UnitOfMeasure for EnergyDensityUnit {
     fn symbol(&self) -> &'static str {
@@ -78,97 +73,7 @@ impl EnergyDensity {
     }
 }
 
-impl fmt::Display for EnergyDensity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for EnergyDensity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for EnergyDensity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for EnergyDensity {
-    type Unit = EnergyDensityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-impl Add for EnergyDensity {
-    type Output = EnergyDensity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        EnergyDensity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for EnergyDensity {
-    type Output = EnergyDensity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        EnergyDensity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for EnergyDensity {
-    type Output = EnergyDensity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        EnergyDensity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<EnergyDensity> for f64 {
-    type Output = EnergyDensity;
-
-    fn mul(self, rhs: EnergyDensity) -> Self::Output {
-        EnergyDensity::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for EnergyDensity {
-    type Output = EnergyDensity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        EnergyDensity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<EnergyDensity> for EnergyDensity {
-    type Output = f64;
-
-    fn div(self, rhs: EnergyDensity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for EnergyDensity {
-    type Output = EnergyDensity;
-
-    fn neg(self) -> Self::Output {
-        EnergyDensity::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(EnergyDensity, EnergyDensityUnit);
 
 // Cross-quantity operations
 use super::energy::{Energy, EnergyUnit};
@@ -194,29 +99,14 @@ impl Mul<EnergyDensity> for Volume {
     }
 }
 
-/// Dimension for EnergyDensity.
-pub struct EnergyDensityDimension;
-
-impl Dimension for EnergyDensityDimension {
-    type Quantity = EnergyDensity;
-    type Unit = EnergyDensityUnit;
-
-    fn name() -> &'static str {
-        "EnergyDensity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        EnergyDensityUnit::JoulesPerCubicMeter
-    }
-
-    fn si_unit() -> Self::Unit {
-        EnergyDensityUnit::JoulesPerCubicMeter
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        EnergyDensityUnit::ALL
-    }
-}
+impl_dimension!(
+    EnergyDensityDimension,
+    EnergyDensity,
+    EnergyDensityUnit,
+    "EnergyDensity",
+    EnergyDensityUnit::JoulesPerCubicMeter,
+    EnergyDensityUnit::JoulesPerCubicMeter
+);
 
 /// Extension trait for creating EnergyDensity quantities from numeric types.
 pub trait EnergyDensityConversions {

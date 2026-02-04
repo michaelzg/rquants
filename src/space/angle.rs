@@ -1,10 +1,8 @@
 //! Angle quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use std::f64::consts::PI;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Units of angle measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -35,11 +33,7 @@ impl AngleUnit {
     ];
 }
 
-impl fmt::Display for AngleUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(AngleUnit);
 
 impl UnitOfMeasure for AngleUnit {
     fn symbol(&self) -> &'static str {
@@ -195,123 +189,16 @@ impl Angle {
     }
 }
 
-impl fmt::Display for Angle {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Angle, AngleUnit);
 
-impl PartialEq for Angle {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Angle {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Angle {
-    type Unit = AngleUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Angle {
-    type Output = Angle;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Angle::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Angle {
-    type Output = Angle;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Angle::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Angle {
-    type Output = Angle;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Angle::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Angle> for f64 {
-    type Output = Angle;
-
-    fn mul(self, rhs: Angle) -> Self::Output {
-        Angle::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Angle {
-    type Output = Angle;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Angle::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Angle> for Angle {
-    type Output = f64;
-
-    fn div(self, rhs: Angle) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Angle {
-    type Output = Angle;
-
-    fn neg(self) -> Self::Output {
-        Angle::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Angle.
-pub struct AngleDimension;
-
-impl Dimension for AngleDimension {
-    type Quantity = Angle;
-    type Unit = AngleUnit;
-
-    fn name() -> &'static str {
-        "Angle"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        AngleUnit::Radians
-    }
-
-    fn si_unit() -> Self::Unit {
-        AngleUnit::Radians
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        AngleUnit::ALL
-    }
-}
+impl_dimension!(
+    AngleDimension,
+    Angle,
+    AngleUnit,
+    "Angle",
+    AngleUnit::Radians,
+    AngleUnit::Radians
+);
 
 /// Extension trait for creating Angle quantities from numeric types.
 pub trait AngleConversions {
@@ -349,8 +236,6 @@ impl AngleConversions for f64 {
         Angle::arc_seconds(self)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

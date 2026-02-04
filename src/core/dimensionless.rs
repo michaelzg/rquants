@@ -3,10 +3,9 @@
 //! Represents quantities with no physical dimension, such as counts,
 //! percentages, and ratios between like quantities.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Add, Mul, Sub};
 
 /// Units of dimensionless measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -34,11 +33,7 @@ impl DimensionlessUnit {
     ];
 }
 
-impl fmt::Display for DimensionlessUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(DimensionlessUnit);
 
 impl UnitOfMeasure for DimensionlessUnit {
     fn symbol(&self) -> &'static str {
@@ -163,50 +158,9 @@ impl Dimensionless {
     }
 }
 
-impl fmt::Display for Dimensionless {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(Dimensionless, DimensionlessUnit);
 
-impl PartialEq for Dimensionless {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Dimensionless {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Dimensionless {
-    type Unit = DimensionlessUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Dimensionless {
-    type Output = Dimensionless;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Dimensionless::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
+// Extra arithmetic operations specific to Dimensionless
 
 impl Add<f64> for Dimensionless {
     type Output = Dimensionless;
@@ -216,36 +170,11 @@ impl Add<f64> for Dimensionless {
     }
 }
 
-impl Sub for Dimensionless {
-    type Output = Dimensionless;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Dimensionless::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
 impl Sub<f64> for Dimensionless {
     type Output = Dimensionless;
 
     fn sub(self, rhs: f64) -> Self::Output {
         self - Dimensionless::each(rhs)
-    }
-}
-
-impl Mul<f64> for Dimensionless {
-    type Output = Dimensionless;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Dimensionless::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Dimensionless> for f64 {
-    type Output = Dimensionless;
-
-    fn mul(self, rhs: Dimensionless) -> Self::Output {
-        Dimensionless::new(self * rhs.value, rhs.unit)
     }
 }
 
@@ -258,30 +187,6 @@ impl Mul<Dimensionless> for Dimensionless {
     }
 }
 
-impl Div<f64> for Dimensionless {
-    type Output = Dimensionless;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Dimensionless::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Dimensionless> for Dimensionless {
-    type Output = f64;
-
-    fn div(self, rhs: Dimensionless) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Dimensionless {
-    type Output = Dimensionless;
-
-    fn neg(self) -> Self::Output {
-        Dimensionless::new(-self.value, self.unit)
-    }
-}
-
 /// Implicit conversion from Dimensionless to f64.
 impl From<Dimensionless> for f64 {
     fn from(d: Dimensionless) -> Self {
@@ -289,29 +194,14 @@ impl From<Dimensionless> for f64 {
     }
 }
 
-/// Dimension for Dimensionless.
-pub struct DimensionlessDimension;
-
-impl Dimension for DimensionlessDimension {
-    type Quantity = Dimensionless;
-    type Unit = DimensionlessUnit;
-
-    fn name() -> &'static str {
-        "Dimensionless"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        DimensionlessUnit::Each
-    }
-
-    fn si_unit() -> Self::Unit {
-        DimensionlessUnit::Each
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        DimensionlessUnit::ALL
-    }
-}
+impl_dimension!(
+    DimensionlessDimension,
+    Dimensionless,
+    DimensionlessUnit,
+    "Dimensionless",
+    DimensionlessUnit::Each,
+    DimensionlessUnit::Each
+);
 
 /// Extension trait for creating Dimensionless quantities from numeric types.
 pub trait DimensionlessConversions {
@@ -344,8 +234,6 @@ impl DimensionlessConversions for f64 {
         Dimensionless::gross(self)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

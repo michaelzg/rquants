@@ -1,11 +1,10 @@
 //! Velocity quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::space::length::Length;
 use crate::time::Time;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of velocity measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -47,11 +46,7 @@ const FT_PER_M: f64 = 0.3048;
 const MILE_PER_M: f64 = 1609.344;
 const NAUTICAL_MILE_PER_M: f64 = 1852.0;
 
-impl fmt::Display for VelocityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(VelocityUnit);
 
 impl UnitOfMeasure for VelocityUnit {
     fn symbol(&self) -> &'static str {
@@ -196,75 +191,7 @@ impl Velocity {
     }
 }
 
-impl fmt::Display for Velocity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Velocity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Velocity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Velocity {
-    type Unit = VelocityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Velocity {
-    type Output = Velocity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Velocity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Velocity {
-    type Output = Velocity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Velocity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Velocity {
-    type Output = Velocity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Velocity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Velocity> for f64 {
-    type Output = Velocity;
-
-    fn mul(self, rhs: Velocity) -> Self::Output {
-        Velocity::new(self * rhs.value, rhs.unit)
-    }
-}
+impl_quantity!(Velocity, VelocityUnit);
 
 // Velocity * Time = Length
 impl Mul<Time> for Velocity {
@@ -276,31 +203,7 @@ impl Mul<Time> for Velocity {
     }
 }
 
-impl Div<f64> for Velocity {
-    type Output = Velocity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Velocity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Velocity> for Velocity {
-    type Output = f64;
-
-    fn div(self, rhs: Velocity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
 // Velocity / Time = Acceleration (defined in acceleration.rs)
-
-impl Neg for Velocity {
-    type Output = Velocity;
-
-    fn neg(self) -> Self::Output {
-        Velocity::new(-self.value, self.unit)
-    }
-}
 
 // Length / Time = Velocity
 impl Div<Time> for Length {
@@ -311,29 +214,14 @@ impl Div<Time> for Length {
     }
 }
 
-/// Dimension for Velocity.
-pub struct VelocityDimension;
-
-impl Dimension for VelocityDimension {
-    type Quantity = Velocity;
-    type Unit = VelocityUnit;
-
-    fn name() -> &'static str {
-        "Velocity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        VelocityUnit::MetersPerSecond
-    }
-
-    fn si_unit() -> Self::Unit {
-        VelocityUnit::MetersPerSecond
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        VelocityUnit::ALL
-    }
-}
+impl_dimension!(
+    VelocityDimension,
+    Velocity,
+    VelocityUnit,
+    "Velocity",
+    VelocityUnit::MetersPerSecond,
+    VelocityUnit::MetersPerSecond
+);
 
 /// Extension trait for creating Velocity quantities from numeric types.
 pub trait VelocityConversions {

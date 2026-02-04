@@ -1,9 +1,7 @@
 //! Spectral irradiance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 
 /// Units of spectral irradiance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +15,7 @@ impl SpectralIrradianceUnit {
     pub const ALL: &'static [SpectralIrradianceUnit] = &[SpectralIrradianceUnit::WattsPerCubicMeter];
 }
 
-impl fmt::Display for SpectralIrradianceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(SpectralIrradianceUnit);
 
 impl UnitOfMeasure for SpectralIrradianceUnit {
     fn symbol(&self) -> &'static str {
@@ -79,123 +73,16 @@ impl SpectralIrradiance {
     }
 }
 
-impl fmt::Display for SpectralIrradiance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
+impl_quantity!(SpectralIrradiance, SpectralIrradianceUnit);
 
-impl PartialEq for SpectralIrradiance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for SpectralIrradiance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for SpectralIrradiance {
-    type Unit = SpectralIrradianceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for SpectralIrradiance {
-    type Output = SpectralIrradiance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        SpectralIrradiance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for SpectralIrradiance {
-    type Output = SpectralIrradiance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        SpectralIrradiance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for SpectralIrradiance {
-    type Output = SpectralIrradiance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        SpectralIrradiance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<SpectralIrradiance> for f64 {
-    type Output = SpectralIrradiance;
-
-    fn mul(self, rhs: SpectralIrradiance) -> Self::Output {
-        SpectralIrradiance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for SpectralIrradiance {
-    type Output = SpectralIrradiance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        SpectralIrradiance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<SpectralIrradiance> for SpectralIrradiance {
-    type Output = f64;
-
-    fn div(self, rhs: SpectralIrradiance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for SpectralIrradiance {
-    type Output = SpectralIrradiance;
-
-    fn neg(self) -> Self::Output {
-        SpectralIrradiance::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for SpectralIrradiance.
-pub struct SpectralIrradianceDimension;
-
-impl Dimension for SpectralIrradianceDimension {
-    type Quantity = SpectralIrradiance;
-    type Unit = SpectralIrradianceUnit;
-
-    fn name() -> &'static str {
-        "SpectralIrradiance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        SpectralIrradianceUnit::WattsPerCubicMeter
-    }
-
-    fn si_unit() -> Self::Unit {
-        SpectralIrradianceUnit::WattsPerCubicMeter
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        SpectralIrradianceUnit::ALL
-    }
-}
+impl_dimension!(
+    SpectralIrradianceDimension,
+    SpectralIrradiance,
+    SpectralIrradianceUnit,
+    "SpectralIrradiance",
+    SpectralIrradianceUnit::WattsPerCubicMeter,
+    SpectralIrradianceUnit::WattsPerCubicMeter
+);
 
 /// Extension trait for creating SpectralIrradiance quantities from numeric types.
 pub trait SpectralIrradianceConversions {

@@ -2,11 +2,10 @@
 
 use super::length::Length;
 use super::volume::{Volume, VolumeUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::systems::metric::{CENTI, HECTO, KILO, MILLI};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Mul};
 
 /// Units of area measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -59,11 +58,7 @@ const SQ_MILE_TO_SQ_METER: f64 = 2_589_988.110336;
 const ACRE_TO_SQ_METER: f64 = 4046.8564224;
 const SQ_INCH_TO_SQ_METER: f64 = 0.00064516;
 
-impl fmt::Display for AreaUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(AreaUnit);
 
 impl UnitOfMeasure for AreaUnit {
     fn symbol(&self) -> &'static str {
@@ -238,75 +233,7 @@ impl Area {
     }
 }
 
-impl fmt::Display for Area {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Area {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Area {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Area {
-    type Unit = AreaUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Area {
-    type Output = Area;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Area::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Area {
-    type Output = Area;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Area::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Area {
-    type Output = Area;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Area::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Area> for f64 {
-    type Output = Area;
-
-    fn mul(self, rhs: Area) -> Self::Output {
-        Area::new(self * rhs.value, rhs.unit)
-    }
-}
+impl_quantity!(Area, AreaUnit);
 
 // Area * Length = Volume
 impl Mul<Length> for Area {
@@ -318,53 +245,14 @@ impl Mul<Length> for Area {
     }
 }
 
-impl Div<f64> for Area {
-    type Output = Area;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Area::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Area> for Area {
-    type Output = f64;
-
-    fn div(self, rhs: Area) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Area {
-    type Output = Area;
-
-    fn neg(self) -> Self::Output {
-        Area::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Area.
-pub struct AreaDimension;
-
-impl Dimension for AreaDimension {
-    type Quantity = Area;
-    type Unit = AreaUnit;
-
-    fn name() -> &'static str {
-        "Area"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        AreaUnit::SquareMeters
-    }
-
-    fn si_unit() -> Self::Unit {
-        AreaUnit::SquareMeters
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        AreaUnit::ALL
-    }
-}
+impl_dimension!(
+    AreaDimension,
+    Area,
+    AreaUnit,
+    "Area",
+    AreaUnit::SquareMeters,
+    AreaUnit::SquareMeters
+);
 
 /// Extension trait for creating Area quantities from numeric types.
 pub trait AreaConversions {

@@ -1,9 +1,8 @@
 //! Magnetic flux density quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of magnetic flux density measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -20,11 +19,7 @@ impl MagneticFluxDensityUnit {
         &[MagneticFluxDensityUnit::Teslas, MagneticFluxDensityUnit::Gauss];
 }
 
-impl fmt::Display for MagneticFluxDensityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(MagneticFluxDensityUnit);
 
 impl UnitOfMeasure for MagneticFluxDensityUnit {
     fn symbol(&self) -> &'static str {
@@ -105,99 +100,7 @@ impl MagneticFluxDensity {
     }
 }
 
-impl fmt::Display for MagneticFluxDensity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for MagneticFluxDensity {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for MagneticFluxDensity {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for MagneticFluxDensity {
-    type Unit = MagneticFluxDensityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for MagneticFluxDensity {
-    type Output = MagneticFluxDensity;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        MagneticFluxDensity::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for MagneticFluxDensity {
-    type Output = MagneticFluxDensity;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        MagneticFluxDensity::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for MagneticFluxDensity {
-    type Output = MagneticFluxDensity;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        MagneticFluxDensity::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<MagneticFluxDensity> for f64 {
-    type Output = MagneticFluxDensity;
-
-    fn mul(self, rhs: MagneticFluxDensity) -> Self::Output {
-        MagneticFluxDensity::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for MagneticFluxDensity {
-    type Output = MagneticFluxDensity;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        MagneticFluxDensity::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<MagneticFluxDensity> for MagneticFluxDensity {
-    type Output = f64;
-
-    fn div(self, rhs: MagneticFluxDensity) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for MagneticFluxDensity {
-    type Output = MagneticFluxDensity;
-
-    fn neg(self) -> Self::Output {
-        MagneticFluxDensity::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(MagneticFluxDensity, MagneticFluxDensityUnit);
 
 // Cross-quantity operations
 use super::magnetic_flux::{MagneticFlux, MagneticFluxUnit};
@@ -223,29 +126,14 @@ impl Mul<MagneticFluxDensity> for Area {
     }
 }
 
-/// Dimension for MagneticFluxDensity.
-pub struct MagneticFluxDensityDimension;
-
-impl Dimension for MagneticFluxDensityDimension {
-    type Quantity = MagneticFluxDensity;
-    type Unit = MagneticFluxDensityUnit;
-
-    fn name() -> &'static str {
-        "MagneticFluxDensity"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MagneticFluxDensityUnit::Teslas
-    }
-
-    fn si_unit() -> Self::Unit {
-        MagneticFluxDensityUnit::Teslas
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MagneticFluxDensityUnit::ALL
-    }
-}
+impl_dimension!(
+    MagneticFluxDensityDimension,
+    MagneticFluxDensity,
+    MagneticFluxDensityUnit,
+    "MagneticFluxDensity",
+    MagneticFluxDensityUnit::Teslas,
+    MagneticFluxDensityUnit::Teslas
+);
 
 /// Extension trait for creating MagneticFluxDensity quantities from numeric types.
 pub trait MagneticFluxDensityConversions {

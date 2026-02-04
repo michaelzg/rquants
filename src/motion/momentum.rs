@@ -1,11 +1,10 @@
 //! Momentum quantity and units.
 
 use super::velocity::{Velocity, VelocityUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::mass::{Mass, MassUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of momentum measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -31,11 +30,7 @@ impl MomentumUnit {
 const LB_TO_KG: f64 = 0.45359237;
 const FT_TO_M: f64 = 0.3048;
 
-impl fmt::Display for MomentumUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(MomentumUnit);
 
 impl UnitOfMeasure for MomentumUnit {
     fn symbol(&self) -> &'static str {
@@ -130,91 +125,7 @@ impl Momentum {
     }
 }
 
-impl fmt::Display for Momentum {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Momentum {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Momentum {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Momentum {
-    type Unit = MomentumUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Momentum {
-    type Output = Momentum;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Momentum::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Momentum {
-    type Output = Momentum;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Momentum::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Momentum {
-    type Output = Momentum;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Momentum::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Momentum> for f64 {
-    type Output = Momentum;
-
-    fn mul(self, rhs: Momentum) -> Self::Output {
-        Momentum::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Momentum {
-    type Output = Momentum;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Momentum::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Momentum> for Momentum {
-    type Output = f64;
-
-    fn div(self, rhs: Momentum) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
+impl_quantity!(Momentum, MomentumUnit);
 
 // Momentum / Mass = Velocity
 impl Div<Mass> for Momentum {
@@ -236,14 +147,6 @@ impl Div<Velocity> for Momentum {
     }
 }
 
-impl Neg for Momentum {
-    type Output = Momentum;
-
-    fn neg(self) -> Self::Output {
-        Momentum::new(-self.value, self.unit)
-    }
-}
-
 // Mass * Velocity = Momentum
 impl Mul<Velocity> for Mass {
     type Output = Momentum;
@@ -262,29 +165,14 @@ impl Mul<Mass> for Velocity {
     }
 }
 
-/// Dimension for Momentum.
-pub struct MomentumDimension;
-
-impl Dimension for MomentumDimension {
-    type Quantity = Momentum;
-    type Unit = MomentumUnit;
-
-    fn name() -> &'static str {
-        "Momentum"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MomentumUnit::KilogramMetersPerSecond
-    }
-
-    fn si_unit() -> Self::Unit {
-        MomentumUnit::KilogramMetersPerSecond
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MomentumUnit::ALL
-    }
-}
+impl_dimension!(
+    MomentumDimension,
+    Momentum,
+    MomentumUnit,
+    "Momentum",
+    MomentumUnit::KilogramMetersPerSecond,
+    MomentumUnit::KilogramMetersPerSecond
+);
 
 /// Extension trait for creating Momentum quantities from numeric types.
 pub trait MomentumConversions {

@@ -1,12 +1,11 @@
 //! Moment of inertia (rotational inertia) quantity and units.
 
 use super::mass::{Mass, MassUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::space::area::Area;
 use crate::space::length::Length;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of moment of inertia measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -30,11 +29,7 @@ impl MomentOfInertiaUnit {
 // 1 lb·ft² = 0.45359237 * 0.3048² kg·m² ≈ 0.0421401 kg·m²
 const LB_FT2_FACTOR: f64 = 0.45359237 * 0.3048 * 0.3048;
 
-impl fmt::Display for MomentOfInertiaUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(MomentOfInertiaUnit);
 
 impl UnitOfMeasure for MomentOfInertiaUnit {
     fn symbol(&self) -> &'static str {
@@ -131,91 +126,7 @@ impl MomentOfInertia {
     }
 }
 
-impl fmt::Display for MomentOfInertia {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for MomentOfInertia {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for MomentOfInertia {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for MomentOfInertia {
-    type Unit = MomentOfInertiaUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        MomentOfInertia::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        MomentOfInertia::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        MomentOfInertia::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<MomentOfInertia> for f64 {
-    type Output = MomentOfInertia;
-
-    fn mul(self, rhs: MomentOfInertia) -> Self::Output {
-        MomentOfInertia::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        MomentOfInertia::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<MomentOfInertia> for MomentOfInertia {
-    type Output = f64;
-
-    fn div(self, rhs: MomentOfInertia) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
+impl_quantity!(MomentOfInertia, MomentOfInertiaUnit);
 
 // MomentOfInertia / Area = Mass
 impl Div<Area> for MomentOfInertia {
@@ -224,14 +135,6 @@ impl Div<Area> for MomentOfInertia {
     fn div(self, rhs: Area) -> Self::Output {
         let mass_kg = self.to_kilogram_meters_squared() / rhs.to_square_meters();
         Mass::new(mass_kg, MassUnit::Kilograms)
-    }
-}
-
-impl Neg for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn neg(self) -> Self::Output {
-        MomentOfInertia::new(-self.value, self.unit)
     }
 }
 
@@ -269,29 +172,14 @@ impl Mass {
     }
 }
 
-/// Dimension for MomentOfInertia.
-pub struct MomentOfInertiaDimension;
-
-impl Dimension for MomentOfInertiaDimension {
-    type Quantity = MomentOfInertia;
-    type Unit = MomentOfInertiaUnit;
-
-    fn name() -> &'static str {
-        "MomentOfInertia"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MomentOfInertiaUnit::KilogramMetersSquared
-    }
-
-    fn si_unit() -> Self::Unit {
-        MomentOfInertiaUnit::KilogramMetersSquared
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MomentOfInertiaUnit::ALL
-    }
-}
+impl_dimension!(
+    MomentOfInertiaDimension,
+    MomentOfInertia,
+    MomentOfInertiaUnit,
+    "MomentOfInertia",
+    MomentOfInertiaUnit::KilogramMetersSquared,
+    MomentOfInertiaUnit::KilogramMetersSquared
+);
 
 /// Extension trait for creating MomentOfInertia quantities from numeric types.
 pub trait MomentOfInertiaConversions {

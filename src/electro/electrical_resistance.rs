@@ -1,9 +1,8 @@
 //! Electrical resistance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of electrical resistance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -28,11 +27,7 @@ impl ElectricalResistanceUnit {
     ];
 }
 
-impl fmt::Display for ElectricalResistanceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ElectricalResistanceUnit);
 
 impl UnitOfMeasure for ElectricalResistanceUnit {
     fn symbol(&self) -> &'static str {
@@ -141,99 +136,7 @@ impl ElectricalResistance {
     }
 }
 
-impl fmt::Display for ElectricalResistance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricalResistance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ElectricalResistance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ElectricalResistance {
-    type Unit = ElectricalResistanceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricalResistance {
-    type Output = ElectricalResistance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricalResistance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricalResistance {
-    type Output = ElectricalResistance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricalResistance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricalResistance {
-    type Output = ElectricalResistance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricalResistance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricalResistance> for f64 {
-    type Output = ElectricalResistance;
-
-    fn mul(self, rhs: ElectricalResistance) -> Self::Output {
-        ElectricalResistance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricalResistance {
-    type Output = ElectricalResistance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricalResistance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricalResistance> for ElectricalResistance {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricalResistance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricalResistance {
-    type Output = ElectricalResistance;
-
-    fn neg(self) -> Self::Output {
-        ElectricalResistance::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(ElectricalResistance, ElectricalResistanceUnit);
 
 // Cross-quantity operations
 use crate::space::Length;
@@ -260,29 +163,14 @@ impl Mul<ElectricalResistance> for Length {
     }
 }
 
-/// Dimension for ElectricalResistance.
-pub struct ElectricalResistanceDimension;
-
-impl Dimension for ElectricalResistanceDimension {
-    type Quantity = ElectricalResistance;
-    type Unit = ElectricalResistanceUnit;
-
-    fn name() -> &'static str {
-        "ElectricalResistance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricalResistanceUnit::Ohms
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricalResistanceUnit::Ohms
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricalResistanceUnit::ALL
-    }
-}
+impl_dimension!(
+    ElectricalResistanceDimension,
+    ElectricalResistance,
+    ElectricalResistanceUnit,
+    "ElectricalResistance",
+    ElectricalResistanceUnit::Ohms,
+    ElectricalResistanceUnit::Ohms
+);
 
 /// Extension trait for creating ElectricalResistance quantities from numeric types.
 pub trait ElectricalResistanceConversions {

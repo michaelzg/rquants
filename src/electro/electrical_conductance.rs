@@ -1,9 +1,8 @@
 //! Electrical conductance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div};
 
 /// Units of electrical conductance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -25,11 +24,7 @@ impl ElectricalConductanceUnit {
     ];
 }
 
-impl fmt::Display for ElectricalConductanceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ElectricalConductanceUnit);
 
 impl UnitOfMeasure for ElectricalConductanceUnit {
     fn symbol(&self) -> &'static str {
@@ -138,99 +133,7 @@ impl ElectricalConductance {
     }
 }
 
-impl fmt::Display for ElectricalConductance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricalConductance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ElectricalConductance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ElectricalConductance {
-    type Unit = ElectricalConductanceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricalConductance {
-    type Output = ElectricalConductance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricalConductance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricalConductance {
-    type Output = ElectricalConductance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricalConductance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricalConductance {
-    type Output = ElectricalConductance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricalConductance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricalConductance> for f64 {
-    type Output = ElectricalConductance;
-
-    fn mul(self, rhs: ElectricalConductance) -> Self::Output {
-        ElectricalConductance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricalConductance {
-    type Output = ElectricalConductance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricalConductance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricalConductance> for ElectricalConductance {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricalConductance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricalConductance {
-    type Output = ElectricalConductance;
-
-    fn neg(self) -> Self::Output {
-        ElectricalConductance::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(ElectricalConductance, ElectricalConductanceUnit);
 
 // Cross-quantity operations
 use crate::space::Length;
@@ -247,29 +150,14 @@ impl Div<Length> for ElectricalConductance {
     }
 }
 
-/// Dimension for ElectricalConductance.
-pub struct ElectricalConductanceDimension;
-
-impl Dimension for ElectricalConductanceDimension {
-    type Quantity = ElectricalConductance;
-    type Unit = ElectricalConductanceUnit;
-
-    fn name() -> &'static str {
-        "ElectricalConductance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricalConductanceUnit::Siemens
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricalConductanceUnit::Siemens
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricalConductanceUnit::ALL
-    }
-}
+impl_dimension!(
+    ElectricalConductanceDimension,
+    ElectricalConductance,
+    ElectricalConductanceUnit,
+    "ElectricalConductance",
+    ElectricalConductanceUnit::Siemens,
+    ElectricalConductanceUnit::Siemens
+);
 
 /// Extension trait for creating ElectricalConductance quantities from numeric types.
 pub trait ElectricalConductanceConversions {

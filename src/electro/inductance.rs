@@ -1,9 +1,8 @@
 //! Inductance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of inductance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -25,11 +24,7 @@ impl InductanceUnit {
     ];
 }
 
-impl fmt::Display for InductanceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(InductanceUnit);
 
 impl UnitOfMeasure for InductanceUnit {
     fn symbol(&self) -> &'static str {
@@ -124,99 +119,7 @@ impl Inductance {
     }
 }
 
-impl fmt::Display for Inductance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Inductance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Inductance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Inductance {
-    type Unit = InductanceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Inductance {
-    type Output = Inductance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Inductance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Inductance {
-    type Output = Inductance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Inductance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Inductance {
-    type Output = Inductance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Inductance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Inductance> for f64 {
-    type Output = Inductance;
-
-    fn mul(self, rhs: Inductance) -> Self::Output {
-        Inductance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Inductance {
-    type Output = Inductance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Inductance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Inductance> for Inductance {
-    type Output = f64;
-
-    fn div(self, rhs: Inductance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Inductance {
-    type Output = Inductance;
-
-    fn neg(self) -> Self::Output {
-        Inductance::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Inductance, InductanceUnit);
 
 // Cross-quantity operations
 use super::electric_current::ElectricCurrent;
@@ -242,29 +145,14 @@ impl Mul<Inductance> for ElectricCurrent {
     }
 }
 
-/// Dimension for Inductance.
-pub struct InductanceDimension;
-
-impl Dimension for InductanceDimension {
-    type Quantity = Inductance;
-    type Unit = InductanceUnit;
-
-    fn name() -> &'static str {
-        "Inductance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        InductanceUnit::Henrys
-    }
-
-    fn si_unit() -> Self::Unit {
-        InductanceUnit::Henrys
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        InductanceUnit::ALL
-    }
-}
+impl_dimension!(
+    InductanceDimension,
+    Inductance,
+    InductanceUnit,
+    "Inductance",
+    InductanceUnit::Henrys,
+    InductanceUnit::Henrys
+);
 
 /// Extension trait for creating Inductance quantities from numeric types.
 pub trait InductanceConversions {

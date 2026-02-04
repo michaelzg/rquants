@@ -1,9 +1,8 @@
 //! Radiance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div, Mul};
 
 /// Units of radiance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,11 +16,7 @@ impl RadianceUnit {
     pub const ALL: &'static [RadianceUnit] = &[RadianceUnit::WattsPerSteradianPerSquareMeter];
 }
 
-impl fmt::Display for RadianceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(RadianceUnit);
 
 impl UnitOfMeasure for RadianceUnit {
     fn symbol(&self) -> &'static str {
@@ -79,99 +74,7 @@ impl Radiance {
     }
 }
 
-impl fmt::Display for Radiance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Radiance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Radiance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Radiance {
-    type Unit = RadianceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Radiance {
-    type Output = Radiance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Radiance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Radiance {
-    type Output = Radiance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Radiance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Radiance {
-    type Output = Radiance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Radiance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Radiance> for f64 {
-    type Output = Radiance;
-
-    fn mul(self, rhs: Radiance) -> Self::Output {
-        Radiance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Radiance {
-    type Output = Radiance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Radiance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Radiance> for Radiance {
-    type Output = f64;
-
-    fn div(self, rhs: Radiance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Radiance {
-    type Output = Radiance;
-
-    fn neg(self) -> Self::Output {
-        Radiance::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Radiance, RadianceUnit);
 
 // Cross-quantity operations
 use super::radiant_intensity::{RadiantIntensity, RadiantIntensityUnit};
@@ -207,29 +110,14 @@ impl Div<Radiance> for RadiantIntensity {
     }
 }
 
-/// Dimension for Radiance.
-pub struct RadianceDimension;
-
-impl Dimension for RadianceDimension {
-    type Quantity = Radiance;
-    type Unit = RadianceUnit;
-
-    fn name() -> &'static str {
-        "Radiance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        RadianceUnit::WattsPerSteradianPerSquareMeter
-    }
-
-    fn si_unit() -> Self::Unit {
-        RadianceUnit::WattsPerSteradianPerSquareMeter
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        RadianceUnit::ALL
-    }
-}
+impl_dimension!(
+    RadianceDimension,
+    Radiance,
+    RadianceUnit,
+    "Radiance",
+    RadianceUnit::WattsPerSteradianPerSquareMeter,
+    RadianceUnit::WattsPerSteradianPerSquareMeter
+);
 
 /// Extension trait for creating Radiance quantities from numeric types.
 pub trait RadianceConversions {

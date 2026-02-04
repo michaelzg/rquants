@@ -2,11 +2,10 @@
 
 use super::area::{Area, AreaUnit};
 use super::volume::{Volume, VolumeUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::systems::metric::{CENTI, DECI, HECTO, KILO, MICRO, MILLI, NANO, PICO};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Mul};
 
 /// Units of length measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -84,11 +83,7 @@ const AU_TO_METERS: f64 = 1.495978707e11;
 const LIGHT_YEAR_TO_METERS: f64 = 9.4607304725808e15;
 const PARSEC_TO_METERS: f64 = 3.08567758149137e16;
 
-impl fmt::Display for LengthUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(LengthUnit);
 
 impl UnitOfMeasure for LengthUnit {
     fn symbol(&self) -> &'static str {
@@ -361,99 +356,7 @@ impl Length {
     }
 }
 
-impl fmt::Display for Length {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Length {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Length {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Length {
-    type Unit = LengthUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Length {
-    type Output = Length;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Length::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Length {
-    type Output = Length;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Length::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Length {
-    type Output = Length;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Length::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Length> for f64 {
-    type Output = Length;
-
-    fn mul(self, rhs: Length) -> Self::Output {
-        Length::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Length {
-    type Output = Length;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Length::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Length> for Length {
-    type Output = f64;
-
-    fn div(self, rhs: Length) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Length {
-    type Output = Length;
-
-    fn neg(self) -> Self::Output {
-        Length::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Length, LengthUnit);
 
 // Length * Length = Area
 impl Mul<Length> for Length {
@@ -475,29 +378,14 @@ impl Mul<Area> for Length {
     }
 }
 
-/// Dimension for Length.
-pub struct LengthDimension;
-
-impl Dimension for LengthDimension {
-    type Quantity = Length;
-    type Unit = LengthUnit;
-
-    fn name() -> &'static str {
-        "Length"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        LengthUnit::Meters
-    }
-
-    fn si_unit() -> Self::Unit {
-        LengthUnit::Meters
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        LengthUnit::ALL
-    }
-}
+impl_dimension!(
+    LengthDimension,
+    Length,
+    LengthUnit,
+    "Length",
+    LengthUnit::Meters,
+    LengthUnit::Meters
+);
 
 /// Extension trait for creating Length quantities from numeric types.
 pub trait LengthConversions {
@@ -590,7 +478,6 @@ impl LengthConversions for f64 {
         Length::parsecs(self)
     }
 }
-
 
 #[cfg(test)]
 mod tests {

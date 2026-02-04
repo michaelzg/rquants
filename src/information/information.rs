@@ -1,9 +1,8 @@
 //! Information quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div};
 
 /// Units of information measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -73,11 +72,7 @@ impl InformationUnit {
 // Conversion factors relative to Bytes
 const BITS_PER_BYTE: f64 = 8.0;
 
-impl fmt::Display for InformationUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(InformationUnit);
 
 impl UnitOfMeasure for InformationUnit {
     fn symbol(&self) -> &'static str {
@@ -348,99 +343,7 @@ impl Information {
     }
 }
 
-impl fmt::Display for Information {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Information {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Information {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Information {
-    type Unit = InformationUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Information {
-    type Output = Information;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Information::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Information {
-    type Output = Information;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Information::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Information {
-    type Output = Information;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Information::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Information> for f64 {
-    type Output = Information;
-
-    fn mul(self, rhs: Information) -> Self::Output {
-        Information::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Information {
-    type Output = Information;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Information::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Information> for Information {
-    type Output = f64;
-
-    fn div(self, rhs: Information) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Information {
-    type Output = Information;
-
-    fn neg(self) -> Self::Output {
-        Information::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Information, InformationUnit);
 
 // Cross-quantity operations
 use super::data_rate::{DataRate, DataRateUnit};
@@ -456,29 +359,14 @@ impl Div<Time> for Information {
     }
 }
 
-/// Dimension for Information.
-pub struct InformationDimension;
-
-impl Dimension for InformationDimension {
-    type Quantity = Information;
-    type Unit = InformationUnit;
-
-    fn name() -> &'static str {
-        "Information"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        InformationUnit::Bytes
-    }
-
-    fn si_unit() -> Self::Unit {
-        InformationUnit::Bytes
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        InformationUnit::ALL
-    }
-}
+impl_dimension!(
+    InformationDimension,
+    Information,
+    InformationUnit,
+    "Information",
+    InformationUnit::Bytes,
+    InformationUnit::Bytes
+);
 
 /// Extension trait for creating Information quantities from numeric types.
 pub trait InformationConversions {

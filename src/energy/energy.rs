@@ -1,13 +1,12 @@
 //! Energy quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::mass::{ChemicalAmount, ChemicalAmountUnit, Mass, MassUnit};
 use crate::motion::{Force, ForceUnit};
 use crate::space::{Length, LengthUnit, Volume, VolumeUnit};
 use crate::time::{Time, TimeUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div};
 
 /// Units of energy measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -125,11 +124,7 @@ const EV_TO_WH: f64 = EV_TO_J * JOULE_TO_WH;
 const CAL_TO_J: f64 = 4.184;
 const CAL_TO_WH: f64 = CAL_TO_J * JOULE_TO_WH;
 
-impl fmt::Display for EnergyUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(EnergyUnit);
 
 impl UnitOfMeasure for EnergyUnit {
     fn symbol(&self) -> &'static str {
@@ -481,99 +476,7 @@ impl Energy {
     }
 }
 
-impl fmt::Display for Energy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Energy {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Energy {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Energy {
-    type Unit = EnergyUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Energy {
-    type Output = Energy;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Energy::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Energy {
-    type Output = Energy;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Energy::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Energy {
-    type Output = Energy;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Energy::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Energy> for f64 {
-    type Output = Energy;
-
-    fn mul(self, rhs: Energy) -> Self::Output {
-        Energy::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Energy {
-    type Output = Energy;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Energy::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Energy> for Energy {
-    type Output = f64;
-
-    fn div(self, rhs: Energy) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Energy {
-    type Output = Energy;
-
-    fn neg(self) -> Self::Output {
-        Energy::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Energy, EnergyUnit);
 
 // Forward declarations for cross-quantity operations
 // These will be implemented after Power is defined
@@ -682,29 +585,14 @@ impl Div<Length> for Energy {
     }
 }
 
-/// Dimension for Energy.
-pub struct EnergyDimension;
-
-impl Dimension for EnergyDimension {
-    type Quantity = Energy;
-    type Unit = EnergyUnit;
-
-    fn name() -> &'static str {
-        "Energy"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        EnergyUnit::WattHours
-    }
-
-    fn si_unit() -> Self::Unit {
-        EnergyUnit::Joules
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        EnergyUnit::ALL
-    }
-}
+impl_dimension!(
+    EnergyDimension,
+    Energy,
+    EnergyUnit,
+    "Energy",
+    EnergyUnit::WattHours,
+    EnergyUnit::Joules
+);
 
 /// Extension trait for creating Energy quantities from numeric types.
 pub trait EnergyConversions {

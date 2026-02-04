@@ -1,11 +1,10 @@
 //! Density quantity and units.
 
 use super::mass::{Mass, MassUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::space::volume::{Volume, VolumeUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of density measurement (mass per volume).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -56,11 +55,7 @@ const LB_PER_CUFT_FACTOR: f64 = 16.01846337396;
 // 1 lb/gal (US) ≈ 119.826 kg/m³
 const LB_PER_GAL_FACTOR: f64 = 119.8264273167;
 
-impl fmt::Display for DensityUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(DensityUnit);
 
 impl UnitOfMeasure for DensityUnit {
     fn symbol(&self) -> &'static str {
@@ -220,75 +215,7 @@ impl Density {
     }
 }
 
-impl fmt::Display for Density {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Density {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Density {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Density {
-    type Unit = DensityUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Density {
-    type Output = Density;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Density::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Density {
-    type Output = Density;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Density::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Density {
-    type Output = Density;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Density::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Density> for f64 {
-    type Output = Density;
-
-    fn mul(self, rhs: Density) -> Self::Output {
-        Density::new(self * rhs.value, rhs.unit)
-    }
-}
+impl_quantity!(Density, DensityUnit);
 
 // Density * Volume = Mass
 impl Mul<Volume> for Density {
@@ -297,30 +224,6 @@ impl Mul<Volume> for Density {
     fn mul(self, rhs: Volume) -> Self::Output {
         let mass_kg = self.to_kilograms_per_cubic_meter() * rhs.to_cubic_meters();
         Mass::new(mass_kg, MassUnit::Kilograms)
-    }
-}
-
-impl Div<f64> for Density {
-    type Output = Density;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Density::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Density> for Density {
-    type Output = f64;
-
-    fn div(self, rhs: Density) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Density {
-    type Output = Density;
-
-    fn neg(self) -> Self::Output {
-        Density::new(-self.value, self.unit)
     }
 }
 
@@ -343,29 +246,14 @@ impl Div<Density> for Mass {
     }
 }
 
-/// Dimension for Density.
-pub struct DensityDimension;
-
-impl Dimension for DensityDimension {
-    type Quantity = Density;
-    type Unit = DensityUnit;
-
-    fn name() -> &'static str {
-        "Density"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        DensityUnit::KilogramsPerCubicMeter
-    }
-
-    fn si_unit() -> Self::Unit {
-        DensityUnit::KilogramsPerCubicMeter
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        DensityUnit::ALL
-    }
-}
+impl_dimension!(
+    DensityDimension,
+    Density,
+    DensityUnit,
+    "Density",
+    DensityUnit::KilogramsPerCubicMeter,
+    DensityUnit::KilogramsPerCubicMeter
+);
 
 /// Extension trait for creating Density quantities from numeric types.
 pub trait DensityConversions {

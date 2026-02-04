@@ -1,9 +1,8 @@
 //! Capacitance quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Mul};
 
 /// Units of capacitance measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -31,11 +30,7 @@ impl CapacitanceUnit {
     ];
 }
 
-impl fmt::Display for CapacitanceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(CapacitanceUnit);
 
 impl UnitOfMeasure for CapacitanceUnit {
     fn symbol(&self) -> &'static str {
@@ -157,99 +152,7 @@ impl Capacitance {
     }
 }
 
-impl fmt::Display for Capacitance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Capacitance {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Capacitance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Capacitance {
-    type Unit = CapacitanceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Capacitance {
-    type Output = Capacitance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Capacitance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Capacitance {
-    type Output = Capacitance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Capacitance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Capacitance {
-    type Output = Capacitance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Capacitance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Capacitance> for f64 {
-    type Output = Capacitance;
-
-    fn mul(self, rhs: Capacitance) -> Self::Output {
-        Capacitance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Capacitance {
-    type Output = Capacitance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Capacitance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Capacitance> for Capacitance {
-    type Output = f64;
-
-    fn div(self, rhs: Capacitance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Capacitance {
-    type Output = Capacitance;
-
-    fn neg(self) -> Self::Output {
-        Capacitance::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Capacitance, CapacitanceUnit);
 
 // Cross-quantity operations
 use super::electric_charge::{ElectricCharge, ElectricChargeUnit};
@@ -275,29 +178,14 @@ impl Mul<Capacitance> for ElectricPotential {
     }
 }
 
-/// Dimension for Capacitance.
-pub struct CapacitanceDimension;
-
-impl Dimension for CapacitanceDimension {
-    type Quantity = Capacitance;
-    type Unit = CapacitanceUnit;
-
-    fn name() -> &'static str {
-        "Capacitance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        CapacitanceUnit::Farads
-    }
-
-    fn si_unit() -> Self::Unit {
-        CapacitanceUnit::Farads
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        CapacitanceUnit::ALL
-    }
-}
+impl_dimension!(
+    CapacitanceDimension,
+    Capacitance,
+    CapacitanceUnit,
+    "Capacitance",
+    CapacitanceUnit::Farads,
+    CapacitanceUnit::Farads
+);
 
 /// Extension trait for creating Capacitance quantities from numeric types.
 pub trait CapacitanceConversions {

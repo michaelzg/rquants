@@ -269,8 +269,6 @@ impl MoneyConversions for f64 {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;

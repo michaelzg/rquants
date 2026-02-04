@@ -1,10 +1,9 @@
 //! Power quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::time::{Time, TimeUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Div, Mul};
 
 /// Units of power measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -51,11 +50,7 @@ const BTU_PER_HOUR_TO_W: f64 = BTU_TO_J / SECONDS_PER_HOUR;
 const HORSEPOWER_TO_W: f64 = 745.7; // Mechanical horsepower
 const SOLAR_LUMINOSITY_TO_W: f64 = 3.828e26;
 
-impl fmt::Display for PowerUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(PowerUnit);
 
 impl UnitOfMeasure for PowerUnit {
     fn symbol(&self) -> &'static str {
@@ -220,99 +215,7 @@ impl Power {
     }
 }
 
-impl fmt::Display for Power {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Power {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for Power {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for Power {
-    type Unit = PowerUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Power {
-    type Output = Power;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Power::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Power {
-    type Output = Power;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Power::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Power {
-    type Output = Power;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Power::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Power> for f64 {
-    type Output = Power;
-
-    fn mul(self, rhs: Power) -> Self::Output {
-        Power::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Power {
-    type Output = Power;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Power::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Power> for Power {
-    type Output = f64;
-
-    fn div(self, rhs: Power) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Power {
-    type Output = Power;
-
-    fn neg(self) -> Self::Output {
-        Power::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(Power, PowerUnit);
 
 // Cross-quantity operations
 use super::energy::{Energy, EnergyUnit};
@@ -380,29 +283,14 @@ impl Div<PowerDensity> for Power {
     }
 }
 
-/// Dimension for Power.
-pub struct PowerDimension;
-
-impl Dimension for PowerDimension {
-    type Quantity = Power;
-    type Unit = PowerUnit;
-
-    fn name() -> &'static str {
-        "Power"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        PowerUnit::Watts
-    }
-
-    fn si_unit() -> Self::Unit {
-        PowerUnit::Watts
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        PowerUnit::ALL
-    }
-}
+impl_dimension!(
+    PowerDimension,
+    Power,
+    PowerUnit,
+    "Power",
+    PowerUnit::Watts,
+    PowerUnit::Watts
+);
 
 /// Extension trait for creating Power quantities from numeric types.
 pub trait PowerConversions {

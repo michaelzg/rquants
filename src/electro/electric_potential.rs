@@ -1,9 +1,8 @@
 //! Electric potential (voltage) quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
+use std::ops::{Div, Mul};
 
 /// Units of electric potential measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -31,11 +30,7 @@ impl ElectricPotentialUnit {
     ];
 }
 
-impl fmt::Display for ElectricPotentialUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(ElectricPotentialUnit);
 
 impl UnitOfMeasure for ElectricPotentialUnit {
     fn symbol(&self) -> &'static str {
@@ -161,99 +156,7 @@ impl ElectricPotential {
     }
 }
 
-impl fmt::Display for ElectricPotential {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricPotential {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for ElectricPotential {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for ElectricPotential {
-    type Unit = ElectricPotentialUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricPotential::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricPotential::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricPotential::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricPotential> for f64 {
-    type Output = ElectricPotential;
-
-    fn mul(self, rhs: ElectricPotential) -> Self::Output {
-        ElectricPotential::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricPotential::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricPotential> for ElectricPotential {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricPotential) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn neg(self) -> Self::Output {
-        ElectricPotential::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(ElectricPotential, ElectricPotentialUnit);
 
 // Cross-quantity operations
 use super::electric_charge::{ElectricCharge, ElectricChargeUnit};
@@ -333,29 +236,14 @@ impl Mul<ElectricPotential> for Time {
     }
 }
 
-/// Dimension for ElectricPotential.
-pub struct ElectricPotentialDimension;
-
-impl Dimension for ElectricPotentialDimension {
-    type Quantity = ElectricPotential;
-    type Unit = ElectricPotentialUnit;
-
-    fn name() -> &'static str {
-        "ElectricPotential"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricPotentialUnit::Volts
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricPotentialUnit::Volts
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricPotentialUnit::ALL
-    }
-}
+impl_dimension!(
+    ElectricPotentialDimension,
+    ElectricPotential,
+    ElectricPotentialUnit,
+    "ElectricPotential",
+    ElectricPotentialUnit::Volts,
+    ElectricPotentialUnit::Volts
+);
 
 /// Extension trait for creating ElectricPotential quantities from numeric types.
 pub trait ElectricPotentialConversions {

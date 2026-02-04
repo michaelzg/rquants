@@ -1,10 +1,9 @@
 //! Specific energy quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::macros::{impl_dimension, impl_quantity, impl_unit_display};
+use crate::core::{Quantity, UnitOfMeasure};
 use crate::mass::Mass;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Mul};
 
 /// Units of specific energy measurement (energy per unit mass).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -26,11 +25,7 @@ impl SpecificEnergyUnit {
     ];
 }
 
-impl fmt::Display for SpecificEnergyUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
+impl_unit_display!(SpecificEnergyUnit);
 
 impl UnitOfMeasure for SpecificEnergyUnit {
     fn symbol(&self) -> &'static str {
@@ -116,99 +111,7 @@ impl SpecificEnergy {
     }
 }
 
-impl fmt::Display for SpecificEnergy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for SpecificEnergy {
-    fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
-    }
-}
-
-impl PartialOrd for SpecificEnergy {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
-    }
-}
-
-impl Quantity for SpecificEnergy {
-    type Unit = SpecificEnergyUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        SpecificEnergy::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        SpecificEnergy::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        SpecificEnergy::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<SpecificEnergy> for f64 {
-    type Output = SpecificEnergy;
-
-    fn mul(self, rhs: SpecificEnergy) -> Self::Output {
-        SpecificEnergy::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        SpecificEnergy::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<SpecificEnergy> for SpecificEnergy {
-    type Output = f64;
-
-    fn div(self, rhs: SpecificEnergy) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn neg(self) -> Self::Output {
-        SpecificEnergy::new(-self.value, self.unit)
-    }
-}
+impl_quantity!(SpecificEnergy, SpecificEnergyUnit);
 
 // Cross-quantity operations
 use super::energy::{Energy, EnergyUnit};
@@ -233,29 +136,14 @@ impl Mul<SpecificEnergy> for Mass {
     }
 }
 
-/// Dimension for SpecificEnergy.
-pub struct SpecificEnergyDimension;
-
-impl Dimension for SpecificEnergyDimension {
-    type Quantity = SpecificEnergy;
-    type Unit = SpecificEnergyUnit;
-
-    fn name() -> &'static str {
-        "SpecificEnergy"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        SpecificEnergyUnit::Grays
-    }
-
-    fn si_unit() -> Self::Unit {
-        SpecificEnergyUnit::Grays
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        SpecificEnergyUnit::ALL
-    }
-}
+impl_dimension!(
+    SpecificEnergyDimension,
+    SpecificEnergy,
+    SpecificEnergyUnit,
+    "SpecificEnergy",
+    SpecificEnergyUnit::Grays,
+    SpecificEnergyUnit::Grays
+);
 
 /// Extension trait for creating SpecificEnergy quantities from numeric types.
 pub trait SpecificEnergyConversions {
