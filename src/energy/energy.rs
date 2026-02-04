@@ -321,6 +321,76 @@ impl Energy {
         Self::new(value, EnergyUnit::Kilocalories)
     }
 
+    /// Creates an Energy in picojoules.
+    pub fn picojoules(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Picojoules)
+    }
+
+    /// Creates an Energy in nanojoules.
+    pub fn nanojoules(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Nanojoules)
+    }
+
+    /// Creates an Energy in microjoules.
+    pub fn microjoules(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Microjoules)
+    }
+
+    /// Creates an Energy in millijoules.
+    pub fn millijoules(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Millijoules)
+    }
+
+    /// Creates an Energy in gigajoules.
+    pub fn gigajoules(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Gigajoules)
+    }
+
+    /// Creates an Energy in terajoules.
+    pub fn terajoules(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Terajoules)
+    }
+
+    /// Creates an Energy in MBtu.
+    pub fn mbtus(value: f64) -> Self {
+        Self::new(value, EnergyUnit::MBtus)
+    }
+
+    /// Creates an Energy in MMBtu.
+    pub fn mmbtus(value: f64) -> Self {
+        Self::new(value, EnergyUnit::MMBtus)
+    }
+
+    /// Creates an Energy in milli-electron-volts.
+    pub fn milli_electron_volts(value: f64) -> Self {
+        Self::new(value, EnergyUnit::MilliElectronVolts)
+    }
+
+    /// Creates an Energy in kilo-electron-volts.
+    pub fn kilo_electron_volts(value: f64) -> Self {
+        Self::new(value, EnergyUnit::KiloElectronVolts)
+    }
+
+    /// Creates an Energy in mega-electron-volts.
+    pub fn mega_electron_volts(value: f64) -> Self {
+        Self::new(value, EnergyUnit::MegaElectronVolts)
+    }
+
+    /// Creates an Energy in giga-electron-volts.
+    pub fn giga_electron_volts(value: f64) -> Self {
+        Self::new(value, EnergyUnit::GigaElectronVolts)
+    }
+
+    /// Creates an Energy in tera-electron-volts.
+    pub fn tera_electron_volts(value: f64) -> Self {
+        Self::new(value, EnergyUnit::TeraElectronVolts)
+    }
+
+    /// Creates an Energy in ergs.
+    pub fn ergs(value: f64) -> Self {
+        Self::new(value, EnergyUnit::Ergs)
+    }
+
     // Conversion methods
     /// Converts to watt-hours.
     pub fn to_watt_hours(&self) -> f64 {
@@ -365,6 +435,41 @@ impl Energy {
     /// Converts to kilocalories.
     pub fn to_kilocalories(&self) -> f64 {
         self.to(EnergyUnit::Kilocalories)
+    }
+
+    /// Converts to milliwatt-hours.
+    pub fn to_milliwatt_hours(&self) -> f64 {
+        self.to(EnergyUnit::MilliwattHours)
+    }
+
+    /// Converts to gigawatt-hours.
+    pub fn to_gigawatt_hours(&self) -> f64 {
+        self.to(EnergyUnit::GigawattHours)
+    }
+
+    /// Converts to megajoules.
+    pub fn to_megajoules(&self) -> f64 {
+        self.to(EnergyUnit::Megajoules)
+    }
+
+    /// Converts to gigajoules.
+    pub fn to_gigajoules(&self) -> f64 {
+        self.to(EnergyUnit::Gigajoules)
+    }
+
+    /// Converts to ergs.
+    pub fn to_ergs(&self) -> f64 {
+        self.to(EnergyUnit::Ergs)
+    }
+
+    /// Converts to MBtu.
+    pub fn to_mbtus(&self) -> f64 {
+        self.to(EnergyUnit::MBtus)
+    }
+
+    /// Converts to MMBtu.
+    pub fn to_mmbtus(&self) -> f64 {
+        self.to(EnergyUnit::MMBtus)
     }
 
     /// Calculates kinetic energy from mass and velocity.
@@ -603,16 +708,54 @@ impl Dimension for EnergyDimension {
 
 /// Extension trait for creating Energy quantities from numeric types.
 pub trait EnergyConversions {
-    /// Creates an Energy in joules.
-    fn joules(self) -> Energy;
-    /// Creates an Energy in kilojoules.
-    fn kilojoules(self) -> Energy;
     /// Creates an Energy in watt-hours.
     fn watt_hours(self) -> Energy;
+    /// Creates an Energy in milliwatt-hours.
+    fn milliwatt_hours(self) -> Energy;
     /// Creates an Energy in kilowatt-hours.
     fn kilowatt_hours(self) -> Energy;
+    /// Creates an Energy in megawatt-hours.
+    fn megawatt_hours(self) -> Energy;
+    /// Creates an Energy in gigawatt-hours.
+    fn gigawatt_hours(self) -> Energy;
+    /// Creates an Energy in joules.
+    fn joules(self) -> Energy;
+    /// Creates an Energy in picojoules.
+    fn picojoules(self) -> Energy;
+    /// Creates an Energy in nanojoules.
+    fn nanojoules(self) -> Energy;
+    /// Creates an Energy in microjoules.
+    fn microjoules(self) -> Energy;
+    /// Creates an Energy in millijoules.
+    fn millijoules(self) -> Energy;
+    /// Creates an Energy in kilojoules.
+    fn kilojoules(self) -> Energy;
+    /// Creates an Energy in megajoules.
+    fn megajoules(self) -> Energy;
+    /// Creates an Energy in gigajoules.
+    fn gigajoules(self) -> Energy;
+    /// Creates an Energy in terajoules.
+    fn terajoules(self) -> Energy;
     /// Creates an Energy in BTU.
     fn btus(self) -> Energy;
+    /// Creates an Energy in MBtu.
+    fn mbtus(self) -> Energy;
+    /// Creates an Energy in MMBtu.
+    fn mmbtus(self) -> Energy;
+    /// Creates an Energy in electron-volts.
+    fn electron_volts(self) -> Energy;
+    /// Creates an Energy in milli-electron-volts.
+    fn milli_electron_volts(self) -> Energy;
+    /// Creates an Energy in kilo-electron-volts.
+    fn kilo_electron_volts(self) -> Energy;
+    /// Creates an Energy in mega-electron-volts.
+    fn mega_electron_volts(self) -> Energy;
+    /// Creates an Energy in giga-electron-volts.
+    fn giga_electron_volts(self) -> Energy;
+    /// Creates an Energy in tera-electron-volts.
+    fn tera_electron_volts(self) -> Energy;
+    /// Creates an Energy in ergs.
+    fn ergs(self) -> Energy;
     /// Creates an Energy in calories.
     fn calories(self) -> Energy;
     /// Creates an Energy in kilocalories.
@@ -620,20 +763,77 @@ pub trait EnergyConversions {
 }
 
 impl EnergyConversions for f64 {
-    fn joules(self) -> Energy {
-        Energy::joules(self)
-    }
-    fn kilojoules(self) -> Energy {
-        Energy::kilojoules(self)
-    }
     fn watt_hours(self) -> Energy {
         Energy::watt_hours(self)
+    }
+    fn milliwatt_hours(self) -> Energy {
+        Energy::milliwatt_hours(self)
     }
     fn kilowatt_hours(self) -> Energy {
         Energy::kilowatt_hours(self)
     }
+    fn megawatt_hours(self) -> Energy {
+        Energy::megawatt_hours(self)
+    }
+    fn gigawatt_hours(self) -> Energy {
+        Energy::gigawatt_hours(self)
+    }
+    fn joules(self) -> Energy {
+        Energy::joules(self)
+    }
+    fn picojoules(self) -> Energy {
+        Energy::picojoules(self)
+    }
+    fn nanojoules(self) -> Energy {
+        Energy::nanojoules(self)
+    }
+    fn microjoules(self) -> Energy {
+        Energy::microjoules(self)
+    }
+    fn millijoules(self) -> Energy {
+        Energy::millijoules(self)
+    }
+    fn kilojoules(self) -> Energy {
+        Energy::kilojoules(self)
+    }
+    fn megajoules(self) -> Energy {
+        Energy::megajoules(self)
+    }
+    fn gigajoules(self) -> Energy {
+        Energy::gigajoules(self)
+    }
+    fn terajoules(self) -> Energy {
+        Energy::terajoules(self)
+    }
     fn btus(self) -> Energy {
         Energy::btus(self)
+    }
+    fn mbtus(self) -> Energy {
+        Energy::mbtus(self)
+    }
+    fn mmbtus(self) -> Energy {
+        Energy::mmbtus(self)
+    }
+    fn electron_volts(self) -> Energy {
+        Energy::electron_volts(self)
+    }
+    fn milli_electron_volts(self) -> Energy {
+        Energy::milli_electron_volts(self)
+    }
+    fn kilo_electron_volts(self) -> Energy {
+        Energy::kilo_electron_volts(self)
+    }
+    fn mega_electron_volts(self) -> Energy {
+        Energy::mega_electron_volts(self)
+    }
+    fn giga_electron_volts(self) -> Energy {
+        Energy::giga_electron_volts(self)
+    }
+    fn tera_electron_volts(self) -> Energy {
+        Energy::tera_electron_volts(self)
+    }
+    fn ergs(self) -> Energy {
+        Energy::ergs(self)
     }
     fn calories(self) -> Energy {
         Energy::calories(self)

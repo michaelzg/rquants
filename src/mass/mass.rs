@@ -306,6 +306,81 @@ impl Mass {
     pub fn to_carats(&self) -> f64 {
         self.to(MassUnit::Carats)
     }
+
+    /// Creates a Mass in kilopounds.
+    pub fn kilopounds(value: f64) -> Self {
+        Self::new(value, MassUnit::Kilopounds)
+    }
+
+    /// Creates a Mass in megapounds.
+    pub fn megapounds(value: f64) -> Self {
+        Self::new(value, MassUnit::Megapounds)
+    }
+
+    /// Creates a Mass in pennyweights.
+    pub fn pennyweights(value: f64) -> Self {
+        Self::new(value, MassUnit::Pennyweights)
+    }
+
+    /// Creates a Mass in troy pounds.
+    pub fn troy_pounds(value: f64) -> Self {
+        Self::new(value, MassUnit::TroyPounds)
+    }
+
+    /// Creates a Mass in tolas.
+    pub fn tolas(value: f64) -> Self {
+        Self::new(value, MassUnit::Tolas)
+    }
+
+    /// Creates a Mass in solar masses.
+    pub fn solar_masses(value: f64) -> Self {
+        Self::new(value, MassUnit::SolarMasses)
+    }
+
+    /// Converts to kilopounds.
+    pub fn to_kilopounds(&self) -> f64 {
+        self.to(MassUnit::Kilopounds)
+    }
+
+    /// Converts to megapounds.
+    pub fn to_megapounds(&self) -> f64 {
+        self.to(MassUnit::Megapounds)
+    }
+
+    /// Converts to troy grains.
+    pub fn to_troy_grains(&self) -> f64 {
+        self.to(MassUnit::TroyGrains)
+    }
+
+    /// Converts to pennyweights.
+    pub fn to_pennyweights(&self) -> f64 {
+        self.to(MassUnit::Pennyweights)
+    }
+
+    /// Converts to troy ounces.
+    pub fn to_troy_ounces(&self) -> f64 {
+        self.to(MassUnit::TroyOunces)
+    }
+
+    /// Converts to troy pounds.
+    pub fn to_troy_pounds(&self) -> f64 {
+        self.to(MassUnit::TroyPounds)
+    }
+
+    /// Converts to tolas.
+    pub fn to_tolas(&self) -> f64 {
+        self.to(MassUnit::Tolas)
+    }
+
+    /// Converts to daltons.
+    pub fn to_daltons(&self) -> f64 {
+        self.to(MassUnit::Dalton)
+    }
+
+    /// Converts to solar masses.
+    pub fn to_solar_masses(&self) -> f64 {
+        self.to(MassUnit::SolarMasses)
+    }
 }
 
 impl fmt::Display for Mass {
@@ -428,38 +503,103 @@ impl Dimension for MassDimension {
 
 /// Extension trait for creating Mass quantities from numeric types.
 pub trait MassConversions {
+    /// Creates a Mass in nanograms.
+    fn nanograms(self) -> Mass;
+    /// Creates a Mass in micrograms.
+    fn micrograms(self) -> Mass;
+    /// Creates a Mass in milligrams.
+    fn milligrams(self) -> Mass;
     /// Creates a Mass in grams.
     fn grams(self) -> Mass;
     /// Creates a Mass in kilograms.
     fn kilograms(self) -> Mass;
-    /// Creates a Mass in milligrams.
-    fn milligrams(self) -> Mass;
-    /// Creates a Mass in pounds.
-    fn pounds(self) -> Mass;
-    /// Creates a Mass in ounces.
-    fn ounces(self) -> Mass;
     /// Creates a Mass in tonnes.
     fn tonnes(self) -> Mass;
+    /// Creates a Mass in ounces.
+    fn ounces(self) -> Mass;
+    /// Creates a Mass in pounds.
+    fn pounds(self) -> Mass;
+    /// Creates a Mass in kilopounds.
+    fn kilopounds(self) -> Mass;
+    /// Creates a Mass in megapounds.
+    fn megapounds(self) -> Mass;
+    /// Creates a Mass in stone.
+    fn stone(self) -> Mass;
+    /// Creates a Mass in troy grains.
+    fn troy_grains(self) -> Mass;
+    /// Creates a Mass in pennyweights.
+    fn pennyweights(self) -> Mass;
+    /// Creates a Mass in troy ounces.
+    fn troy_ounces(self) -> Mass;
+    /// Creates a Mass in troy pounds.
+    fn troy_pounds(self) -> Mass;
+    /// Creates a Mass in tolas.
+    fn tolas(self) -> Mass;
+    /// Creates a Mass in carats.
+    fn carats(self) -> Mass;
+    /// Creates a Mass in solar masses.
+    fn solar_masses(self) -> Mass;
+    /// Creates a Mass in daltons.
+    fn daltons(self) -> Mass;
 }
 
 impl MassConversions for f64 {
+    fn nanograms(self) -> Mass {
+        Mass::nanograms(self)
+    }
+    fn micrograms(self) -> Mass {
+        Mass::micrograms(self)
+    }
+    fn milligrams(self) -> Mass {
+        Mass::milligrams(self)
+    }
     fn grams(self) -> Mass {
         Mass::grams(self)
     }
     fn kilograms(self) -> Mass {
         Mass::kilograms(self)
     }
-    fn milligrams(self) -> Mass {
-        Mass::milligrams(self)
-    }
-    fn pounds(self) -> Mass {
-        Mass::pounds(self)
+    fn tonnes(self) -> Mass {
+        Mass::tonnes(self)
     }
     fn ounces(self) -> Mass {
         Mass::ounces(self)
     }
-    fn tonnes(self) -> Mass {
-        Mass::tonnes(self)
+    fn pounds(self) -> Mass {
+        Mass::pounds(self)
+    }
+    fn kilopounds(self) -> Mass {
+        Mass::kilopounds(self)
+    }
+    fn megapounds(self) -> Mass {
+        Mass::megapounds(self)
+    }
+    fn stone(self) -> Mass {
+        Mass::stone(self)
+    }
+    fn troy_grains(self) -> Mass {
+        Mass::troy_grains(self)
+    }
+    fn pennyweights(self) -> Mass {
+        Mass::pennyweights(self)
+    }
+    fn troy_ounces(self) -> Mass {
+        Mass::troy_ounces(self)
+    }
+    fn troy_pounds(self) -> Mass {
+        Mass::troy_pounds(self)
+    }
+    fn tolas(self) -> Mass {
+        Mass::tolas(self)
+    }
+    fn carats(self) -> Mass {
+        Mass::carats(self)
+    }
+    fn solar_masses(self) -> Mass {
+        Mass::solar_masses(self)
+    }
+    fn daltons(self) -> Mass {
+        Mass::daltons(self)
     }
 }
 

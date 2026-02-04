@@ -23,6 +23,6 @@ pub mod frequency;
 pub mod time;
 pub mod time_derivative;
 
-pub use frequency::{Frequency, FrequencyUnit};
-pub use time::{Time, TimeDimension, TimeUnit};
+pub use frequency::{Frequency, FrequencyConversions, FrequencyUnit};
+pub use time::{Time, TimeConversions, TimeDimension, TimeUnit};
 pub use time_derivative::{SecondTimeDerivative, SecondTimeIntegral, TimeDerivative, TimeIntegral};

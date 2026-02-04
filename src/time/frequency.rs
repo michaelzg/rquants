@@ -325,26 +325,7 @@ impl FrequencyConversions for f64 {
     }
 }
 
-impl FrequencyConversions for i32 {
-    fn hertz(self) -> Frequency {
-        Frequency::hertz(self as f64)
-    }
-    fn kilohertz(self) -> Frequency {
-        Frequency::kilohertz(self as f64)
-    }
-    fn megahertz(self) -> Frequency {
-        Frequency::megahertz(self as f64)
-    }
-    fn gigahertz(self) -> Frequency {
-        Frequency::gigahertz(self as f64)
-    }
-    fn terahertz(self) -> Frequency {
-        Frequency::terahertz(self as f64)
-    }
-    fn rpm(self) -> Frequency {
-        Frequency::rpm(self as f64)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {

@@ -211,6 +211,31 @@ impl Area {
     pub fn to_acres(&self) -> f64 {
         self.to(AreaUnit::Acres)
     }
+
+    /// Converts to square millimeters.
+    pub fn to_square_millimeters(&self) -> f64 {
+        self.to(AreaUnit::SquareMillimeters)
+    }
+
+    /// Converts to square centimeters.
+    pub fn to_square_centimeters(&self) -> f64 {
+        self.to(AreaUnit::SquareCentimeters)
+    }
+
+    /// Converts to square inches.
+    pub fn to_square_inches(&self) -> f64 {
+        self.to(AreaUnit::SquareInches)
+    }
+
+    /// Converts to square yards.
+    pub fn to_square_yards(&self) -> f64 {
+        self.to(AreaUnit::SquareYards)
+    }
+
+    /// Converts to square miles.
+    pub fn to_square_miles(&self) -> f64 {
+        self.to(AreaUnit::SquareMiles)
+    }
 }
 
 impl fmt::Display for Area {
@@ -343,19 +368,35 @@ impl Dimension for AreaDimension {
 
 /// Extension trait for creating Area quantities from numeric types.
 pub trait AreaConversions {
+    /// Creates an Area in square millimeters.
+    fn square_millimeters(self) -> Area;
+    /// Creates an Area in square centimeters.
+    fn square_centimeters(self) -> Area;
     /// Creates an Area in square meters.
     fn square_meters(self) -> Area;
     /// Creates an Area in square kilometers.
     fn square_kilometers(self) -> Area;
     /// Creates an Area in hectares.
     fn hectares(self) -> Area;
+    /// Creates an Area in square inches.
+    fn square_inches(self) -> Area;
     /// Creates an Area in square feet.
     fn square_feet(self) -> Area;
+    /// Creates an Area in square yards.
+    fn square_yards(self) -> Area;
+    /// Creates an Area in square miles.
+    fn square_miles(self) -> Area;
     /// Creates an Area in acres.
     fn acres(self) -> Area;
 }
 
 impl AreaConversions for f64 {
+    fn square_millimeters(self) -> Area {
+        Area::square_millimeters(self)
+    }
+    fn square_centimeters(self) -> Area {
+        Area::square_centimeters(self)
+    }
     fn square_meters(self) -> Area {
         Area::square_meters(self)
     }
@@ -365,8 +406,17 @@ impl AreaConversions for f64 {
     fn hectares(self) -> Area {
         Area::hectares(self)
     }
+    fn square_inches(self) -> Area {
+        Area::square_inches(self)
+    }
     fn square_feet(self) -> Area {
         Area::square_feet(self)
+    }
+    fn square_yards(self) -> Area {
+        Area::square_yards(self)
+    }
+    fn square_miles(self) -> Area {
+        Area::square_miles(self)
     }
     fn acres(self) -> Area {
         Area::acres(self)

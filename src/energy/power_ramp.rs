@@ -124,6 +124,11 @@ impl PowerRamp {
         Self::new(value, PowerRampUnit::MegawattsPerHour)
     }
 
+    /// Creates a PowerRamp in gigawatts per hour.
+    pub fn gigawatts_per_hour(value: f64) -> Self {
+        Self::new(value, PowerRampUnit::GigawattsPerHour)
+    }
+
     // Conversion methods
     /// Converts to watts per hour.
     pub fn to_watts_per_hour(&self) -> f64 {
@@ -148,6 +153,11 @@ impl PowerRamp {
     /// Converts to megawatts per hour.
     pub fn to_megawatts_per_hour(&self) -> f64 {
         self.to(PowerRampUnit::MegawattsPerHour)
+    }
+
+    /// Converts to gigawatts per hour.
+    pub fn to_gigawatts_per_hour(&self) -> f64 {
+        self.to(PowerRampUnit::GigawattsPerHour)
     }
 }
 
@@ -299,21 +309,36 @@ impl Dimension for PowerRampDimension {
 pub trait PowerRampConversions {
     /// Creates a PowerRamp in watts per hour.
     fn watts_per_hour(self) -> PowerRamp;
+    /// Creates a PowerRamp in watts per minute.
+    fn watts_per_minute(self) -> PowerRamp;
     /// Creates a PowerRamp in kilowatts per hour.
     fn kilowatts_per_hour(self) -> PowerRamp;
+    /// Creates a PowerRamp in kilowatts per minute.
+    fn kilowatts_per_minute(self) -> PowerRamp;
     /// Creates a PowerRamp in megawatts per hour.
     fn megawatts_per_hour(self) -> PowerRamp;
+    /// Creates a PowerRamp in gigawatts per hour.
+    fn gigawatts_per_hour(self) -> PowerRamp;
 }
 
 impl PowerRampConversions for f64 {
     fn watts_per_hour(self) -> PowerRamp {
         PowerRamp::watts_per_hour(self)
     }
+    fn watts_per_minute(self) -> PowerRamp {
+        PowerRamp::watts_per_minute(self)
+    }
     fn kilowatts_per_hour(self) -> PowerRamp {
         PowerRamp::kilowatts_per_hour(self)
     }
+    fn kilowatts_per_minute(self) -> PowerRamp {
+        PowerRamp::kilowatts_per_minute(self)
+    }
     fn megawatts_per_hour(self) -> PowerRamp {
         PowerRamp::megawatts_per_hour(self)
+    }
+    fn gigawatts_per_hour(self) -> PowerRamp {
+        PowerRamp::gigawatts_per_hour(self)
     }
 }
 

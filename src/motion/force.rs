@@ -326,6 +326,8 @@ pub trait ForceConversions {
     fn kilogram_force(self) -> Force;
     /// Creates a Force in pound-force.
     fn pound_force(self) -> Force;
+    /// Creates a Force in dynes.
+    fn dynes(self) -> Force;
 }
 
 impl ForceConversions for f64 {
@@ -340,6 +342,9 @@ impl ForceConversions for f64 {
     }
     fn pound_force(self) -> Force {
         Force::pound_force(self)
+    }
+    fn dynes(self) -> Force {
+        Force::dynes(self)
     }
 }
 

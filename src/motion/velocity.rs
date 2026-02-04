@@ -184,6 +184,16 @@ impl Velocity {
     pub fn to_knots(&self) -> f64 {
         self.to(VelocityUnit::Knots)
     }
+
+    /// Converts to mm/s.
+    pub fn to_millimeters_per_second(&self) -> f64 {
+        self.to(VelocityUnit::MillimetersPerSecond)
+    }
+
+    /// Converts to km/s.
+    pub fn to_kilometers_per_second(&self) -> f64 {
+        self.to(VelocityUnit::KilometersPerSecond)
+    }
 }
 
 impl fmt::Display for Velocity {
@@ -329,8 +339,14 @@ impl Dimension for VelocityDimension {
 pub trait VelocityConversions {
     /// Creates a Velocity in m/s.
     fn meters_per_second(self) -> Velocity;
+    /// Creates a Velocity in mm/s.
+    fn millimeters_per_second(self) -> Velocity;
+    /// Creates a Velocity in km/s.
+    fn kilometers_per_second(self) -> Velocity;
     /// Creates a Velocity in km/h.
     fn kilometers_per_hour(self) -> Velocity;
+    /// Creates a Velocity in ft/s.
+    fn feet_per_second(self) -> Velocity;
     /// Creates a Velocity in mph.
     fn miles_per_hour(self) -> Velocity;
     /// Creates a Velocity in knots.
@@ -341,8 +357,17 @@ impl VelocityConversions for f64 {
     fn meters_per_second(self) -> Velocity {
         Velocity::meters_per_second(self)
     }
+    fn millimeters_per_second(self) -> Velocity {
+        Velocity::millimeters_per_second(self)
+    }
+    fn kilometers_per_second(self) -> Velocity {
+        Velocity::kilometers_per_second(self)
+    }
     fn kilometers_per_hour(self) -> Velocity {
         Velocity::kilometers_per_hour(self)
+    }
+    fn feet_per_second(self) -> Velocity {
+        Velocity::feet_per_second(self)
     }
     fn miles_per_hour(self) -> Velocity {
         Velocity::miles_per_hour(self)

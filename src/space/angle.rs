@@ -148,6 +148,16 @@ impl Angle {
         self.to(AngleUnit::Turns)
     }
 
+    /// Converts to arc minutes.
+    pub fn to_arc_minutes(&self) -> f64 {
+        self.to(AngleUnit::ArcMinutes)
+    }
+
+    /// Converts to arc seconds.
+    pub fn to_arc_seconds(&self) -> f64 {
+        self.to(AngleUnit::ArcSeconds)
+    }
+
     // Trigonometric functions
     /// Returns the sine of this angle.
     pub fn sin(&self) -> f64 {
@@ -309,8 +319,14 @@ pub trait AngleConversions {
     fn radians(self) -> Angle;
     /// Creates an Angle in degrees.
     fn degrees(self) -> Angle;
+    /// Creates an Angle in gradians.
+    fn gradians(self) -> Angle;
     /// Creates an Angle in turns.
     fn turns(self) -> Angle;
+    /// Creates an Angle in arc minutes.
+    fn arc_minutes(self) -> Angle;
+    /// Creates an Angle in arc seconds.
+    fn arc_seconds(self) -> Angle;
 }
 
 impl AngleConversions for f64 {
@@ -320,22 +336,21 @@ impl AngleConversions for f64 {
     fn degrees(self) -> Angle {
         Angle::degrees(self)
     }
+    fn gradians(self) -> Angle {
+        Angle::gradians(self)
+    }
     fn turns(self) -> Angle {
         Angle::turns(self)
     }
+    fn arc_minutes(self) -> Angle {
+        Angle::arc_minutes(self)
+    }
+    fn arc_seconds(self) -> Angle {
+        Angle::arc_seconds(self)
+    }
 }
 
-impl AngleConversions for i32 {
-    fn radians(self) -> Angle {
-        Angle::radians(self as f64)
-    }
-    fn degrees(self) -> Angle {
-        Angle::degrees(self as f64)
-    }
-    fn turns(self) -> Angle {
-        Angle::turns(self as f64)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {

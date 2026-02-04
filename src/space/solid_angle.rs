@@ -234,6 +234,8 @@ impl Dimension for SolidAngleDimension {
 pub trait SolidAngleConversions {
     /// Creates a SolidAngle in steradians.
     fn steradians(self) -> SolidAngle;
+    /// Creates a SolidAngle in square degrees.
+    fn square_degrees(self) -> SolidAngle;
     /// Creates a SolidAngle in spheres.
     fn spheres(self) -> SolidAngle;
 }
@@ -241,6 +243,9 @@ pub trait SolidAngleConversions {
 impl SolidAngleConversions for f64 {
     fn steradians(self) -> SolidAngle {
         SolidAngle::steradians(self)
+    }
+    fn square_degrees(self) -> SolidAngle {
+        SolidAngle::square_degrees(self)
     }
     fn spheres(self) -> SolidAngle {
         SolidAngle::spheres(self)

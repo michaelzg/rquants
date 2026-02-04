@@ -305,6 +305,51 @@ impl Length {
         self.to(LengthUnit::Miles)
     }
 
+    /// Converts to angstroms.
+    pub fn to_angstroms(&self) -> f64 {
+        self.to(LengthUnit::Angstroms)
+    }
+
+    /// Converts to nanometers.
+    pub fn to_nanometers(&self) -> f64 {
+        self.to(LengthUnit::Nanometers)
+    }
+
+    /// Converts to micrometers.
+    pub fn to_micrometers(&self) -> f64 {
+        self.to(LengthUnit::Micrometers)
+    }
+
+    /// Converts to decimeters.
+    pub fn to_decimeters(&self) -> f64 {
+        self.to(LengthUnit::Decimeters)
+    }
+
+    /// Converts to hectometers.
+    pub fn to_hectometers(&self) -> f64 {
+        self.to(LengthUnit::Hectometers)
+    }
+
+    /// Converts to nautical miles.
+    pub fn to_nautical_miles(&self) -> f64 {
+        self.to(LengthUnit::NauticalMiles)
+    }
+
+    /// Converts to astronomical units.
+    pub fn to_astronomical_units(&self) -> f64 {
+        self.to(LengthUnit::AstronomicalUnits)
+    }
+
+    /// Converts to light years.
+    pub fn to_light_years(&self) -> f64 {
+        self.to(LengthUnit::LightYears)
+    }
+
+    /// Converts to parsecs.
+    pub fn to_parsecs(&self) -> f64 {
+        self.to(LengthUnit::Parsecs)
+    }
+
     /// Returns the squared length (this * this).
     pub fn squared(&self) -> Area {
         *self * *self
@@ -452,14 +497,12 @@ impl Dimension for LengthDimension {
     fn units() -> &'static [Self::Unit] {
         LengthUnit::ALL
     }
-
-    fn dimension_symbol() -> Option<&'static str> {
-        Some("L")
-    }
 }
 
 /// Extension trait for creating Length quantities from numeric types.
 pub trait LengthConversions {
+    /// Creates a Length in angstroms.
+    fn angstroms(self) -> Length;
     /// Creates a Length in nanometers.
     fn nanometers(self) -> Length;
     /// Creates a Length in micrometers.
@@ -468,8 +511,12 @@ pub trait LengthConversions {
     fn millimeters(self) -> Length;
     /// Creates a Length in centimeters.
     fn centimeters(self) -> Length;
+    /// Creates a Length in decimeters.
+    fn decimeters(self) -> Length;
     /// Creates a Length in meters.
     fn meters(self) -> Length;
+    /// Creates a Length in hectometers.
+    fn hectometers(self) -> Length;
     /// Creates a Length in kilometers.
     fn kilometers(self) -> Length;
     /// Creates a Length in inches.
@@ -480,9 +527,20 @@ pub trait LengthConversions {
     fn yards(self) -> Length;
     /// Creates a Length in miles.
     fn miles(self) -> Length;
+    /// Creates a Length in nautical miles.
+    fn nautical_miles(self) -> Length;
+    /// Creates a Length in astronomical units.
+    fn astronomical_units(self) -> Length;
+    /// Creates a Length in light years.
+    fn light_years(self) -> Length;
+    /// Creates a Length in parsecs.
+    fn parsecs(self) -> Length;
 }
 
 impl LengthConversions for f64 {
+    fn angstroms(self) -> Length {
+        Length::angstroms(self)
+    }
     fn nanometers(self) -> Length {
         Length::nanometers(self)
     }
@@ -495,8 +553,14 @@ impl LengthConversions for f64 {
     fn centimeters(self) -> Length {
         Length::centimeters(self)
     }
+    fn decimeters(self) -> Length {
+        Length::decimeters(self)
+    }
     fn meters(self) -> Length {
         Length::meters(self)
+    }
+    fn hectometers(self) -> Length {
+        Length::hectometers(self)
     }
     fn kilometers(self) -> Length {
         Length::kilometers(self)
@@ -513,40 +577,20 @@ impl LengthConversions for f64 {
     fn miles(self) -> Length {
         Length::miles(self)
     }
+    fn nautical_miles(self) -> Length {
+        Length::nautical_miles(self)
+    }
+    fn astronomical_units(self) -> Length {
+        Length::astronomical_units(self)
+    }
+    fn light_years(self) -> Length {
+        Length::light_years(self)
+    }
+    fn parsecs(self) -> Length {
+        Length::parsecs(self)
+    }
 }
 
-impl LengthConversions for i32 {
-    fn nanometers(self) -> Length {
-        Length::nanometers(self as f64)
-    }
-    fn micrometers(self) -> Length {
-        Length::micrometers(self as f64)
-    }
-    fn millimeters(self) -> Length {
-        Length::millimeters(self as f64)
-    }
-    fn centimeters(self) -> Length {
-        Length::centimeters(self as f64)
-    }
-    fn meters(self) -> Length {
-        Length::meters(self as f64)
-    }
-    fn kilometers(self) -> Length {
-        Length::kilometers(self as f64)
-    }
-    fn inches(self) -> Length {
-        Length::inches(self as f64)
-    }
-    fn feet(self) -> Length {
-        Length::feet(self as f64)
-    }
-    fn yards(self) -> Length {
-        Length::yards(self as f64)
-    }
-    fn miles(self) -> Length {
-        Length::miles(self as f64)
-    }
-}
 
 #[cfg(test)]
 mod tests {

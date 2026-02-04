@@ -207,6 +207,26 @@ impl Volume {
         Self::new(value, VolumeUnit::CubicYards)
     }
 
+    /// Creates a Volume in US fluid ounces.
+    pub fn us_fluid_ounces(value: f64) -> Self {
+        Self::new(value, VolumeUnit::UsFluidOunces)
+    }
+
+    /// Creates a Volume in US cups.
+    pub fn us_cups(value: f64) -> Self {
+        Self::new(value, VolumeUnit::UsCups)
+    }
+
+    /// Creates a Volume in US pints.
+    pub fn us_pints(value: f64) -> Self {
+        Self::new(value, VolumeUnit::UsPints)
+    }
+
+    /// Creates a Volume in US quarts.
+    pub fn us_quarts(value: f64) -> Self {
+        Self::new(value, VolumeUnit::UsQuarts)
+    }
+
     /// Creates a Volume in US gallons.
     pub fn us_gallons(value: f64) -> Self {
         Self::new(value, VolumeUnit::UsGallons)
@@ -236,6 +256,51 @@ impl Volume {
     /// Converts to US gallons.
     pub fn to_us_gallons(&self) -> f64 {
         self.to(VolumeUnit::UsGallons)
+    }
+
+    /// Converts to cubic millimeters.
+    pub fn to_cubic_millimeters(&self) -> f64 {
+        self.to(VolumeUnit::CubicMillimeters)
+    }
+
+    /// Converts to cubic centimeters.
+    pub fn to_cubic_centimeters(&self) -> f64 {
+        self.to(VolumeUnit::CubicCentimeters)
+    }
+
+    /// Converts to cubic kilometers.
+    pub fn to_cubic_kilometers(&self) -> f64 {
+        self.to(VolumeUnit::CubicKilometers)
+    }
+
+    /// Converts to cubic inches.
+    pub fn to_cubic_inches(&self) -> f64 {
+        self.to(VolumeUnit::CubicInches)
+    }
+
+    /// Converts to cubic yards.
+    pub fn to_cubic_yards(&self) -> f64 {
+        self.to(VolumeUnit::CubicYards)
+    }
+
+    /// Converts to US fluid ounces.
+    pub fn to_us_fluid_ounces(&self) -> f64 {
+        self.to(VolumeUnit::UsFluidOunces)
+    }
+
+    /// Converts to US cups.
+    pub fn to_us_cups(&self) -> f64 {
+        self.to(VolumeUnit::UsCups)
+    }
+
+    /// Converts to US pints.
+    pub fn to_us_pints(&self) -> f64 {
+        self.to(VolumeUnit::UsPints)
+    }
+
+    /// Converts to US quarts.
+    pub fn to_us_quarts(&self) -> f64 {
+        self.to(VolumeUnit::UsQuarts)
     }
 }
 
@@ -359,30 +424,75 @@ impl Dimension for VolumeDimension {
 
 /// Extension trait for creating Volume quantities from numeric types.
 pub trait VolumeConversions {
+    /// Creates a Volume in cubic millimeters.
+    fn cubic_millimeters(self) -> Volume;
+    /// Creates a Volume in cubic centimeters.
+    fn cubic_centimeters(self) -> Volume;
     /// Creates a Volume in cubic meters.
     fn cubic_meters(self) -> Volume;
-    /// Creates a Volume in liters.
-    fn liters(self) -> Volume;
+    /// Creates a Volume in cubic kilometers.
+    fn cubic_kilometers(self) -> Volume;
     /// Creates a Volume in milliliters.
     fn milliliters(self) -> Volume;
+    /// Creates a Volume in liters.
+    fn liters(self) -> Volume;
+    /// Creates a Volume in cubic inches.
+    fn cubic_inches(self) -> Volume;
     /// Creates a Volume in cubic feet.
     fn cubic_feet(self) -> Volume;
+    /// Creates a Volume in cubic yards.
+    fn cubic_yards(self) -> Volume;
+    /// Creates a Volume in US fluid ounces.
+    fn us_fluid_ounces(self) -> Volume;
+    /// Creates a Volume in US cups.
+    fn us_cups(self) -> Volume;
+    /// Creates a Volume in US pints.
+    fn us_pints(self) -> Volume;
+    /// Creates a Volume in US quarts.
+    fn us_quarts(self) -> Volume;
     /// Creates a Volume in US gallons.
     fn us_gallons(self) -> Volume;
 }
 
 impl VolumeConversions for f64 {
+    fn cubic_millimeters(self) -> Volume {
+        Volume::cubic_millimeters(self)
+    }
+    fn cubic_centimeters(self) -> Volume {
+        Volume::cubic_centimeters(self)
+    }
     fn cubic_meters(self) -> Volume {
         Volume::cubic_meters(self)
     }
-    fn liters(self) -> Volume {
-        Volume::liters(self)
+    fn cubic_kilometers(self) -> Volume {
+        Volume::cubic_kilometers(self)
     }
     fn milliliters(self) -> Volume {
         Volume::milliliters(self)
     }
+    fn liters(self) -> Volume {
+        Volume::liters(self)
+    }
+    fn cubic_inches(self) -> Volume {
+        Volume::cubic_inches(self)
+    }
     fn cubic_feet(self) -> Volume {
         Volume::cubic_feet(self)
+    }
+    fn cubic_yards(self) -> Volume {
+        Volume::cubic_yards(self)
+    }
+    fn us_fluid_ounces(self) -> Volume {
+        Volume::us_fluid_ounces(self)
+    }
+    fn us_cups(self) -> Volume {
+        Volume::us_cups(self)
+    }
+    fn us_pints(self) -> Volume {
+        Volume::us_pints(self)
+    }
+    fn us_quarts(self) -> Volume {
+        Volume::us_quarts(self)
     }
     fn us_gallons(self) -> Volume {
         Volume::us_gallons(self)

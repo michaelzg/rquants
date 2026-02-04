@@ -345,23 +345,7 @@ impl DimensionlessConversions for f64 {
     }
 }
 
-impl DimensionlessConversions for i32 {
-    fn each(self) -> Dimensionless {
-        Dimensionless::each(self as f64)
-    }
-    fn percent(self) -> Dimensionless {
-        Dimensionless::percent(self as f64)
-    }
-    fn dozen(self) -> Dimensionless {
-        Dimensionless::dozen(self as f64)
-    }
-    fn score(self) -> Dimensionless {
-        Dimensionless::score(self as f64)
-    }
-    fn gross(self) -> Dimensionless {
-        Dimensionless::gross(self as f64)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {

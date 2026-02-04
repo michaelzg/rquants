@@ -269,38 +269,7 @@ impl MoneyConversions for f64 {
     }
 }
 
-impl MoneyConversions for i32 {
-    fn usd(self) -> Money {
-        Money::usd(self as f64)
-    }
-    fn eur(self) -> Money {
-        Money::eur(self as f64)
-    }
-    fn gbp(self) -> Money {
-        Money::gbp(self as f64)
-    }
-    fn jpy(self) -> Money {
-        Money::jpy(self as f64)
-    }
-    fn chf(self) -> Money {
-        Money::chf(self as f64)
-    }
-    fn cad(self) -> Money {
-        Money::cad(self as f64)
-    }
-    fn aud(self) -> Money {
-        Money::aud(self as f64)
-    }
-    fn cny(self) -> Money {
-        Money::cny(self as f64)
-    }
-    fn inr(self) -> Money {
-        Money::inr(self as f64)
-    }
-    fn btc(self) -> Money {
-        Money::btc(self as f64)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -371,7 +340,7 @@ mod tests {
         assert_eq!(m1.to_amount(), 100.0);
         assert_eq!(m1.currency(), Currency::USD);
 
-        let m2 = 50.eur();
+        let m2 = 50.0.eur();
         assert_eq!(m2.to_amount(), 50.0);
         assert_eq!(m2.currency(), Currency::EUR);
     }

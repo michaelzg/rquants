@@ -167,6 +167,11 @@ impl Pressure {
         Self::new(value, PressureUnit::MillimetersOfMercury)
     }
 
+    /// Creates a Pressure in inHg.
+    pub fn inches_of_mercury(value: f64) -> Self {
+        Self::new(value, PressureUnit::InchesOfMercury)
+    }
+
     /// Creates a Pressure in Torr.
     pub fn torr(value: f64) -> Self {
         Self::new(value, PressureUnit::Torr)
@@ -206,6 +211,16 @@ impl Pressure {
     /// Converts to Torr.
     pub fn to_torr(&self) -> f64 {
         self.to(PressureUnit::Torr)
+    }
+
+    /// Converts to megapascals.
+    pub fn to_megapascals(&self) -> f64 {
+        self.to(PressureUnit::Megapascals)
+    }
+
+    /// Converts to inHg.
+    pub fn to_inches_of_mercury(&self) -> f64 {
+        self.to(PressureUnit::InchesOfMercury)
     }
 }
 
@@ -362,12 +377,20 @@ pub trait PressureConversions {
     fn pascals(self) -> Pressure;
     /// Creates a Pressure in kilopascals.
     fn kilopascals(self) -> Pressure;
+    /// Creates a Pressure in megapascals.
+    fn megapascals(self) -> Pressure;
     /// Creates a Pressure in bars.
     fn bars(self) -> Pressure;
     /// Creates a Pressure in psi.
     fn psi(self) -> Pressure;
     /// Creates a Pressure in atmospheres.
     fn atmospheres(self) -> Pressure;
+    /// Creates a Pressure in mmHg.
+    fn millimeters_of_mercury(self) -> Pressure;
+    /// Creates a Pressure in inHg.
+    fn inches_of_mercury(self) -> Pressure;
+    /// Creates a Pressure in Torr.
+    fn torr(self) -> Pressure;
 }
 
 impl PressureConversions for f64 {
@@ -377,6 +400,9 @@ impl PressureConversions for f64 {
     fn kilopascals(self) -> Pressure {
         Pressure::kilopascals(self)
     }
+    fn megapascals(self) -> Pressure {
+        Pressure::megapascals(self)
+    }
     fn bars(self) -> Pressure {
         Pressure::bars(self)
     }
@@ -385,6 +411,15 @@ impl PressureConversions for f64 {
     }
     fn atmospheres(self) -> Pressure {
         Pressure::atmospheres(self)
+    }
+    fn millimeters_of_mercury(self) -> Pressure {
+        Pressure::millimeters_of_mercury(self)
+    }
+    fn inches_of_mercury(self) -> Pressure {
+        Pressure::inches_of_mercury(self)
+    }
+    fn torr(self) -> Pressure {
+        Pressure::torr(self)
     }
 }
 

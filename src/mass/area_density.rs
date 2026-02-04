@@ -304,6 +304,8 @@ pub trait AreaDensityConversions {
     fn kilograms_per_hectare(self) -> AreaDensity;
     /// Creates an AreaDensity in g/cm².
     fn grams_per_square_centimeter(self) -> AreaDensity;
+    /// Creates an AreaDensity in lb/ac.
+    fn pounds_per_acre(self) -> AreaDensity;
 }
 
 impl AreaDensityConversions for f64 {
@@ -315,6 +317,9 @@ impl AreaDensityConversions for f64 {
     }
     fn grams_per_square_centimeter(self) -> AreaDensity {
         AreaDensity::grams_per_square_centimeter(self)
+    }
+    fn pounds_per_acre(self) -> AreaDensity {
+        AreaDensity::pounds_per_acre(self)
     }
 }
 

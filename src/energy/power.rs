@@ -163,6 +163,16 @@ impl Power {
         Self::new(value, PowerUnit::BtusPerHour)
     }
 
+    /// Creates a Power in ergs per second.
+    pub fn ergs_per_second(value: f64) -> Self {
+        Self::new(value, PowerUnit::ErgsPerSecond)
+    }
+
+    /// Creates a Power in solar luminosities.
+    pub fn solar_luminosities(value: f64) -> Self {
+        Self::new(value, PowerUnit::SolarLuminosities)
+    }
+
     // Conversion methods
     /// Converts to watts.
     pub fn to_watts(&self) -> f64 {
@@ -197,6 +207,16 @@ impl Power {
     /// Converts to BTU/hour.
     pub fn to_btus_per_hour(&self) -> f64 {
         self.to(PowerUnit::BtusPerHour)
+    }
+
+    /// Converts to ergs per second.
+    pub fn to_ergs_per_second(&self) -> f64 {
+        self.to(PowerUnit::ErgsPerSecond)
+    }
+
+    /// Converts to solar luminosities.
+    pub fn to_solar_luminosities(&self) -> f64 {
+        self.to(PowerUnit::SolarLuminosities)
     }
 }
 
@@ -396,8 +416,14 @@ pub trait PowerConversions {
     fn megawatts(self) -> Power;
     /// Creates a Power in gigawatts.
     fn gigawatts(self) -> Power;
+    /// Creates a Power in BTU/hour.
+    fn btus_per_hour(self) -> Power;
+    /// Creates a Power in ergs per second.
+    fn ergs_per_second(self) -> Power;
     /// Creates a Power in horsepower.
     fn horsepower(self) -> Power;
+    /// Creates a Power in solar luminosities.
+    fn solar_luminosities(self) -> Power;
 }
 
 impl PowerConversions for f64 {
@@ -416,8 +442,17 @@ impl PowerConversions for f64 {
     fn gigawatts(self) -> Power {
         Power::gigawatts(self)
     }
+    fn btus_per_hour(self) -> Power {
+        Power::btus_per_hour(self)
+    }
+    fn ergs_per_second(self) -> Power {
+        Power::ergs_per_second(self)
+    }
     fn horsepower(self) -> Power {
         Power::horsepower(self)
+    }
+    fn solar_luminosities(self) -> Power {
+        Power::solar_luminosities(self)
     }
 }
 

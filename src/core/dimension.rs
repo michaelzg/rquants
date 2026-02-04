@@ -59,13 +59,6 @@ pub trait Dimension {
     /// Returns all available units for this dimension.
     fn units() -> &'static [Self::Unit];
 
-    /// Returns the SI dimension symbol (e.g., "L" for length, "M" for mass).
-    ///
-    /// Returns None for dimensions that are not SI base dimensions.
-    fn dimension_symbol() -> Option<&'static str> {
-        None
-    }
-
     /// Attempts to find a unit by its symbol.
     fn unit_by_symbol(symbol: &str) -> Option<Self::Unit> {
         Self::units().iter().find(|u| u.symbol() == symbol).copied()
@@ -97,21 +90,6 @@ pub trait Dimension {
 
         Ok(Self::Quantity::new(value, unit))
     }
-}
-
-/// Marker trait for SI base dimensions.
-///
-/// The seven SI base dimensions are:
-/// - Length (L)
-/// - Mass (M)
-/// - Time (T)
-/// - Electric Current (I)
-/// - Temperature (Θ)
-/// - Amount of Substance (N)
-/// - Luminous Intensity (J)
-pub trait BaseDimension: Dimension {
-    /// Returns the SI base dimension symbol.
-    fn base_dimension_symbol() -> &'static str;
 }
 
 /// Helper function to parse a value and unit from a string.

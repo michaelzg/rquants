@@ -325,10 +325,6 @@ impl Dimension for TimeDimension {
     fn units() -> &'static [Self::Unit] {
         TimeUnit::ALL
     }
-
-    fn dimension_symbol() -> Option<&'static str> {
-        Some("T")
-    }
 }
 
 /// Extension trait for creating Time quantities from numeric types.
@@ -373,29 +369,7 @@ impl TimeConversions for f64 {
     }
 }
 
-impl TimeConversions for i32 {
-    fn nanoseconds(self) -> Time {
-        Time::nanoseconds(self as f64)
-    }
-    fn microseconds(self) -> Time {
-        Time::microseconds(self as f64)
-    }
-    fn milliseconds(self) -> Time {
-        Time::milliseconds(self as f64)
-    }
-    fn seconds(self) -> Time {
-        Time::seconds(self as f64)
-    }
-    fn minutes(self) -> Time {
-        Time::minutes(self as f64)
-    }
-    fn hours(self) -> Time {
-        Time::hours(self as f64)
-    }
-    fn days(self) -> Time {
-        Time::days(self as f64)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -468,7 +442,7 @@ mod tests {
         let t = 5.0.seconds();
         assert_eq!(t.to_seconds(), 5.0);
 
-        let t2 = 100.milliseconds();
+        let t2 = 100.0.milliseconds();
         assert_eq!(t2.to_milliseconds(), 100.0);
     }
 

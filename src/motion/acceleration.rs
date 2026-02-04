@@ -128,6 +128,11 @@ impl Acceleration {
         Self::new(value, AccelerationUnit::FeetPerSecondSquared)
     }
 
+    /// Creates an Acceleration in miles per hour squared.
+    pub fn miles_per_hour_squared(value: f64) -> Self {
+        Self::new(value, AccelerationUnit::MilesPerHourSquared)
+    }
+
     /// Creates an Acceleration in g (standard gravity).
     pub fn earth_gravities(value: f64) -> Self {
         Self::new(value, AccelerationUnit::EarthGravities)
@@ -147,6 +152,16 @@ impl Acceleration {
     /// Converts to g (standard gravity).
     pub fn to_earth_gravities(&self) -> f64 {
         self.to(AccelerationUnit::EarthGravities)
+    }
+
+    /// Converts to mm/s².
+    pub fn to_millimeters_per_second_squared(&self) -> f64 {
+        self.to(AccelerationUnit::MillimetersPerSecondSquared)
+    }
+
+    /// Converts to mph².
+    pub fn to_miles_per_hour_squared(&self) -> f64 {
+        self.to(AccelerationUnit::MilesPerHourSquared)
     }
 }
 
@@ -301,8 +316,12 @@ impl Dimension for AccelerationDimension {
 pub trait AccelerationConversions {
     /// Creates an Acceleration in m/s².
     fn meters_per_second_squared(self) -> Acceleration;
+    /// Creates an Acceleration in mm/s².
+    fn millimeters_per_second_squared(self) -> Acceleration;
     /// Creates an Acceleration in ft/s².
     fn feet_per_second_squared(self) -> Acceleration;
+    /// Creates an Acceleration in mph².
+    fn miles_per_hour_squared(self) -> Acceleration;
     /// Creates an Acceleration in g.
     fn earth_gravities(self) -> Acceleration;
 }
@@ -311,8 +330,14 @@ impl AccelerationConversions for f64 {
     fn meters_per_second_squared(self) -> Acceleration {
         Acceleration::meters_per_second_squared(self)
     }
+    fn millimeters_per_second_squared(self) -> Acceleration {
+        Acceleration::millimeters_per_second_squared(self)
+    }
     fn feet_per_second_squared(self) -> Acceleration {
         Acceleration::feet_per_second_squared(self)
+    }
+    fn miles_per_hour_squared(self) -> Acceleration {
+        Acceleration::miles_per_hour_squared(self)
     }
     fn earth_gravities(self) -> Acceleration {
         Acceleration::earth_gravities(self)

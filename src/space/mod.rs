@@ -27,8 +27,8 @@ pub mod length;
 pub mod solid_angle;
 pub mod volume;
 
-pub use angle::{Angle, AngleUnit};
-pub use area::{Area, AreaUnit};
-pub use length::{Length, LengthUnit};
-pub use solid_angle::{SolidAngle, SolidAngleUnit};
-pub use volume::{Volume, VolumeUnit};
+pub use angle::{Angle, AngleConversions, AngleUnit};
+pub use area::{Area, AreaConversions, AreaUnit};
+pub use length::{Length, LengthConversions, LengthUnit};
+pub use solid_angle::{SolidAngle, SolidAngleConversions, SolidAngleUnit};
+pub use volume::{Volume, VolumeConversions, VolumeUnit};

@@ -263,6 +263,8 @@ pub trait SpecificEnergyConversions {
     fn grays(self) -> SpecificEnergy;
     /// Creates a SpecificEnergy in rads.
     fn rads(self) -> SpecificEnergy;
+    /// Creates a SpecificEnergy in ergs per gram.
+    fn ergs_per_gram(self) -> SpecificEnergy;
 }
 
 impl SpecificEnergyConversions for f64 {
@@ -271,6 +273,9 @@ impl SpecificEnergyConversions for f64 {
     }
     fn rads(self) -> SpecificEnergy {
         SpecificEnergy::rads(self)
+    }
+    fn ergs_per_gram(self) -> SpecificEnergy {
+        SpecificEnergy::ergs_per_gram(self)
     }
 }
 

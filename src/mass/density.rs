@@ -173,6 +173,11 @@ impl Density {
         Self::new(value, DensityUnit::PoundsPerCubicFoot)
     }
 
+    /// Creates a Density in lb/gal.
+    pub fn pounds_per_gallon(value: f64) -> Self {
+        Self::new(value, DensityUnit::PoundsPerGallon)
+    }
+
     // Conversion methods
     /// Converts to kg/m³.
     pub fn to_kilograms_per_cubic_meter(&self) -> f64 {
@@ -197,6 +202,21 @@ impl Density {
     /// Converts to g/cm³.
     pub fn to_grams_per_cubic_centimeter(&self) -> f64 {
         self.to(DensityUnit::GramsPerCubicCentimeter)
+    }
+
+    /// Converts to mg/L.
+    pub fn to_milligrams_per_liter(&self) -> f64 {
+        self.to(DensityUnit::MilligramsPerLiter)
+    }
+
+    /// Converts to lb/ft³.
+    pub fn to_pounds_per_cubic_foot(&self) -> f64 {
+        self.to(DensityUnit::PoundsPerCubicFoot)
+    }
+
+    /// Converts to lb/gal.
+    pub fn to_pounds_per_gallon(&self) -> f64 {
+        self.to(DensityUnit::PoundsPerGallon)
     }
 }
 
@@ -355,8 +375,16 @@ pub trait DensityConversions {
     fn kilograms_per_liter(self) -> Density;
     /// Creates a Density in g/L.
     fn grams_per_liter(self) -> Density;
+    /// Creates a Density in mg/L.
+    fn milligrams_per_liter(self) -> Density;
     /// Creates a Density in g/mL.
     fn grams_per_milliliter(self) -> Density;
+    /// Creates a Density in g/cm³.
+    fn grams_per_cubic_centimeter(self) -> Density;
+    /// Creates a Density in lb/ft³.
+    fn pounds_per_cubic_foot(self) -> Density;
+    /// Creates a Density in lb/gal.
+    fn pounds_per_gallon(self) -> Density;
 }
 
 impl DensityConversions for f64 {
@@ -369,8 +397,20 @@ impl DensityConversions for f64 {
     fn grams_per_liter(self) -> Density {
         Density::grams_per_liter(self)
     }
+    fn milligrams_per_liter(self) -> Density {
+        Density::milligrams_per_liter(self)
+    }
     fn grams_per_milliliter(self) -> Density {
         Density::grams_per_milliliter(self)
+    }
+    fn grams_per_cubic_centimeter(self) -> Density {
+        Density::grams_per_cubic_centimeter(self)
+    }
+    fn pounds_per_cubic_foot(self) -> Density {
+        Density::pounds_per_cubic_foot(self)
+    }
+    fn pounds_per_gallon(self) -> Density {
+        Density::pounds_per_gallon(self)
     }
 }
 
