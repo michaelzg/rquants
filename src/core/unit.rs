@@ -10,7 +10,10 @@ use std::hash::Hash;
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```rust
+/// use rquants::UnitOfMeasure;
+/// use std::fmt::{self, Display};
+///
 /// // Units are typically implemented as enums
 /// #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 /// pub enum LengthUnit {
@@ -34,6 +37,12 @@ use std::hash::Hash;
 ///             LengthUnit::Kilometers => 1000.0,
 ///             LengthUnit::Feet => 0.3048,
 ///         }
+///     }
+/// }
+///
+/// impl Display for LengthUnit {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         write!(f, "{}", self.symbol())
 ///     }
 /// }
 /// ```
@@ -64,7 +73,10 @@ pub trait UnitOfMeasure: Debug + Clone + Copy + PartialEq + Eq + Hash + Display 
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```rust
+    /// use rquants::space::LengthUnit;
+    /// use rquants::UnitOfMeasure;
+    ///
     /// // Convert 1000 meters to kilometers
     /// let km = LengthUnit::Kilometers;
     /// assert_eq!(km.convert_from_primary(1000.0), 1.0);
@@ -77,7 +89,10 @@ pub trait UnitOfMeasure: Debug + Clone + Copy + PartialEq + Eq + Hash + Display 
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```rust
+    /// use rquants::space::LengthUnit;
+    /// use rquants::UnitOfMeasure;
+    ///
     /// // Convert 1 kilometer to meters
     /// let km = LengthUnit::Kilometers;
     /// assert_eq!(km.convert_to_primary(1.0), 1000.0);
