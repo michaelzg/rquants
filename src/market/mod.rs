@@ -14,7 +14,7 @@
 //!
 //! let price = Money::usd(100.0);
 //! let tax = Money::usd(10.0);
-//! let total = price + tax;
+//! let total = (price + tax).unwrap();
 //! assert_eq!(total.to_amount(), 110.0);
 //! ```
 //!

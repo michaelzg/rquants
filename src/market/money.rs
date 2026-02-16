@@ -18,7 +18,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 ///
 /// let price = Money::usd(100.0);
 /// let tax = Money::usd(10.0);
-/// let total = price + tax;
+/// let total = (price + tax).unwrap();
 /// assert_eq!(total.to_amount(), 110.0);
 /// ```
 #[derive(Debug, Clone, Copy)]
@@ -127,6 +127,24 @@ impl Money {
             )))
         }
     }
+
+    /// Adds two money amounts, returning an error if currencies differ.
+    pub fn checked_add(self, rhs: Money) -> Result<Money, QuantityError> {
+        self.can_operate_with(&rhs)?;
+        Ok(Money::new(self.amount + rhs.amount, self.currency))
+    }
+
+    /// Subtracts two money amounts, returning an error if currencies differ.
+    pub fn checked_sub(self, rhs: Money) -> Result<Money, QuantityError> {
+        self.can_operate_with(&rhs)?;
+        Ok(Money::new(self.amount - rhs.amount, self.currency))
+    }
+
+    /// Divides two money amounts, returning an error if currencies differ.
+    pub fn checked_ratio(self, rhs: Money) -> Result<f64, QuantityError> {
+        self.can_operate_with(&rhs)?;
+        Ok(self.amount / rhs.amount)
+    }
 }
 
 impl fmt::Display for Money {
@@ -154,20 +172,18 @@ impl PartialOrd for Money {
 // Arithmetic operations - only work on same currency
 
 impl Add for Money {
-    type Output = Money;
+    type Output = Result<Money, QuantityError>;
 
     fn add(self, rhs: Self) -> Self::Output {
-        self.can_operate_with(&rhs).unwrap();
-        Money::new(self.amount + rhs.amount, self.currency)
+        self.checked_add(rhs)
     }
 }
 
 impl Sub for Money {
-    type Output = Money;
+    type Output = Result<Money, QuantityError>;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self.can_operate_with(&rhs).unwrap();
-        Money::new(self.amount - rhs.amount, self.currency)
+        self.checked_sub(rhs)
     }
 }
 
@@ -196,11 +212,10 @@ impl Div<f64> for Money {
 }
 
 impl Div<Money> for Money {
-    type Output = f64;
+    type Output = Result<f64, QuantityError>;
 
     fn div(self, rhs: Money) -> Self::Output {
-        self.can_operate_with(&rhs).unwrap();
-        self.amount / rhs.amount
+        self.checked_ratio(rhs)
     }
 }
 
@@ -302,10 +317,10 @@ mod tests {
         let m1 = Money::usd(100.0);
         let m2 = Money::usd(50.0);
 
-        let sum = m1 + m2;
+        let sum = (m1 + m2).unwrap();
         assert_eq!(sum.to_amount(), 150.0);
 
-        let diff = m1 - m2;
+        let diff = (m1 - m2).unwrap();
         assert_eq!(diff.to_amount(), 50.0);
 
         let product = m1 * 2.0;
@@ -314,24 +329,44 @@ mod tests {
         let quotient = m1 / 2.0;
         assert_eq!(quotient.to_amount(), 50.0);
 
-        let ratio = m1 / m2;
+        let ratio = (m1 / m2).unwrap();
         assert_eq!(ratio, 2.0);
     }
 
     #[test]
-    #[should_panic(expected = "Cannot operate on different currencies")]
-    fn test_money_arithmetic_different_currency_add() {
+    fn test_money_checked_arithmetic() {
         let m1 = Money::usd(100.0);
-        let m2 = Money::eur(50.0);
-        let _ = m1 + m2; // Should panic
+        let m2 = Money::usd(50.0);
+
+        assert_eq!(m1.checked_add(m2).unwrap().to_amount(), 150.0);
+        assert_eq!(m1.checked_sub(m2).unwrap().to_amount(), 50.0);
+        assert_eq!(m1.checked_ratio(m2).unwrap(), 2.0);
     }
 
     #[test]
-    #[should_panic(expected = "Cannot operate on different currencies")]
+    fn test_money_checked_arithmetic_different_currency() {
+        let m1 = Money::usd(100.0);
+        let m2 = Money::eur(50.0);
+
+        assert!(m1.checked_add(m2).is_err());
+        assert!(m1.checked_sub(m2).is_err());
+        assert!(m1.checked_ratio(m2).is_err());
+    }
+
+    #[test]
+    fn test_money_arithmetic_different_currency_add() {
+        let m1 = Money::usd(100.0);
+        let m2 = Money::eur(50.0);
+        let result = m1 + m2;
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_money_arithmetic_different_currency_div() {
         let m1 = Money::usd(100.0);
         let m2 = Money::eur(50.0);
-        let _ = m1 / m2; // Should panic
+        let result = m1 / m2;
+        assert!(result.is_err());
     }
 
     #[test]
