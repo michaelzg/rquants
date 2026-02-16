@@ -25,7 +25,7 @@ fn money_basics() {
     // Concert ticket math
     let ticket = Money::usd(95.00);
     let fees = Money::usd(23.50);
-    let total = ticket + fees;
+    let total = (ticket + fees).unwrap();
     println!("Concert ticket: {} + {} fees = {}", ticket, fees, total);
 
     // Group dinner: split the bill
@@ -40,7 +40,7 @@ fn money_basics() {
     // Sale: 30% off a PS5
     let ps5 = Money::usd(499.99);
     let discount = ps5 * 0.30;
-    let sale_price = ps5 - discount;
+    let sale_price = (ps5 - discount).unwrap();
     println!(
         "PS5 on sale: {} - 30% ({}) = {}",
         ps5, discount, sale_price

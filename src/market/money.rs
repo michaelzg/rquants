@@ -18,7 +18,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 ///
 /// let price = Money::usd(100.0);
 /// let tax = Money::usd(10.0);
-/// let total = price + tax;
+/// let total = (price + tax).unwrap();
 /// assert_eq!(total.to_amount(), 110.0);
 /// ```
 #[derive(Debug, Clone, Copy)]
@@ -172,20 +172,18 @@ impl PartialOrd for Money {
 // Arithmetic operations - only work on same currency
 
 impl Add for Money {
-    type Output = Money;
+    type Output = Result<Money, QuantityError>;
 
     fn add(self, rhs: Self) -> Self::Output {
         self.checked_add(rhs)
-            .unwrap_or_else(|e| panic!("Money addition failed: {e}"))
     }
 }
 
 impl Sub for Money {
-    type Output = Money;
+    type Output = Result<Money, QuantityError>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         self.checked_sub(rhs)
-            .unwrap_or_else(|e| panic!("Money subtraction failed: {e}"))
     }
 }
 
@@ -214,11 +212,10 @@ impl Div<f64> for Money {
 }
 
 impl Div<Money> for Money {
-    type Output = f64;
+    type Output = Result<f64, QuantityError>;
 
     fn div(self, rhs: Money) -> Self::Output {
         self.checked_ratio(rhs)
-            .unwrap_or_else(|e| panic!("Money division failed: {e}"))
     }
 }
 
@@ -320,10 +317,10 @@ mod tests {
         let m1 = Money::usd(100.0);
         let m2 = Money::usd(50.0);
 
-        let sum = m1 + m2;
+        let sum = (m1 + m2).unwrap();
         assert_eq!(sum.to_amount(), 150.0);
 
-        let diff = m1 - m2;
+        let diff = (m1 - m2).unwrap();
         assert_eq!(diff.to_amount(), 50.0);
 
         let product = m1 * 2.0;
@@ -332,7 +329,7 @@ mod tests {
         let quotient = m1 / 2.0;
         assert_eq!(quotient.to_amount(), 50.0);
 
-        let ratio = m1 / m2;
+        let ratio = (m1 / m2).unwrap();
         assert_eq!(ratio, 2.0);
     }
 
@@ -357,19 +354,19 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Cannot operate on different currencies")]
     fn test_money_arithmetic_different_currency_add() {
         let m1 = Money::usd(100.0);
         let m2 = Money::eur(50.0);
-        let _ = m1 + m2; // Should panic
+        let result = m1 + m2;
+        assert!(result.is_err());
     }
 
     #[test]
-    #[should_panic(expected = "Cannot operate on different currencies")]
     fn test_money_arithmetic_different_currency_div() {
         let m1 = Money::usd(100.0);
         let m2 = Money::eur(50.0);
-        let _ = m1 / m2; // Should panic
+        let result = m1 / m2;
+        assert!(result.is_err());
     }
 
     #[test]
