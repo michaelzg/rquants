@@ -16,7 +16,7 @@ use std::fmt;
 /// use rquants::prelude::*;
 ///
 /// // 1 USD = 0.85 EUR
-/// let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+/// let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
 ///
 /// let dollars = Money::usd(100.0);
 /// let euros = rate.convert(dollars).unwrap();
@@ -39,18 +39,33 @@ impl CurrencyExchangeRate {
     /// * `counter` - The counter currency (e.g., EUR)
     /// * `rate` - The exchange rate (e.g., 0.85 means 1 USD = 0.85 EUR)
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if base and counter currencies are the same.
-    pub fn new(base: Currency, counter: Currency, rate: f64) -> Self {
+    /// Returns an error if:
+    /// - `base` and `counter` are the same currency
+    /// - `rate` is not finite
+    /// - `rate` is not strictly positive
+    pub fn new(base: Currency, counter: Currency, rate: f64) -> Result<Self, QuantityError> {
         if base == counter {
-            panic!("Cannot create exchange rate with the same base and counter currency");
+            return Err(QuantityError::UnsupportedOperation(
+                "Cannot create exchange rate with the same base and counter currency".to_string(),
+            ));
         }
-        Self {
+        if !rate.is_finite() {
+            return Err(QuantityError::ConversionError(
+                "Exchange rate must be finite".to_string(),
+            ));
+        }
+        if rate <= 0.0 {
+            return Err(QuantityError::ConversionError(
+                "Exchange rate must be greater than zero".to_string(),
+            ));
+        }
+        Ok(Self {
             base,
             counter,
             rate,
-        }
+        })
     }
 
     /// Returns the base currency.
@@ -88,7 +103,7 @@ impl CurrencyExchangeRate {
     /// ```rust
     /// use rquants::prelude::*;
     ///
-    /// let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+    /// let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
     ///
     /// // Convert from base to counter
     /// let usd = Money::usd(100.0);
@@ -124,7 +139,7 @@ impl CurrencyExchangeRate {
     /// ```rust
     /// use rquants::prelude::*;
     ///
-    /// let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+    /// let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
     /// let inverse = rate.inverse();
     ///
     /// assert_eq!(inverse.base(), Currency::EUR);
@@ -158,21 +173,41 @@ mod tests {
 
     #[test]
     fn test_exchange_rate_creation() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
         assert_eq!(rate.base(), Currency::USD);
         assert_eq!(rate.counter(), Currency::EUR);
         assert_eq!(rate.rate(), 0.85);
     }
 
     #[test]
-    #[should_panic(expected = "Cannot create exchange rate with the same base and counter currency")]
     fn test_exchange_rate_same_currency() {
-        CurrencyExchangeRate::new(Currency::USD, Currency::USD, 1.0);
+        let result = CurrencyExchangeRate::new(Currency::USD, Currency::USD, 1.0);
+        assert!(matches!(result, Err(QuantityError::UnsupportedOperation(_))));
+    }
+
+    #[test]
+    fn test_exchange_rate_invalid_rate() {
+        assert!(matches!(
+            CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.0),
+            Err(QuantityError::ConversionError(_))
+        ));
+        assert!(matches!(
+            CurrencyExchangeRate::new(Currency::USD, Currency::EUR, -1.0),
+            Err(QuantityError::ConversionError(_))
+        ));
+        assert!(matches!(
+            CurrencyExchangeRate::new(Currency::USD, Currency::EUR, f64::INFINITY),
+            Err(QuantityError::ConversionError(_))
+        ));
+        assert!(matches!(
+            CurrencyExchangeRate::new(Currency::USD, Currency::EUR, f64::NAN),
+            Err(QuantityError::ConversionError(_))
+        ));
     }
 
     #[test]
     fn test_exchange_rate_convert_base_to_counter() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
         let usd = Money::usd(100.0);
         let eur = rate.convert(usd).unwrap();
 
@@ -182,7 +217,7 @@ mod tests {
 
     #[test]
     fn test_exchange_rate_convert_counter_to_base() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
         let eur = Money::eur(85.0);
         let usd = rate.convert(eur).unwrap();
 
@@ -192,7 +227,7 @@ mod tests {
 
     #[test]
     fn test_exchange_rate_convert_invalid_currency() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
         let gbp = Money::gbp(100.0);
         let result = rate.convert(gbp);
 
@@ -207,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_exchange_rate_inverse() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
         let inverse = rate.inverse();
 
         assert_eq!(inverse.base(), Currency::EUR);
@@ -225,13 +260,13 @@ mod tests {
 
     #[test]
     fn test_exchange_rate_display() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
         assert_eq!(format!("{}", rate), "USD/EUR 0.85");
     }
 
     #[test]
     fn test_exchange_rate_roundtrip() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::JPY, 110.0);
+        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::JPY, 110.0).unwrap();
 
         let original = Money::usd(100.0);
         let converted = rate.convert(original).unwrap();

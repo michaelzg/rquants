@@ -3,22 +3,9 @@
 //! Represents ranges of quantities with operations for containment checking,
 //! iteration, and range manipulation.
 
+use crate::core::error::QuantityError;
 use crate::core::{Quantity, UnitOfMeasure};
 use std::fmt;
-
-/// Error type for quantity range operations.
-#[derive(Debug, Clone, PartialEq)]
-pub struct QuantityRangeError {
-    message: String,
-}
-
-impl fmt::Display for QuantityRangeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for QuantityRangeError {}
 
 /// A range of quantities from a lower bound to an upper bound.
 ///
@@ -49,12 +36,12 @@ impl<Q: Quantity> QuantityRange<Q> {
     /// Creates a new quantity range.
     ///
     /// Returns an error if lower >= upper.
-    pub fn new(lower: Q, upper: Q) -> Result<Self, QuantityRangeError> {
+    pub fn new(lower: Q, upper: Q) -> Result<Self, QuantityError> {
         if lower.to_primary() >= upper.to_primary() {
-            return Err(QuantityRangeError {
-                message: "QuantityRange upper bound must be strictly greater than the lower bound"
+            return Err(QuantityError::RangeError(
+                "QuantityRange upper bound must be strictly greater than the lower bound"
                     .to_string(),
-            });
+            ));
         }
         Ok(Self { lower, upper })
     }

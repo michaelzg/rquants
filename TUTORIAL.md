@@ -142,7 +142,7 @@ Where Scala uses `Option[T]`, Rust uses `Option<T>`. Where Scala uses `Try[T]` o
 
 ```rust
 // Handling a Result (like Scala's Try)
-let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
 match rate.convert(Money::usd(100.0)) {
     Ok(euros) => println!("Got: {}", euros),
     Err(e) => println!("Error: {}", e),
@@ -537,7 +537,7 @@ Adding different currencies panics:
 
 ```rust
 // Define an exchange rate: 1 USD = 0.92 EUR
-let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.92);
+let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.92).unwrap();
 
 // Convert USD to EUR
 let dollars = Money::usd(100.0);

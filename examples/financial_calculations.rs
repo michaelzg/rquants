@@ -59,7 +59,7 @@ fn exchange_rates() {
     println!("--- Exchange Rates ---\n");
 
     // Summer trip to Tokyo: USD to JPY
-    let usd_jpy = CurrencyExchangeRate::new(Currency::USD, Currency::JPY, 155.0);
+    let usd_jpy = CurrencyExchangeRate::new(Currency::USD, Currency::JPY, 155.0).unwrap();
     let budget = Money::usd(2000.0);
     match usd_jpy.convert(budget) {
         Ok(yen) => println!("Tokyo trip: {} = {} (ramen for days)", budget, yen),
@@ -67,7 +67,7 @@ fn exchange_rates() {
     }
 
     // Study abroad in London: USD to GBP
-    let usd_gbp = CurrencyExchangeRate::new(Currency::USD, Currency::GBP, 0.79);
+    let usd_gbp = CurrencyExchangeRate::new(Currency::USD, Currency::GBP, 0.79).unwrap();
     let rent = Money::usd(1500.0);
     match usd_gbp.convert(rent) {
         Ok(pounds) => println!("London rent: {} = {}", rent, pounds),
@@ -75,7 +75,7 @@ fn exchange_rates() {
     }
 
     // Freelance gig paid in EUR, you need USD
-    let eur_usd = CurrencyExchangeRate::new(Currency::EUR, Currency::USD, 1.08);
+    let eur_usd = CurrencyExchangeRate::new(Currency::EUR, Currency::USD, 1.08).unwrap();
     let payment = Money::new(3500.0, Currency::EUR);
     match eur_usd.convert(payment) {
         Ok(dollars) => println!("Freelance pay: {} = {}", payment, dollars),
@@ -83,7 +83,7 @@ fn exchange_rates() {
     }
 
     // Bitcoin price check
-    let btc_usd = CurrencyExchangeRate::new(Currency::BTC, Currency::USD, 100_000.0);
+    let btc_usd = CurrencyExchangeRate::new(Currency::BTC, Currency::USD, 100_000.0).unwrap();
     let holdings = Money::new(0.05, Currency::BTC);
     match btc_usd.convert(holdings) {
         Ok(value) => println!("Crypto portfolio: {} = {}", holdings, value),

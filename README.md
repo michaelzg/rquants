@@ -133,7 +133,7 @@ let price = Money::usd(29.99);
 let total = price * 3.0;
 
 // Currency exchange
-let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.92);
+let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.92).unwrap();
 let euros = rate.convert(Money::usd(100.0)).unwrap();
 
 // Generic pricing: Price<Q> works with any quantity
@@ -195,7 +195,7 @@ pub enum LengthUnit { Meters, Kilometers, Feet, ... }
 // let _ = Money::usd(100.0) + Money::eur(50.0);
 
 // Use explicit conversion instead:
-let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
 let eur_as_usd = rate.convert(Money::eur(50.0)).unwrap();
 let total = Money::usd(100.0) + eur_as_usd;
 ```

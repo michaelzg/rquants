@@ -24,7 +24,7 @@
 //! use rquants::prelude::*;
 //!
 //! // 1 USD = 0.85 EUR
-//! let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+//! let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85).unwrap();
 //!
 //! let dollars = Money::usd(100.0);
 //! let euros = rate.convert(dollars).unwrap();
