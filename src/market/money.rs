@@ -127,6 +127,24 @@ impl Money {
             )))
         }
     }
+
+    /// Adds two money amounts, returning an error if currencies differ.
+    pub fn checked_add(self, rhs: Money) -> Result<Money, QuantityError> {
+        self.can_operate_with(&rhs)?;
+        Ok(Money::new(self.amount + rhs.amount, self.currency))
+    }
+
+    /// Subtracts two money amounts, returning an error if currencies differ.
+    pub fn checked_sub(self, rhs: Money) -> Result<Money, QuantityError> {
+        self.can_operate_with(&rhs)?;
+        Ok(Money::new(self.amount - rhs.amount, self.currency))
+    }
+
+    /// Divides two money amounts, returning an error if currencies differ.
+    pub fn checked_ratio(self, rhs: Money) -> Result<f64, QuantityError> {
+        self.can_operate_with(&rhs)?;
+        Ok(self.amount / rhs.amount)
+    }
 }
 
 impl fmt::Display for Money {
@@ -157,8 +175,8 @@ impl Add for Money {
     type Output = Money;
 
     fn add(self, rhs: Self) -> Self::Output {
-        self.can_operate_with(&rhs).unwrap();
-        Money::new(self.amount + rhs.amount, self.currency)
+        self.checked_add(rhs)
+            .unwrap_or_else(|e| panic!("Money addition failed: {e}"))
     }
 }
 
@@ -166,8 +184,8 @@ impl Sub for Money {
     type Output = Money;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self.can_operate_with(&rhs).unwrap();
-        Money::new(self.amount - rhs.amount, self.currency)
+        self.checked_sub(rhs)
+            .unwrap_or_else(|e| panic!("Money subtraction failed: {e}"))
     }
 }
 
@@ -199,8 +217,8 @@ impl Div<Money> for Money {
     type Output = f64;
 
     fn div(self, rhs: Money) -> Self::Output {
-        self.can_operate_with(&rhs).unwrap();
-        self.amount / rhs.amount
+        self.checked_ratio(rhs)
+            .unwrap_or_else(|e| panic!("Money division failed: {e}"))
     }
 }
 
@@ -316,6 +334,26 @@ mod tests {
 
         let ratio = m1 / m2;
         assert_eq!(ratio, 2.0);
+    }
+
+    #[test]
+    fn test_money_checked_arithmetic() {
+        let m1 = Money::usd(100.0);
+        let m2 = Money::usd(50.0);
+
+        assert_eq!(m1.checked_add(m2).unwrap().to_amount(), 150.0);
+        assert_eq!(m1.checked_sub(m2).unwrap().to_amount(), 50.0);
+        assert_eq!(m1.checked_ratio(m2).unwrap(), 2.0);
+    }
+
+    #[test]
+    fn test_money_checked_arithmetic_different_currency() {
+        let m1 = Money::usd(100.0);
+        let m2 = Money::eur(50.0);
+
+        assert!(m1.checked_add(m2).is_err());
+        assert!(m1.checked_sub(m2).is_err());
+        assert!(m1.checked_ratio(m2).is_err());
     }
 
     #[test]
