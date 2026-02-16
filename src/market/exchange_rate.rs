@@ -31,6 +31,37 @@ pub struct CurrencyExchangeRate {
 }
 
 impl CurrencyExchangeRate {
+    /// Creates a new exchange rate, validating input.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - base and counter currencies are the same
+    /// - rate is not finite
+    /// - rate is not strictly positive
+    pub fn try_new(base: Currency, counter: Currency, rate: f64) -> Result<Self, QuantityError> {
+        if base == counter {
+            return Err(QuantityError::UnsupportedOperation(
+                "Cannot create exchange rate with the same base and counter currency".to_string(),
+            ));
+        }
+        if !rate.is_finite() {
+            return Err(QuantityError::ConversionError(
+                "Exchange rate must be finite".to_string(),
+            ));
+        }
+        if rate <= 0.0 {
+            return Err(QuantityError::ConversionError(
+                "Exchange rate must be greater than zero".to_string(),
+            ));
+        }
+        Ok(Self {
+            base,
+            counter,
+            rate,
+        })
+    }
+
     /// Creates a new exchange rate.
     ///
     /// # Arguments
@@ -41,16 +72,10 @@ impl CurrencyExchangeRate {
     ///
     /// # Panics
     ///
-    /// Panics if base and counter currencies are the same.
+    /// Panics if base and counter currencies are the same or if rate is invalid.
     pub fn new(base: Currency, counter: Currency, rate: f64) -> Self {
-        if base == counter {
-            panic!("Cannot create exchange rate with the same base and counter currency");
-        }
-        Self {
-            base,
-            counter,
-            rate,
-        }
+        Self::try_new(base, counter, rate)
+            .unwrap_or_else(|e| panic!("Invalid exchange rate: {e}"))
     }
 
     /// Returns the base currency.
@@ -158,14 +183,23 @@ mod tests {
 
     #[test]
     fn test_exchange_rate_creation() {
-        let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
+        let rate = CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, 0.85).unwrap();
         assert_eq!(rate.base(), Currency::USD);
         assert_eq!(rate.counter(), Currency::EUR);
         assert_eq!(rate.rate(), 0.85);
     }
 
     #[test]
-    #[should_panic(expected = "Cannot create exchange rate with the same base and counter currency")]
+    fn test_exchange_rate_try_new_validates_input() {
+        assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::USD, 1.0).is_err());
+        assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, 0.0).is_err());
+        assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, -1.0).is_err());
+        assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, f64::INFINITY).is_err());
+        assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, f64::NAN).is_err());
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid exchange rate: Unsupported operation: Cannot create exchange rate with the same base and counter currency")]
     fn test_exchange_rate_same_currency() {
         CurrencyExchangeRate::new(Currency::USD, Currency::USD, 1.0);
     }
