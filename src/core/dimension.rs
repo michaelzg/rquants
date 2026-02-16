@@ -12,7 +12,10 @@ use super::unit::UnitOfMeasure;
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```rust
+/// use rquants::space::{Length, LengthUnit};
+/// use rquants::Dimension;
+///
 /// pub struct LengthDimension;
 ///
 /// impl Dimension for LengthDimension {

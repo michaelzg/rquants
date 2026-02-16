@@ -16,10 +16,41 @@ use std::fmt::{Debug, Display};
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```rust
+/// use rquants::{Quantity, UnitOfMeasure};
+/// use std::fmt;
+///
+/// #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd)]
+/// pub enum LengthUnit {
+///     Meters,
+/// }
+///
+/// impl fmt::Display for LengthUnit {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         write!(f, "m")
+///     }
+/// }
+///
+/// impl UnitOfMeasure for LengthUnit {
+///     fn symbol(&self) -> &'static str {
+///         "m"
+///     }
+///
+///     fn conversion_factor(&self) -> f64 {
+///         1.0
+///     }
+/// }
+///
+/// #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 /// pub struct Length {
 ///     value: f64,
 ///     unit: LengthUnit,
+/// }
+///
+/// impl fmt::Display for Length {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         write!(f, "{} {}", self.value, self.unit)
+///     }
 /// }
 ///
 /// impl Quantity for Length {
@@ -60,7 +91,10 @@ pub trait Quantity: Clone + Copy + Debug + Display + PartialEq + PartialOrd {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```rust
+    /// use rquants::space::{Length, LengthUnit};
+    /// use rquants::Quantity;
+    ///
     /// let length = Length::meters(1000.0);
     /// assert_eq!(length.to(LengthUnit::Kilometers), 1.0);
     /// ```
@@ -76,7 +110,10 @@ pub trait Quantity: Clone + Copy + Debug + Display + PartialEq + PartialOrd {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```rust
+    /// use rquants::space::{Length, LengthUnit};
+    /// use rquants::Quantity;
+    ///
     /// let length = Length::meters(1000.0);
     /// let length_km = length.in_unit(LengthUnit::Kilometers);
     /// assert_eq!(length_km.value(), 1.0);

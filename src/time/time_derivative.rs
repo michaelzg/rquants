@@ -23,12 +23,15 @@ use crate::core::Quantity;
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```rust
+/// use rquants::prelude::*;
+///
 /// // Velocity is TimeDerivative<Length>
 /// // velocity * time = length
 /// let velocity = Velocity::meters_per_second(10.0);
 /// let time = Time::seconds(5.0);
-/// let distance = velocity.integrate_over(time);  // 50 meters
+/// let distance = velocity * time;  // 50 meters
+/// assert!((distance.to_meters() - 50.0).abs() < 1e-10);
 /// ```
 pub trait TimeDerivative<Integral: Quantity>: Quantity {
     /// Returns the integrated quantity over the given time.
@@ -56,12 +59,15 @@ pub trait TimeDerivative<Integral: Quantity>: Quantity {
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```rust
+/// use rquants::prelude::*;
+///
 /// // Length is TimeIntegral<Velocity>
 /// // length / time = velocity
 /// let distance = Length::meters(100.0);
 /// let time = Time::seconds(10.0);
-/// let velocity = distance.per(time);  // 10 m/s
+/// let velocity = distance / time;  // 10 m/s
+/// assert!((velocity.to_meters_per_second() - 10.0).abs() < 1e-10);
 /// ```
 pub trait TimeIntegral<Derivative: Quantity>: Quantity {
     /// Returns the time derivative of this quantity over the given time.
