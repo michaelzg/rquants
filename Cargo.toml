@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "A Rust library for quantities, units of measure, and dimensional analysis"
 license = "Apache-2.0"
-repository = "https://github.com/your-org/rquants"
+repository = "https://github.com/michaelzg/rquants"
 keywords = ["units", "quantities", "dimensional-analysis", "physics", "measurement"]
 categories = ["science", "mathematics"]
 
