@@ -160,13 +160,14 @@ pub trait Quantity: Clone + Copy + Debug + Display + PartialEq + PartialOrd {
         Self::new(f(self.value()), self.unit())
     }
 
-    /// Compares this quantity to another, returning the ordering.
+    /// Compares this quantity to another using a total ordering.
     ///
-    /// Quantities are compared by their values in the primary unit.
+    /// Quantities are compared by their values in the primary unit. NaN values
+    /// are ordered according to [`f64::total_cmp`].
     fn compare(&self, other: &Self) -> Ordering {
         let self_primary = self.to_primary();
         let other_primary = other.to_primary();
-        self_primary.partial_cmp(&other_primary).unwrap_or(Ordering::Equal)
+        self_primary.total_cmp(&other_primary)
     }
 
     /// Returns the maximum of this quantity and another.
@@ -273,7 +274,7 @@ mod tests {
 
     impl PartialOrd for TestQuantity {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-            Some(self.compare(other))
+            self.to_primary().partial_cmp(&other.to_primary())
         }
     }
 
@@ -331,6 +332,15 @@ mod tests {
         let q1 = TestQuantity::new(1.0, TestUnit::Kilo);
         let q2 = TestQuantity::new(500.0, TestUnit::Base);
         assert_eq!(q1.compare(&q2), Ordering::Greater);
+    }
+
+    #[test]
+    fn test_partial_cmp_returns_none_for_nan() {
+        let q1 = TestQuantity::new(f64::NAN, TestUnit::Base);
+        let q2 = TestQuantity::new(1.0, TestUnit::Base);
+
+        assert_eq!(q1.partial_cmp(&q2), None);
+        assert_eq!(q1.compare(&q2), f64::NAN.total_cmp(&1.0));
     }
 
     #[test]

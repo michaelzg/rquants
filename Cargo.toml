@@ -9,3 +9,6 @@ keywords = ["units", "quantities", "dimensional-analysis", "physics", "measureme
 categories = ["science", "mathematics"]
 
 [dependencies]
+
+[dev-dependencies]
+proptest = "1"

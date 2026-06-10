@@ -112,13 +112,13 @@ impl fmt::Display for ChemicalAmount {
 
 impl PartialEq for ChemicalAmount {
     fn eq(&self, other: &Self) -> bool {
-        (self.to_primary() - other.to_primary()).abs() < f64::EPSILON
+        self.to_primary() == other.to_primary()
     }
 }
 
 impl PartialOrd for ChemicalAmount {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.compare(other))
+        self.to_primary().partial_cmp(&other.to_primary())
     }
 }
 

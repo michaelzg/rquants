@@ -328,12 +328,7 @@ impl fmt::Display for Temperature {
 
 impl PartialEq for Temperature {
     fn eq(&self, other: &Self) -> bool {
-        let a = self.to_kelvin_scale();
-        let b = other.to_kelvin_scale();
-        // Use a relative tolerance for temperature scale conversions
-        // which involve addition/subtraction of offsets
-        let max_abs = a.abs().max(b.abs()).max(1.0);
-        (a - b).abs() < max_abs * 1e-12
+        self.to_kelvin_scale() == other.to_kelvin_scale()
     }
 }
 
@@ -507,7 +502,7 @@ mod tests {
     fn test_temperature_comparison() {
         let boiling_c = Temperature::celsius(100.0);
         let boiling_f = Temperature::fahrenheit(212.0);
-        assert_eq!(boiling_c, boiling_f);
+        assert!((boiling_c.to_kelvin_scale() - boiling_f.to_kelvin_scale()).abs() < 1e-10);
 
         let freezing = Temperature::celsius(0.0);
         assert!(freezing < boiling_c);

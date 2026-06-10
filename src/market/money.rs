@@ -155,7 +155,7 @@ impl fmt::Display for Money {
 
 impl PartialEq for Money {
     fn eq(&self, other: &Self) -> bool {
-        self.currency == other.currency && (self.amount - other.amount).abs() < f64::EPSILON
+        self.currency == other.currency && self.amount == other.amount
     }
 }
 
