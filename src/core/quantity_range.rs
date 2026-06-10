@@ -228,8 +228,8 @@ impl<Q: Quantity + fmt::Display> fmt::Display for QuantityRange<Q> {
 
 impl<Q: Quantity> PartialEq for QuantityRange<Q> {
     fn eq(&self, other: &Self) -> bool {
-        (self.lower.to_primary() - other.lower.to_primary()).abs() < f64::EPSILON
-            && (self.upper.to_primary() - other.upper.to_primary()).abs() < f64::EPSILON
+        self.lower.to_primary() == other.lower.to_primary()
+            && self.upper.to_primary() == other.upper.to_primary()
     }
 }
 

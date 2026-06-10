@@ -16,7 +16,7 @@ use std::ops::{Div, Mul};
 /// use rquants::prelude::*;
 ///
 /// let price = Price::new(Money::usd(10.0), Length::meters(1.0));
-/// let cost = price.clone() * Length::meters(5.0);
+/// let cost = price * Length::meters(5.0);
 /// assert_eq!(cost.to_amount(), 50.0);
 /// ```
 #[derive(Debug, Clone, Copy)]
@@ -46,7 +46,7 @@ impl<Q: Quantity + Mul<f64, Output = Q>> Price<Q> {
         self.quantity
     }
 
-    /// Returns the price per unit (money amount / quantity amount).
+    /// Returns the price per primary quantity unit.
     ///
     /// # Example
     ///
@@ -57,7 +57,7 @@ impl<Q: Quantity + Mul<f64, Output = Q>> Price<Q> {
     /// assert_eq!(price.per_unit_amount(), 5.0);
     /// ```
     pub fn per_unit_amount(&self) -> f64 {
-        self.money.to_amount() / self.quantity.value()
+        self.money.to_amount() / self.quantity.to_primary()
     }
 
     /// Calculates how much quantity can be purchased with the given money.
@@ -80,7 +80,8 @@ impl<Q: Quantity + Mul<f64, Output = Q>> Price<Q> {
 
 impl<Q: Quantity + Mul<f64, Output = Q>> PartialEq for Price<Q> {
     fn eq(&self, other: &Self) -> bool {
-        self.money == other.money && (self.quantity.value() - other.quantity.value()).abs() < f64::EPSILON
+        self.money.currency() == other.money.currency()
+            && self.per_unit_amount() == other.per_unit_amount()
     }
 }
 
@@ -166,6 +167,12 @@ mod tests {
     }
 
     #[test]
+    fn test_price_per_unit_amount_uses_primary_units() {
+        let price = Price::new(Money::usd(10.0), Length::centimeters(100.0));
+        assert_eq!(price.per_unit_amount(), 10.0);
+    }
+
+    #[test]
     fn test_price_in_currency() {
         let price = Price::new(Money::usd(10.0), Length::meters(1.0));
         let budget = Money::usd(25.0);
@@ -230,9 +237,15 @@ mod tests {
         let price1 = Price::new(Money::usd(10.0), Length::meters(1.0));
         let price2 = Price::new(Money::usd(10.0), Length::meters(1.0));
         let price3 = Price::new(Money::usd(20.0), Length::meters(1.0));
+        let price4 = Price::new(Money::usd(10.0), Length::centimeters(100.0));
+        let price5 = Price::new(Money::usd(20.0), Length::meters(2.0));
+        let price6 = Price::new(Money::usd(10.0), Length::kilometers(1.0));
 
         assert_eq!(price1, price2);
+        assert_eq!(price1, price4);
+        assert_eq!(price1, price5);
         assert_ne!(price1, price3);
+        assert_ne!(price1, price6);
     }
 
     #[test]
