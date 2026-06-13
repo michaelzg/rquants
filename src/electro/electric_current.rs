@@ -1,206 +1,58 @@
 //! Electric current quantity and units.
+use crate::core::Quantity;
+use std::ops::Mul;
+crate::quantity! {
+    /// A quantity of electric current.
+    ///
+    /// Electric current is the flow of electric charge through a conductor.
+    /// I = Q / t (current = charge / time)
+    ///
+    /// # Relationships
+    ///
+    /// - Current × Time = Charge (Q = It)
+    /// - Current × Resistance = Potential (V = IR, Ohm's law)
+    /// - Current × Potential = Power (P = IV)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let current = ElectricCurrent::amperes(2.0);
+    /// let resistance = ElectricalResistance::ohms(5.0);
+    ///
+    /// // Ohm's law: V = IR
+    /// let voltage = current * resistance;
+    /// assert!((voltage.to_volts() - 10.0).abs() < 1e-10);
+    /// ```
+    pub quantity ElectricCurrent {
+        unit: ElectricCurrentUnit;
+        dimension: ElectricCurrentDimension;
+        conversions: ElectricCurrentConversions;
+        name: "ElectricCurrent";
+        primary: Amperes;
+        si: Amperes;
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of electric current measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ElectricCurrentUnit {
-    /// Amperes (A) - SI unit
-    Amperes,
-    /// Milliamperes (mA)
-    Milliamperes,
-}
-
-impl ElectricCurrentUnit {
-    /// All available electric current units.
-    pub const ALL: &'static [ElectricCurrentUnit] =
-        &[ElectricCurrentUnit::Amperes, ElectricCurrentUnit::Milliamperes];
-}
-
-impl fmt::Display for ElectricCurrentUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for ElectricCurrentUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            ElectricCurrentUnit::Amperes => "A",
-            ElectricCurrentUnit::Milliamperes => "mA",
+        units {
+            /// Amperes (A) - SI unit
+            Amperes {
+                symbol: "A",
+                factor: 1.0,
+                ctor: amperes,
+                to: to_amperes,
+                si: true
+            },
+            /// Milliamperes (mA)
+            Milliamperes {
+                symbol: "mA",
+                factor: 1e-3,
+                ctor: milliamperes,
+                to: to_milliamperes,
+                si: true
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            ElectricCurrentUnit::Amperes => 1.0,
-            ElectricCurrentUnit::Milliamperes => 1e-3,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(
-            self,
-            ElectricCurrentUnit::Amperes | ElectricCurrentUnit::Milliamperes
-        )
-    }
 }
-
-/// A quantity of electric current.
-///
-/// Electric current is the flow of electric charge through a conductor.
-/// I = Q / t (current = charge / time)
-///
-/// # Relationships
-///
-/// - Current × Time = Charge (Q = It)
-/// - Current × Resistance = Potential (V = IR, Ohm's law)
-/// - Current × Potential = Power (P = IV)
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let current = ElectricCurrent::amperes(2.0);
-/// let resistance = ElectricalResistance::ohms(5.0);
-///
-/// // Ohm's law: V = IR
-/// let voltage = current * resistance;
-/// assert!((voltage.to_volts() - 10.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ElectricCurrent {
-    value: f64,
-    unit: ElectricCurrentUnit,
-}
-
-impl ElectricCurrent {
-    /// Creates a new ElectricCurrent quantity.
-    pub const fn new_const(value: f64, unit: ElectricCurrentUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates an ElectricCurrent in amperes.
-    pub fn amperes(value: f64) -> Self {
-        Self::new(value, ElectricCurrentUnit::Amperes)
-    }
-
-    /// Creates an ElectricCurrent in milliamperes.
-    pub fn milliamperes(value: f64) -> Self {
-        Self::new(value, ElectricCurrentUnit::Milliamperes)
-    }
-
-    // Conversion methods
-    /// Converts to amperes.
-    pub fn to_amperes(&self) -> f64 {
-        self.to(ElectricCurrentUnit::Amperes)
-    }
-
-    /// Converts to milliamperes.
-    pub fn to_milliamperes(&self) -> f64 {
-        self.to(ElectricCurrentUnit::Milliamperes)
-    }
-}
-
-impl fmt::Display for ElectricCurrent {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricCurrent {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for ElectricCurrent {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for ElectricCurrent {
-    type Unit = ElectricCurrentUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricCurrent::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricCurrent::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricCurrent::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricCurrent> for f64 {
-    type Output = ElectricCurrent;
-
-    fn mul(self, rhs: ElectricCurrent) -> Self::Output {
-        ElectricCurrent::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricCurrent::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricCurrent> for ElectricCurrent {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricCurrent) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricCurrent {
-    type Output = ElectricCurrent;
-
-    fn neg(self) -> Self::Output {
-        ElectricCurrent::new(-self.value, self.unit)
-    }
-}
-
 // Cross-quantity operations
 use super::electric_charge::{ElectricCharge, ElectricChargeUnit};
 use super::electric_potential::{ElectricPotential, ElectricPotentialUnit};
@@ -267,51 +119,10 @@ impl Mul<ElectricCurrent> for ElectricPotential {
         Power::new(watts, PowerUnit::Watts)
     }
 }
-
-/// Dimension for ElectricCurrent.
-pub struct ElectricCurrentDimension;
-
-impl Dimension for ElectricCurrentDimension {
-    type Quantity = ElectricCurrent;
-    type Unit = ElectricCurrentUnit;
-
-    fn name() -> &'static str {
-        "ElectricCurrent"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricCurrentUnit::Amperes
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricCurrentUnit::Amperes
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricCurrentUnit::ALL
-    }
-}
-
-/// Extension trait for creating ElectricCurrent quantities from numeric types.
-pub trait ElectricCurrentConversions {
-    /// Creates an ElectricCurrent in amperes.
-    fn amperes(self) -> ElectricCurrent;
-    /// Creates an ElectricCurrent in milliamperes.
-    fn milliamperes(self) -> ElectricCurrent;
-}
-
-impl ElectricCurrentConversions for f64 {
-    fn amperes(self) -> ElectricCurrent {
-        ElectricCurrent::amperes(self)
-    }
-    fn milliamperes(self) -> ElectricCurrent {
-        ElectricCurrent::milliamperes(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_current_creation() {

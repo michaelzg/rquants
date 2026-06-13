@@ -1,163 +1,84 @@
 //! Angle quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
 use std::f64::consts::PI;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+crate::quantity! {
+    /// A quantity of angle.
+    ///
+    /// Angle represents a plane angle measurement.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    /// use std::f64::consts::PI;
+    ///
+    /// let a1 = Angle::radians(PI);
+    /// let a2 = Angle::degrees(180.0);
+    ///
+    /// // These represent the same angle
+    /// assert!((a1.to_radians() - a2.to_radians()).abs() < 1e-10);
+    /// ```
+    pub quantity Angle {
+        unit: AngleUnit;
+        dimension: AngleDimension;
+        conversions: AngleConversions;
+        name: "Angle";
+        primary: Radians;
+        si: Radians;
 
-/// Units of angle measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AngleUnit {
-    /// Radians (rad) - SI unit
-    Radians,
-    /// Degrees (°)
-    Degrees,
-    /// Gradians/Gons (gon)
-    Gradians,
-    /// Turns (complete rotations)
-    Turns,
-    /// Arc minutes (')
-    ArcMinutes,
-    /// Arc seconds ('')
-    ArcSeconds,
-}
-
-impl AngleUnit {
-    /// All available angle units.
-    pub const ALL: &'static [AngleUnit] = &[
-        AngleUnit::Radians,
-        AngleUnit::Degrees,
-        AngleUnit::Gradians,
-        AngleUnit::Turns,
-        AngleUnit::ArcMinutes,
-        AngleUnit::ArcSeconds,
-    ];
-}
-
-impl fmt::Display for AngleUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for AngleUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            AngleUnit::Radians => "rad",
-            AngleUnit::Degrees => "°",
-            AngleUnit::Gradians => "gon",
-            AngleUnit::Turns => "tr",
-            AngleUnit::ArcMinutes => "'",
-            AngleUnit::ArcSeconds => "''",
+        units {
+            /// Radians (rad) - SI unit
+            Radians {
+                symbol: "rad",
+                factor: 1.0,
+                ctor: radians,
+                to: to_radians,
+                si: true
+            },
+            /// Degrees (°)
+            Degrees {
+                symbol: "°",
+                factor: PI / 180.0,
+                ctor: degrees,
+                to: to_degrees,
+                si: false
+            },
+            /// Gradians/Gons (gon)
+            Gradians {
+                symbol: "gon",
+                factor: PI / 200.0,
+                ctor: gradians,
+                to: to_gradians,
+                si: false
+            },
+            /// Turns (complete rotations)
+            Turns {
+                symbol: "tr",
+                factor: 2.0 * PI,
+                ctor: turns,
+                to: to_turns,
+                si: false
+            },
+            /// Arc minutes (')
+            ArcMinutes {
+                symbol: "'",
+                factor: PI / (180.0 * 60.0),
+                ctor: arc_minutes,
+                to: to_arc_minutes,
+                si: false
+            },
+            /// Arc seconds ('')
+            ArcSeconds {
+                symbol: "''",
+                factor: PI / (180.0 * 3600.0),
+                ctor: arc_seconds,
+                to: to_arc_seconds,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            AngleUnit::Radians => 1.0,
-            AngleUnit::Degrees => PI / 180.0,
-            AngleUnit::Gradians => PI / 200.0,
-            AngleUnit::Turns => 2.0 * PI,
-            AngleUnit::ArcMinutes => PI / (180.0 * 60.0),
-            AngleUnit::ArcSeconds => PI / (180.0 * 3600.0),
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(self, AngleUnit::Radians)
-    }
 }
-
-/// A quantity of angle.
-///
-/// Angle represents a plane angle measurement.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-/// use std::f64::consts::PI;
-///
-/// let a1 = Angle::radians(PI);
-/// let a2 = Angle::degrees(180.0);
-///
-/// // These represent the same angle
-/// assert!((a1.to_radians() - a2.to_radians()).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Angle {
-    value: f64,
-    unit: AngleUnit,
-}
-
 impl Angle {
-    /// Creates a new Angle quantity.
-    pub const fn new_const(value: f64, unit: AngleUnit) -> Self {
-        Self { value, unit }
-    }
-
-    /// Creates an Angle in radians.
-    pub fn radians(value: f64) -> Self {
-        Self::new(value, AngleUnit::Radians)
-    }
-
-    /// Creates an Angle in degrees.
-    pub fn degrees(value: f64) -> Self {
-        Self::new(value, AngleUnit::Degrees)
-    }
-
-    /// Creates an Angle in gradians.
-    pub fn gradians(value: f64) -> Self {
-        Self::new(value, AngleUnit::Gradians)
-    }
-
-    /// Creates an Angle in turns.
-    pub fn turns(value: f64) -> Self {
-        Self::new(value, AngleUnit::Turns)
-    }
-
-    /// Creates an Angle in arc minutes.
-    pub fn arc_minutes(value: f64) -> Self {
-        Self::new(value, AngleUnit::ArcMinutes)
-    }
-
-    /// Creates an Angle in arc seconds.
-    pub fn arc_seconds(value: f64) -> Self {
-        Self::new(value, AngleUnit::ArcSeconds)
-    }
-
-    // Conversion methods
-    /// Converts to radians.
-    pub fn to_radians(&self) -> f64 {
-        self.to(AngleUnit::Radians)
-    }
-
-    /// Converts to degrees.
-    pub fn to_degrees(&self) -> f64 {
-        self.to(AngleUnit::Degrees)
-    }
-
-    /// Converts to gradians.
-    pub fn to_gradians(&self) -> f64 {
-        self.to(AngleUnit::Gradians)
-    }
-
-    /// Converts to turns.
-    pub fn to_turns(&self) -> f64 {
-        self.to(AngleUnit::Turns)
-    }
-
-    /// Converts to arc minutes.
-    pub fn to_arc_minutes(&self) -> f64 {
-        self.to(AngleUnit::ArcMinutes)
-    }
-
-    /// Converts to arc seconds.
-    pub fn to_arc_seconds(&self) -> f64 {
-        self.to(AngleUnit::ArcSeconds)
-    }
-
     // Trigonometric functions
     /// Returns the sine of this angle.
     pub fn sin(&self) -> f64 {
@@ -194,167 +115,10 @@ impl Angle {
         Self::radians(y.atan2(x))
     }
 }
-
-impl fmt::Display for Angle {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Angle {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Angle {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Angle {
-    type Unit = AngleUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Angle {
-    type Output = Angle;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Angle::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Angle {
-    type Output = Angle;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Angle::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Angle {
-    type Output = Angle;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Angle::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Angle> for f64 {
-    type Output = Angle;
-
-    fn mul(self, rhs: Angle) -> Self::Output {
-        Angle::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Angle {
-    type Output = Angle;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Angle::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Angle> for Angle {
-    type Output = f64;
-
-    fn div(self, rhs: Angle) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Angle {
-    type Output = Angle;
-
-    fn neg(self) -> Self::Output {
-        Angle::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Angle.
-pub struct AngleDimension;
-
-impl Dimension for AngleDimension {
-    type Quantity = Angle;
-    type Unit = AngleUnit;
-
-    fn name() -> &'static str {
-        "Angle"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        AngleUnit::Radians
-    }
-
-    fn si_unit() -> Self::Unit {
-        AngleUnit::Radians
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        AngleUnit::ALL
-    }
-}
-
-/// Extension trait for creating Angle quantities from numeric types.
-pub trait AngleConversions {
-    /// Creates an Angle in radians.
-    fn radians(self) -> Angle;
-    /// Creates an Angle in degrees.
-    fn degrees(self) -> Angle;
-    /// Creates an Angle in gradians.
-    fn gradians(self) -> Angle;
-    /// Creates an Angle in turns.
-    fn turns(self) -> Angle;
-    /// Creates an Angle in arc minutes.
-    fn arc_minutes(self) -> Angle;
-    /// Creates an Angle in arc seconds.
-    fn arc_seconds(self) -> Angle;
-}
-
-impl AngleConversions for f64 {
-    fn radians(self) -> Angle {
-        Angle::radians(self)
-    }
-    fn degrees(self) -> Angle {
-        Angle::degrees(self)
-    }
-    fn gradians(self) -> Angle {
-        Angle::gradians(self)
-    }
-    fn turns(self) -> Angle {
-        Angle::turns(self)
-    }
-    fn arc_minutes(self) -> Angle {
-        Angle::arc_minutes(self)
-    }
-    fn arc_seconds(self) -> Angle {
-        Angle::arc_seconds(self)
-    }
-}
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_angle_creation() {

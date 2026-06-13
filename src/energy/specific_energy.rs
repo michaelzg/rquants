@@ -1,215 +1,62 @@
 //! Specific energy quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::Quantity;
 use crate::mass::Mass;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::Mul;
+crate::quantity! {
+    /// A quantity of specific energy (energy per unit mass).
+    ///
+    /// Specific energy is the energy per unit mass of a substance.
+    /// Also used for absorbed radiation dose (Gray, Rad).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let se = SpecificEnergy::grays(10.0);
+    /// let mass = Mass::kilograms(5.0);
+    ///
+    /// // Energy = SpecificEnergy * Mass
+    /// let energy = se * mass;
+    /// assert!((energy.to_joules() - 50.0).abs() < 1e-10);
+    /// ```
+    pub quantity SpecificEnergy {
+        unit: SpecificEnergyUnit;
+        dimension: SpecificEnergyDimension;
+        conversions: SpecificEnergyConversions;
+        name: "SpecificEnergy";
+        primary: Grays;
+        si: Grays;
 
-/// Units of specific energy measurement (energy per unit mass).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SpecificEnergyUnit {
-    /// Grays (Gy) - SI unit (J/kg)
-    Grays,
-    /// Rads (rad) - CGS unit
-    Rads,
-    /// Ergs per gram (erg/g)
-    ErgsPerGram,
-}
-
-impl SpecificEnergyUnit {
-    /// All available specific energy units.
-    pub const ALL: &'static [SpecificEnergyUnit] = &[
-        SpecificEnergyUnit::Grays,
-        SpecificEnergyUnit::Rads,
-        SpecificEnergyUnit::ErgsPerGram,
-    ];
-}
-
-impl fmt::Display for SpecificEnergyUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for SpecificEnergyUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            SpecificEnergyUnit::Grays => "Gy",
-            SpecificEnergyUnit::Rads => "rad",
-            SpecificEnergyUnit::ErgsPerGram => "erg/g",
+        units {
+            /// Grays (Gy) - SI unit (J/kg)
+            Grays {
+                symbol: "Gy",
+                factor: 1.0,
+                ctor: grays,
+                to: to_grays,
+                si: true
+            },
+            /// Rads (rad) - CGS unit
+            Rads {
+                symbol: "rad",
+                factor: 0.01,
+                ctor: rads,
+                to: to_rads,
+                si: false
+            },
+            /// Ergs per gram (erg/g)
+            ErgsPerGram {
+                symbol: "erg/g",
+                factor: 0.0001,
+                ctor: ergs_per_gram,
+                to: to_ergs_per_gram,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            SpecificEnergyUnit::Grays => 1.0,
-            SpecificEnergyUnit::Rads => 0.01,     // 1 rad = 0.01 Gy
-            SpecificEnergyUnit::ErgsPerGram => 0.0001, // 1 erg/g = 1e-4 Gy
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(self, SpecificEnergyUnit::Grays)
-    }
 }
-
-/// A quantity of specific energy (energy per unit mass).
-///
-/// Specific energy is the energy per unit mass of a substance.
-/// Also used for absorbed radiation dose (Gray, Rad).
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let se = SpecificEnergy::grays(10.0);
-/// let mass = Mass::kilograms(5.0);
-///
-/// // Energy = SpecificEnergy * Mass
-/// let energy = se * mass;
-/// assert!((energy.to_joules() - 50.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct SpecificEnergy {
-    value: f64,
-    unit: SpecificEnergyUnit,
-}
-
-impl SpecificEnergy {
-    /// Creates a new SpecificEnergy quantity.
-    pub const fn new_const(value: f64, unit: SpecificEnergyUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates a SpecificEnergy in grays.
-    pub fn grays(value: f64) -> Self {
-        Self::new(value, SpecificEnergyUnit::Grays)
-    }
-
-    /// Creates a SpecificEnergy in rads.
-    pub fn rads(value: f64) -> Self {
-        Self::new(value, SpecificEnergyUnit::Rads)
-    }
-
-    /// Creates a SpecificEnergy in ergs per gram.
-    pub fn ergs_per_gram(value: f64) -> Self {
-        Self::new(value, SpecificEnergyUnit::ErgsPerGram)
-    }
-
-    // Conversion methods
-    /// Converts to grays.
-    pub fn to_grays(&self) -> f64 {
-        self.to(SpecificEnergyUnit::Grays)
-    }
-
-    /// Converts to rads.
-    pub fn to_rads(&self) -> f64 {
-        self.to(SpecificEnergyUnit::Rads)
-    }
-
-    /// Converts to ergs per gram.
-    pub fn to_ergs_per_gram(&self) -> f64 {
-        self.to(SpecificEnergyUnit::ErgsPerGram)
-    }
-}
-
-impl fmt::Display for SpecificEnergy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for SpecificEnergy {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for SpecificEnergy {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for SpecificEnergy {
-    type Unit = SpecificEnergyUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        SpecificEnergy::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        SpecificEnergy::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        SpecificEnergy::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<SpecificEnergy> for f64 {
-    type Output = SpecificEnergy;
-
-    fn mul(self, rhs: SpecificEnergy) -> Self::Output {
-        SpecificEnergy::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        SpecificEnergy::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<SpecificEnergy> for SpecificEnergy {
-    type Output = f64;
-
-    fn div(self, rhs: SpecificEnergy) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for SpecificEnergy {
-    type Output = SpecificEnergy;
-
-    fn neg(self) -> Self::Output {
-        SpecificEnergy::new(-self.value, self.unit)
-    }
-}
-
 // Cross-quantity operations
 use super::energy::{Energy, EnergyUnit};
 
@@ -232,56 +79,10 @@ impl Mul<SpecificEnergy> for Mass {
         Energy::new(joules, EnergyUnit::Joules)
     }
 }
-
-/// Dimension for SpecificEnergy.
-pub struct SpecificEnergyDimension;
-
-impl Dimension for SpecificEnergyDimension {
-    type Quantity = SpecificEnergy;
-    type Unit = SpecificEnergyUnit;
-
-    fn name() -> &'static str {
-        "SpecificEnergy"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        SpecificEnergyUnit::Grays
-    }
-
-    fn si_unit() -> Self::Unit {
-        SpecificEnergyUnit::Grays
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        SpecificEnergyUnit::ALL
-    }
-}
-
-/// Extension trait for creating SpecificEnergy quantities from numeric types.
-pub trait SpecificEnergyConversions {
-    /// Creates a SpecificEnergy in grays.
-    fn grays(self) -> SpecificEnergy;
-    /// Creates a SpecificEnergy in rads.
-    fn rads(self) -> SpecificEnergy;
-    /// Creates a SpecificEnergy in ergs per gram.
-    fn ergs_per_gram(self) -> SpecificEnergy;
-}
-
-impl SpecificEnergyConversions for f64 {
-    fn grays(self) -> SpecificEnergy {
-        SpecificEnergy::grays(self)
-    }
-    fn rads(self) -> SpecificEnergy {
-        SpecificEnergy::rads(self)
-    }
-    fn ergs_per_gram(self) -> SpecificEnergy {
-        SpecificEnergy::ergs_per_gram(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_specific_energy_creation() {

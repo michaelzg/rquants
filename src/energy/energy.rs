@@ -1,111 +1,11 @@
 //! Energy quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::Quantity;
 use crate::mass::{ChemicalAmount, ChemicalAmountUnit, Mass, MassUnit};
 use crate::motion::{Force, ForceUnit};
 use crate::space::{Length, LengthUnit, Volume, VolumeUnit};
 use crate::time::{Time, TimeUnit};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of energy measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EnergyUnit {
-    // Watt-hours family (primary)
-    /// Watt-hours (Wh) - primary unit
-    WattHours,
-    /// Milliwatt-hours (mWh)
-    MilliwattHours,
-    /// Kilowatt-hours (kWh)
-    KilowattHours,
-    /// Megawatt-hours (MWh)
-    MegawattHours,
-    /// Gigawatt-hours (GWh)
-    GigawattHours,
-
-    // Joules family (SI)
-    /// Joules (J) - SI unit
-    Joules,
-    /// Picojoules (pJ)
-    Picojoules,
-    /// Nanojoules (nJ)
-    Nanojoules,
-    /// Microjoules (µJ)
-    Microjoules,
-    /// Millijoules (mJ)
-    Millijoules,
-    /// Kilojoules (kJ)
-    Kilojoules,
-    /// Megajoules (MJ)
-    Megajoules,
-    /// Gigajoules (GJ)
-    Gigajoules,
-    /// Terajoules (TJ)
-    Terajoules,
-
-    // BTU family
-    /// British Thermal Units (BTU)
-    BritishThermalUnits,
-    /// Thousand BTU (MBtu)
-    MBtus,
-    /// Million BTU (MMBtu)
-    MMBtus,
-
-    // Electron-volts family
-    /// Electron-volts (eV)
-    ElectronVolts,
-    /// Milli-electron-volts (meV)
-    MilliElectronVolts,
-    /// Kilo-electron-volts (keV)
-    KiloElectronVolts,
-    /// Mega-electron-volts (MeV)
-    MegaElectronVolts,
-    /// Giga-electron-volts (GeV)
-    GigaElectronVolts,
-    /// Tera-electron-volts (TeV)
-    TeraElectronVolts,
-
-    // Other
-    /// Ergs (erg) - CGS unit
-    Ergs,
-    /// Calories (cal)
-    Calories,
-    /// Kilocalories (kcal)
-    Kilocalories,
-}
-
-impl EnergyUnit {
-    /// All available energy units.
-    pub const ALL: &'static [EnergyUnit] = &[
-        EnergyUnit::WattHours,
-        EnergyUnit::MilliwattHours,
-        EnergyUnit::KilowattHours,
-        EnergyUnit::MegawattHours,
-        EnergyUnit::GigawattHours,
-        EnergyUnit::Joules,
-        EnergyUnit::Picojoules,
-        EnergyUnit::Nanojoules,
-        EnergyUnit::Microjoules,
-        EnergyUnit::Millijoules,
-        EnergyUnit::Kilojoules,
-        EnergyUnit::Megajoules,
-        EnergyUnit::Gigajoules,
-        EnergyUnit::Terajoules,
-        EnergyUnit::BritishThermalUnits,
-        EnergyUnit::MBtus,
-        EnergyUnit::MMBtus,
-        EnergyUnit::ElectronVolts,
-        EnergyUnit::MilliElectronVolts,
-        EnergyUnit::KiloElectronVolts,
-        EnergyUnit::MegaElectronVolts,
-        EnergyUnit::GigaElectronVolts,
-        EnergyUnit::TeraElectronVolts,
-        EnergyUnit::Ergs,
-        EnergyUnit::Calories,
-        EnergyUnit::Kilocalories,
-    ];
-}
+use std::ops::Div;
 
 // Conversion factors relative to WattHours (primary unit)
 const SECONDS_PER_HOUR: f64 = 3600.0;
@@ -124,354 +24,253 @@ const EV_TO_WH: f64 = EV_TO_J * JOULE_TO_WH;
 // Calorie (1 cal = 4.184 J)
 const CAL_TO_J: f64 = 4.184;
 const CAL_TO_WH: f64 = CAL_TO_J * JOULE_TO_WH;
+crate::quantity! {
+    /// A quantity of energy.
+    ///
+    /// Energy represents the capacity to do work.
+    ///
+    /// # Relationships
+    ///
+    /// - Energy = Power × Time
+    /// - Energy = Force × Distance
+    /// - Energy / Time = Power
+    /// - Energy / Mass = SpecificEnergy
+    /// - Energy / Volume = EnergyDensity
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let energy = Energy::kilowatt_hours(1.0);
+    /// assert!((energy.to_joules() - 3_600_000.0).abs() < 1.0);
+    ///
+    /// let power = Power::watts(100.0);
+    /// let time = Time::hours(2.0);
+    /// let work = power * time;
+    /// assert!((work.to_watt_hours() - 200.0).abs() < 1e-10);
+    /// ```
+    pub quantity Energy {
+        unit: EnergyUnit;
+        dimension: EnergyDimension;
+        conversions: EnergyConversions;
+        name: "Energy";
+        primary: WattHours;
+        si: Joules;
 
-impl fmt::Display for EnergyUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for EnergyUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            EnergyUnit::WattHours => "Wh",
-            EnergyUnit::MilliwattHours => "mWh",
-            EnergyUnit::KilowattHours => "kWh",
-            EnergyUnit::MegawattHours => "MWh",
-            EnergyUnit::GigawattHours => "GWh",
-            EnergyUnit::Joules => "J",
-            EnergyUnit::Picojoules => "pJ",
-            EnergyUnit::Nanojoules => "nJ",
-            EnergyUnit::Microjoules => "µJ",
-            EnergyUnit::Millijoules => "mJ",
-            EnergyUnit::Kilojoules => "kJ",
-            EnergyUnit::Megajoules => "MJ",
-            EnergyUnit::Gigajoules => "GJ",
-            EnergyUnit::Terajoules => "TJ",
-            EnergyUnit::BritishThermalUnits => "BTU",
-            EnergyUnit::MBtus => "MBtu",
-            EnergyUnit::MMBtus => "MMBtu",
-            EnergyUnit::ElectronVolts => "eV",
-            EnergyUnit::MilliElectronVolts => "meV",
-            EnergyUnit::KiloElectronVolts => "keV",
-            EnergyUnit::MegaElectronVolts => "MeV",
-            EnergyUnit::GigaElectronVolts => "GeV",
-            EnergyUnit::TeraElectronVolts => "TeV",
-            EnergyUnit::Ergs => "erg",
-            EnergyUnit::Calories => "cal",
-            EnergyUnit::Kilocalories => "kcal",
+        units {
+            /// Watt-hours (Wh) - primary unit
+            WattHours {
+                symbol: "Wh",
+                factor: 1.0,
+                ctor: watt_hours,
+                to: to_watt_hours,
+                si: false
+            },
+            /// Milliwatt-hours (mWh)
+            MilliwattHours {
+                symbol: "mWh",
+                factor: 1e-3,
+                ctor: milliwatt_hours,
+                to: to_milliwatt_hours,
+                si: false
+            },
+            /// Kilowatt-hours (kWh)
+            KilowattHours {
+                symbol: "kWh",
+                factor: 1e3,
+                ctor: kilowatt_hours,
+                to: to_kilowatt_hours,
+                si: false
+            },
+            /// Megawatt-hours (MWh)
+            MegawattHours {
+                symbol: "MWh",
+                factor: 1e6,
+                ctor: megawatt_hours,
+                to: to_megawatt_hours,
+                si: false
+            },
+            /// Gigawatt-hours (GWh)
+            GigawattHours {
+                symbol: "GWh",
+                factor: 1e9,
+                ctor: gigawatt_hours,
+                to: to_gigawatt_hours,
+                si: false
+            },
+            /// Joules (J) - SI unit
+            Joules {
+                symbol: "J",
+                factor: JOULE_TO_WH,
+                ctor: joules,
+                to: to_joules,
+                si: true
+            },
+            /// Picojoules (pJ)
+            Picojoules {
+                symbol: "pJ",
+                factor: JOULE_TO_WH * 1e-12,
+                ctor: picojoules,
+                to: to_picojoules,
+                si: true
+            },
+            /// Nanojoules (nJ)
+            Nanojoules {
+                symbol: "nJ",
+                factor: JOULE_TO_WH * 1e-9,
+                ctor: nanojoules,
+                to: to_nanojoules,
+                si: true
+            },
+            /// Microjoules (µJ)
+            Microjoules {
+                symbol: "µJ",
+                factor: JOULE_TO_WH * 1e-6,
+                ctor: microjoules,
+                to: to_microjoules,
+                si: true
+            },
+            /// Millijoules (mJ)
+            Millijoules {
+                symbol: "mJ",
+                factor: JOULE_TO_WH * 1e-3,
+                ctor: millijoules,
+                to: to_millijoules,
+                si: true
+            },
+            /// Kilojoules (kJ)
+            Kilojoules {
+                symbol: "kJ",
+                factor: JOULE_TO_WH * 1e3,
+                ctor: kilojoules,
+                to: to_kilojoules,
+                si: true
+            },
+            /// Megajoules (MJ)
+            Megajoules {
+                symbol: "MJ",
+                factor: JOULE_TO_WH * 1e6,
+                ctor: megajoules,
+                to: to_megajoules,
+                si: true
+            },
+            /// Gigajoules (GJ)
+            Gigajoules {
+                symbol: "GJ",
+                factor: JOULE_TO_WH * 1e9,
+                ctor: gigajoules,
+                to: to_gigajoules,
+                si: true
+            },
+            /// Terajoules (TJ)
+            Terajoules {
+                symbol: "TJ",
+                factor: JOULE_TO_WH * 1e12,
+                ctor: terajoules,
+                to: to_terajoules,
+                si: true
+            },
+            /// British Thermal Units (BTU)
+            BritishThermalUnits {
+                symbol: "BTU",
+                factor: BTU_TO_WH,
+                ctor: btus,
+                to: to_btus,
+                si: false
+            },
+            /// Thousand BTU (MBtu)
+            MBtus {
+                symbol: "MBtu",
+                factor: BTU_TO_WH * 1e3,
+                ctor: mbtus,
+                to: to_mbtus,
+                si: false
+            },
+            /// Million BTU (MMBtu)
+            MMBtus {
+                symbol: "MMBtu",
+                factor: BTU_TO_WH * 1e6,
+                ctor: mmbtus,
+                to: to_mmbtus,
+                si: false
+            },
+            /// Electron-volts (eV)
+            ElectronVolts {
+                symbol: "eV",
+                factor: EV_TO_WH,
+                ctor: electron_volts,
+                to: to_electron_volts,
+                si: false
+            },
+            /// Milli-electron-volts (meV)
+            MilliElectronVolts {
+                symbol: "meV",
+                factor: EV_TO_WH * 1e-3,
+                ctor: milli_electron_volts,
+                to: to_milli_electron_volts,
+                si: false
+            },
+            /// Kilo-electron-volts (keV)
+            KiloElectronVolts {
+                symbol: "keV",
+                factor: EV_TO_WH * 1e3,
+                ctor: kilo_electron_volts,
+                to: to_kilo_electron_volts,
+                si: false
+            },
+            /// Mega-electron-volts (MeV)
+            MegaElectronVolts {
+                symbol: "MeV",
+                factor: EV_TO_WH * 1e6,
+                ctor: mega_electron_volts,
+                to: to_mega_electron_volts,
+                si: false
+            },
+            /// Giga-electron-volts (GeV)
+            GigaElectronVolts {
+                symbol: "GeV",
+                factor: EV_TO_WH * 1e9,
+                ctor: giga_electron_volts,
+                to: to_giga_electron_volts,
+                si: false
+            },
+            /// Tera-electron-volts (TeV)
+            TeraElectronVolts {
+                symbol: "TeV",
+                factor: EV_TO_WH * 1e12,
+                ctor: tera_electron_volts,
+                to: to_tera_electron_volts,
+                si: false
+            },
+            /// Ergs (erg) - CGS unit
+            Ergs {
+                symbol: "erg",
+                factor: JOULE_TO_WH * 1e-7,
+                ctor: ergs,
+                to: to_ergs,
+                si: false
+            },
+            /// Calories (cal)
+            Calories {
+                symbol: "cal",
+                factor: CAL_TO_WH,
+                ctor: calories,
+                to: to_calories,
+                si: false
+            },
+            /// Kilocalories (kcal)
+            Kilocalories {
+                symbol: "kcal",
+                factor: CAL_TO_WH * 1e3,
+                ctor: kilocalories,
+                to: to_kilocalories,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            // Watt-hours family
-            EnergyUnit::WattHours => 1.0,
-            EnergyUnit::MilliwattHours => 1e-3,
-            EnergyUnit::KilowattHours => 1e3,
-            EnergyUnit::MegawattHours => 1e6,
-            EnergyUnit::GigawattHours => 1e9,
-
-            // Joules family (convert via J -> Wh)
-            EnergyUnit::Joules => JOULE_TO_WH,
-            EnergyUnit::Picojoules => JOULE_TO_WH * 1e-12,
-            EnergyUnit::Nanojoules => JOULE_TO_WH * 1e-9,
-            EnergyUnit::Microjoules => JOULE_TO_WH * 1e-6,
-            EnergyUnit::Millijoules => JOULE_TO_WH * 1e-3,
-            EnergyUnit::Kilojoules => JOULE_TO_WH * 1e3,
-            EnergyUnit::Megajoules => JOULE_TO_WH * 1e6,
-            EnergyUnit::Gigajoules => JOULE_TO_WH * 1e9,
-            EnergyUnit::Terajoules => JOULE_TO_WH * 1e12,
-
-            // BTU family
-            EnergyUnit::BritishThermalUnits => BTU_TO_WH,
-            EnergyUnit::MBtus => BTU_TO_WH * 1e3,
-            EnergyUnit::MMBtus => BTU_TO_WH * 1e6,
-
-            // Electron-volt family
-            EnergyUnit::ElectronVolts => EV_TO_WH,
-            EnergyUnit::MilliElectronVolts => EV_TO_WH * 1e-3,
-            EnergyUnit::KiloElectronVolts => EV_TO_WH * 1e3,
-            EnergyUnit::MegaElectronVolts => EV_TO_WH * 1e6,
-            EnergyUnit::GigaElectronVolts => EV_TO_WH * 1e9,
-            EnergyUnit::TeraElectronVolts => EV_TO_WH * 1e12,
-
-            // Others
-            EnergyUnit::Ergs => JOULE_TO_WH * 1e-7, // 1 erg = 1e-7 J
-            EnergyUnit::Calories => CAL_TO_WH,
-            EnergyUnit::Kilocalories => CAL_TO_WH * 1e3,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(
-            self,
-            EnergyUnit::Joules
-                | EnergyUnit::Picojoules
-                | EnergyUnit::Nanojoules
-                | EnergyUnit::Microjoules
-                | EnergyUnit::Millijoules
-                | EnergyUnit::Kilojoules
-                | EnergyUnit::Megajoules
-                | EnergyUnit::Gigajoules
-                | EnergyUnit::Terajoules
-        )
-    }
 }
-
-/// A quantity of energy.
-///
-/// Energy represents the capacity to do work.
-///
-/// # Relationships
-///
-/// - Energy = Power × Time
-/// - Energy = Force × Distance
-/// - Energy / Time = Power
-/// - Energy / Mass = SpecificEnergy
-/// - Energy / Volume = EnergyDensity
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let energy = Energy::kilowatt_hours(1.0);
-/// assert!((energy.to_joules() - 3_600_000.0).abs() < 1.0);
-///
-/// let power = Power::watts(100.0);
-/// let time = Time::hours(2.0);
-/// let work = power * time;
-/// assert!((work.to_watt_hours() - 200.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Energy {
-    value: f64,
-    unit: EnergyUnit,
-}
-
 impl Energy {
-    /// Creates a new Energy quantity.
-    pub const fn new_const(value: f64, unit: EnergyUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Watt-hour constructors
-    /// Creates an Energy in watt-hours.
-    pub fn watt_hours(value: f64) -> Self {
-        Self::new(value, EnergyUnit::WattHours)
-    }
-
-    /// Creates an Energy in milliwatt-hours.
-    pub fn milliwatt_hours(value: f64) -> Self {
-        Self::new(value, EnergyUnit::MilliwattHours)
-    }
-
-    /// Creates an Energy in kilowatt-hours.
-    pub fn kilowatt_hours(value: f64) -> Self {
-        Self::new(value, EnergyUnit::KilowattHours)
-    }
-
-    /// Creates an Energy in megawatt-hours.
-    pub fn megawatt_hours(value: f64) -> Self {
-        Self::new(value, EnergyUnit::MegawattHours)
-    }
-
-    /// Creates an Energy in gigawatt-hours.
-    pub fn gigawatt_hours(value: f64) -> Self {
-        Self::new(value, EnergyUnit::GigawattHours)
-    }
-
-    // Joule constructors
-    /// Creates an Energy in joules.
-    pub fn joules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Joules)
-    }
-
-    /// Creates an Energy in kilojoules.
-    pub fn kilojoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Kilojoules)
-    }
-
-    /// Creates an Energy in megajoules.
-    pub fn megajoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Megajoules)
-    }
-
-    // BTU constructors
-    /// Creates an Energy in BTU.
-    pub fn btus(value: f64) -> Self {
-        Self::new(value, EnergyUnit::BritishThermalUnits)
-    }
-
-    // eV constructors
-    /// Creates an Energy in electron-volts.
-    pub fn electron_volts(value: f64) -> Self {
-        Self::new(value, EnergyUnit::ElectronVolts)
-    }
-
-    // Calorie constructors
-    /// Creates an Energy in calories.
-    pub fn calories(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Calories)
-    }
-
-    /// Creates an Energy in kilocalories.
-    pub fn kilocalories(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Kilocalories)
-    }
-
-    /// Creates an Energy in picojoules.
-    pub fn picojoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Picojoules)
-    }
-
-    /// Creates an Energy in nanojoules.
-    pub fn nanojoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Nanojoules)
-    }
-
-    /// Creates an Energy in microjoules.
-    pub fn microjoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Microjoules)
-    }
-
-    /// Creates an Energy in millijoules.
-    pub fn millijoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Millijoules)
-    }
-
-    /// Creates an Energy in gigajoules.
-    pub fn gigajoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Gigajoules)
-    }
-
-    /// Creates an Energy in terajoules.
-    pub fn terajoules(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Terajoules)
-    }
-
-    /// Creates an Energy in MBtu.
-    pub fn mbtus(value: f64) -> Self {
-        Self::new(value, EnergyUnit::MBtus)
-    }
-
-    /// Creates an Energy in MMBtu.
-    pub fn mmbtus(value: f64) -> Self {
-        Self::new(value, EnergyUnit::MMBtus)
-    }
-
-    /// Creates an Energy in milli-electron-volts.
-    pub fn milli_electron_volts(value: f64) -> Self {
-        Self::new(value, EnergyUnit::MilliElectronVolts)
-    }
-
-    /// Creates an Energy in kilo-electron-volts.
-    pub fn kilo_electron_volts(value: f64) -> Self {
-        Self::new(value, EnergyUnit::KiloElectronVolts)
-    }
-
-    /// Creates an Energy in mega-electron-volts.
-    pub fn mega_electron_volts(value: f64) -> Self {
-        Self::new(value, EnergyUnit::MegaElectronVolts)
-    }
-
-    /// Creates an Energy in giga-electron-volts.
-    pub fn giga_electron_volts(value: f64) -> Self {
-        Self::new(value, EnergyUnit::GigaElectronVolts)
-    }
-
-    /// Creates an Energy in tera-electron-volts.
-    pub fn tera_electron_volts(value: f64) -> Self {
-        Self::new(value, EnergyUnit::TeraElectronVolts)
-    }
-
-    /// Creates an Energy in ergs.
-    pub fn ergs(value: f64) -> Self {
-        Self::new(value, EnergyUnit::Ergs)
-    }
-
-    // Conversion methods
-    /// Converts to watt-hours.
-    pub fn to_watt_hours(&self) -> f64 {
-        self.to(EnergyUnit::WattHours)
-    }
-
-    /// Converts to kilowatt-hours.
-    pub fn to_kilowatt_hours(&self) -> f64 {
-        self.to(EnergyUnit::KilowattHours)
-    }
-
-    /// Converts to megawatt-hours.
-    pub fn to_megawatt_hours(&self) -> f64 {
-        self.to(EnergyUnit::MegawattHours)
-    }
-
-    /// Converts to joules.
-    pub fn to_joules(&self) -> f64 {
-        self.to(EnergyUnit::Joules)
-    }
-
-    /// Converts to kilojoules.
-    pub fn to_kilojoules(&self) -> f64 {
-        self.to(EnergyUnit::Kilojoules)
-    }
-
-    /// Converts to BTU.
-    pub fn to_btus(&self) -> f64 {
-        self.to(EnergyUnit::BritishThermalUnits)
-    }
-
-    /// Converts to electron-volts.
-    pub fn to_electron_volts(&self) -> f64 {
-        self.to(EnergyUnit::ElectronVolts)
-    }
-
-    /// Converts to calories.
-    pub fn to_calories(&self) -> f64 {
-        self.to(EnergyUnit::Calories)
-    }
-
-    /// Converts to kilocalories.
-    pub fn to_kilocalories(&self) -> f64 {
-        self.to(EnergyUnit::Kilocalories)
-    }
-
-    /// Converts to milliwatt-hours.
-    pub fn to_milliwatt_hours(&self) -> f64 {
-        self.to(EnergyUnit::MilliwattHours)
-    }
-
-    /// Converts to gigawatt-hours.
-    pub fn to_gigawatt_hours(&self) -> f64 {
-        self.to(EnergyUnit::GigawattHours)
-    }
-
-    /// Converts to megajoules.
-    pub fn to_megajoules(&self) -> f64 {
-        self.to(EnergyUnit::Megajoules)
-    }
-
-    /// Converts to gigajoules.
-    pub fn to_gigajoules(&self) -> f64 {
-        self.to(EnergyUnit::Gigajoules)
-    }
-
-    /// Converts to ergs.
-    pub fn to_ergs(&self) -> f64 {
-        self.to(EnergyUnit::Ergs)
-    }
-
-    /// Converts to MBtu.
-    pub fn to_mbtus(&self) -> f64 {
-        self.to(EnergyUnit::MBtus)
-    }
-
-    /// Converts to MMBtu.
-    pub fn to_mmbtus(&self) -> f64 {
-        self.to(EnergyUnit::MMBtus)
-    }
-
     /// Calculates kinetic energy from mass and velocity.
     /// KE = 0.5 * m * v²
     pub fn kinetic(mass: Mass, velocity: crate::motion::Velocity) -> Self {
@@ -480,101 +279,6 @@ impl Energy {
         Energy::joules(0.5 * m * v * v)
     }
 }
-
-impl fmt::Display for Energy {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Energy {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Energy {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Energy {
-    type Unit = EnergyUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Energy {
-    type Output = Energy;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Energy::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Energy {
-    type Output = Energy;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Energy::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Energy {
-    type Output = Energy;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Energy::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Energy> for f64 {
-    type Output = Energy;
-
-    fn mul(self, rhs: Energy) -> Self::Output {
-        Energy::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Energy {
-    type Output = Energy;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Energy::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Energy> for Energy {
-    type Output = f64;
-
-    fn div(self, rhs: Energy) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Energy {
-    type Output = Energy;
-
-    fn neg(self) -> Self::Output {
-        Energy::new(-self.value, self.unit)
-    }
-}
-
 // Forward declarations for cross-quantity operations
 // These will be implemented after Power is defined
 use super::energy_density::{EnergyDensity, EnergyDensityUnit};
@@ -681,171 +385,10 @@ impl Div<Length> for Energy {
         Force::new(newtons, ForceUnit::Newtons)
     }
 }
-
-/// Dimension for Energy.
-pub struct EnergyDimension;
-
-impl Dimension for EnergyDimension {
-    type Quantity = Energy;
-    type Unit = EnergyUnit;
-
-    fn name() -> &'static str {
-        "Energy"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        EnergyUnit::WattHours
-    }
-
-    fn si_unit() -> Self::Unit {
-        EnergyUnit::Joules
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        EnergyUnit::ALL
-    }
-}
-
-/// Extension trait for creating Energy quantities from numeric types.
-pub trait EnergyConversions {
-    /// Creates an Energy in watt-hours.
-    fn watt_hours(self) -> Energy;
-    /// Creates an Energy in milliwatt-hours.
-    fn milliwatt_hours(self) -> Energy;
-    /// Creates an Energy in kilowatt-hours.
-    fn kilowatt_hours(self) -> Energy;
-    /// Creates an Energy in megawatt-hours.
-    fn megawatt_hours(self) -> Energy;
-    /// Creates an Energy in gigawatt-hours.
-    fn gigawatt_hours(self) -> Energy;
-    /// Creates an Energy in joules.
-    fn joules(self) -> Energy;
-    /// Creates an Energy in picojoules.
-    fn picojoules(self) -> Energy;
-    /// Creates an Energy in nanojoules.
-    fn nanojoules(self) -> Energy;
-    /// Creates an Energy in microjoules.
-    fn microjoules(self) -> Energy;
-    /// Creates an Energy in millijoules.
-    fn millijoules(self) -> Energy;
-    /// Creates an Energy in kilojoules.
-    fn kilojoules(self) -> Energy;
-    /// Creates an Energy in megajoules.
-    fn megajoules(self) -> Energy;
-    /// Creates an Energy in gigajoules.
-    fn gigajoules(self) -> Energy;
-    /// Creates an Energy in terajoules.
-    fn terajoules(self) -> Energy;
-    /// Creates an Energy in BTU.
-    fn btus(self) -> Energy;
-    /// Creates an Energy in MBtu.
-    fn mbtus(self) -> Energy;
-    /// Creates an Energy in MMBtu.
-    fn mmbtus(self) -> Energy;
-    /// Creates an Energy in electron-volts.
-    fn electron_volts(self) -> Energy;
-    /// Creates an Energy in milli-electron-volts.
-    fn milli_electron_volts(self) -> Energy;
-    /// Creates an Energy in kilo-electron-volts.
-    fn kilo_electron_volts(self) -> Energy;
-    /// Creates an Energy in mega-electron-volts.
-    fn mega_electron_volts(self) -> Energy;
-    /// Creates an Energy in giga-electron-volts.
-    fn giga_electron_volts(self) -> Energy;
-    /// Creates an Energy in tera-electron-volts.
-    fn tera_electron_volts(self) -> Energy;
-    /// Creates an Energy in ergs.
-    fn ergs(self) -> Energy;
-    /// Creates an Energy in calories.
-    fn calories(self) -> Energy;
-    /// Creates an Energy in kilocalories.
-    fn kilocalories(self) -> Energy;
-}
-
-impl EnergyConversions for f64 {
-    fn watt_hours(self) -> Energy {
-        Energy::watt_hours(self)
-    }
-    fn milliwatt_hours(self) -> Energy {
-        Energy::milliwatt_hours(self)
-    }
-    fn kilowatt_hours(self) -> Energy {
-        Energy::kilowatt_hours(self)
-    }
-    fn megawatt_hours(self) -> Energy {
-        Energy::megawatt_hours(self)
-    }
-    fn gigawatt_hours(self) -> Energy {
-        Energy::gigawatt_hours(self)
-    }
-    fn joules(self) -> Energy {
-        Energy::joules(self)
-    }
-    fn picojoules(self) -> Energy {
-        Energy::picojoules(self)
-    }
-    fn nanojoules(self) -> Energy {
-        Energy::nanojoules(self)
-    }
-    fn microjoules(self) -> Energy {
-        Energy::microjoules(self)
-    }
-    fn millijoules(self) -> Energy {
-        Energy::millijoules(self)
-    }
-    fn kilojoules(self) -> Energy {
-        Energy::kilojoules(self)
-    }
-    fn megajoules(self) -> Energy {
-        Energy::megajoules(self)
-    }
-    fn gigajoules(self) -> Energy {
-        Energy::gigajoules(self)
-    }
-    fn terajoules(self) -> Energy {
-        Energy::terajoules(self)
-    }
-    fn btus(self) -> Energy {
-        Energy::btus(self)
-    }
-    fn mbtus(self) -> Energy {
-        Energy::mbtus(self)
-    }
-    fn mmbtus(self) -> Energy {
-        Energy::mmbtus(self)
-    }
-    fn electron_volts(self) -> Energy {
-        Energy::electron_volts(self)
-    }
-    fn milli_electron_volts(self) -> Energy {
-        Energy::milli_electron_volts(self)
-    }
-    fn kilo_electron_volts(self) -> Energy {
-        Energy::kilo_electron_volts(self)
-    }
-    fn mega_electron_volts(self) -> Energy {
-        Energy::mega_electron_volts(self)
-    }
-    fn giga_electron_volts(self) -> Energy {
-        Energy::giga_electron_volts(self)
-    }
-    fn tera_electron_volts(self) -> Energy {
-        Energy::tera_electron_volts(self)
-    }
-    fn ergs(self) -> Energy {
-        Energy::ergs(self)
-    }
-    fn calories(self) -> Energy {
-        Energy::calories(self)
-    }
-    fn kilocalories(self) -> Energy {
-        Energy::kilocalories(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_energy_creation() {

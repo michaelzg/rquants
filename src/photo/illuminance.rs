@@ -1,181 +1,43 @@
 //! Illuminance quantity and units.
+use crate::core::Quantity;
+use std::ops::Mul;
+crate::quantity! {
+    /// A quantity of illuminance.
+    ///
+    /// Illuminance represents the luminous flux incident on a surface per unit area.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let illuminance = Illuminance::lux(500.0);
+    /// let area = Area::square_meters(4.0);
+    ///
+    /// // Illuminance * Area = LuminousFlux
+    /// let flux = illuminance * area;
+    /// assert!((flux.to_lumens() - 2000.0).abs() < 1e-10);
+    /// ```
+    pub quantity Illuminance {
+        unit: IlluminanceUnit;
+        dimension: IlluminanceDimension;
+        conversions: IlluminanceConversions;
+        name: "Illuminance";
+        primary: Lux;
+        si: Lux;
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of illuminance measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum IlluminanceUnit {
-    /// Lux (lx) - SI unit (lm/m²)
-    Lux,
-}
-
-impl IlluminanceUnit {
-    /// All available illuminance units.
-    pub const ALL: &'static [IlluminanceUnit] = &[IlluminanceUnit::Lux];
-}
-
-impl fmt::Display for IlluminanceUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for IlluminanceUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            IlluminanceUnit::Lux => "lx",
+        units {
+            /// Lux (lx) - SI unit (lm/m²)
+            Lux {
+                symbol: "lx",
+                factor: 1.0,
+                ctor: lux,
+                to: to_lux,
+                si: true
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            IlluminanceUnit::Lux => 1.0,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(self, IlluminanceUnit::Lux)
-    }
 }
-
-/// A quantity of illuminance.
-///
-/// Illuminance represents the luminous flux incident on a surface per unit area.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let illuminance = Illuminance::lux(500.0);
-/// let area = Area::square_meters(4.0);
-///
-/// // Illuminance * Area = LuminousFlux
-/// let flux = illuminance * area;
-/// assert!((flux.to_lumens() - 2000.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Illuminance {
-    value: f64,
-    unit: IlluminanceUnit,
-}
-
-impl Illuminance {
-    /// Creates a new Illuminance quantity.
-    pub const fn new_const(value: f64, unit: IlluminanceUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates an Illuminance in lux.
-    pub fn lux(value: f64) -> Self {
-        Self::new(value, IlluminanceUnit::Lux)
-    }
-
-    // Conversion methods
-    /// Converts to lux.
-    pub fn to_lux(&self) -> f64 {
-        self.to(IlluminanceUnit::Lux)
-    }
-}
-
-impl fmt::Display for Illuminance {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Illuminance {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Illuminance {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Illuminance {
-    type Unit = IlluminanceUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Illuminance {
-    type Output = Illuminance;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Illuminance::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Illuminance {
-    type Output = Illuminance;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Illuminance::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Illuminance {
-    type Output = Illuminance;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Illuminance::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Illuminance> for f64 {
-    type Output = Illuminance;
-
-    fn mul(self, rhs: Illuminance) -> Self::Output {
-        Illuminance::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Illuminance {
-    type Output = Illuminance;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Illuminance::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Illuminance> for Illuminance {
-    type Output = f64;
-
-    fn div(self, rhs: Illuminance) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Illuminance {
-    type Output = Illuminance;
-
-    fn neg(self) -> Self::Output {
-        Illuminance::new(-self.value, self.unit)
-    }
-}
-
 // Cross-quantity operations
 use super::luminous_exposure::{LuminousExposure, LuminousExposureUnit};
 use super::luminous_flux::{LuminousFlux, LuminousFluxUnit};
@@ -221,46 +83,10 @@ impl Mul<Illuminance> for Time {
         LuminousExposure::new(lx_s, LuminousExposureUnit::LuxSeconds)
     }
 }
-
-/// Dimension for Illuminance.
-pub struct IlluminanceDimension;
-
-impl Dimension for IlluminanceDimension {
-    type Quantity = Illuminance;
-    type Unit = IlluminanceUnit;
-
-    fn name() -> &'static str {
-        "Illuminance"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        IlluminanceUnit::Lux
-    }
-
-    fn si_unit() -> Self::Unit {
-        IlluminanceUnit::Lux
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        IlluminanceUnit::ALL
-    }
-}
-
-/// Extension trait for creating Illuminance quantities from numeric types.
-pub trait IlluminanceConversions {
-    /// Creates an Illuminance in lux.
-    fn lux(self) -> Illuminance;
-}
-
-impl IlluminanceConversions for f64 {
-    fn lux(self) -> Illuminance {
-        Illuminance::lux(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_illuminance_creation() {
