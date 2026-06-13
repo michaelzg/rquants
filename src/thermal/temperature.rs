@@ -44,90 +44,23 @@ impl TemperatureScale {
             TemperatureScale::Rankine => "°R",
         }
     }
+
+    /// Returns `(ratio, offset)` for converting this scale to Kelvin:
+    /// `kelvin = value * ratio + offset`.
+    const fn to_kelvin_params(self) -> (f64, f64) {
+        match self {
+            TemperatureScale::Kelvin => (1.0, 0.0),
+            TemperatureScale::Celsius => (1.0, 273.15),
+            TemperatureScale::Fahrenheit => (5.0 / 9.0, 459.67 * 5.0 / 9.0),
+            TemperatureScale::Rankine => (5.0 / 9.0, 0.0),
+        }
+    }
 }
 
 impl fmt::Display for TemperatureScale {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.symbol())
     }
-}
-
-// ===== Scale conversion functions =====
-// These adjust for zero offsets (thermometer readings)
-
-fn celsius_to_fahrenheit_scale(c: f64) -> f64 {
-    c * 9.0 / 5.0 + 32.0
-}
-
-fn fahrenheit_to_celsius_scale(f: f64) -> f64 {
-    (f - 32.0) * 5.0 / 9.0
-}
-
-fn celsius_to_kelvin_scale(c: f64) -> f64 {
-    c + 273.15
-}
-
-fn kelvin_to_celsius_scale(k: f64) -> f64 {
-    k - 273.15
-}
-
-fn fahrenheit_to_kelvin_scale(f: f64) -> f64 {
-    (f + 459.67) * 5.0 / 9.0
-}
-
-fn kelvin_to_fahrenheit_scale(k: f64) -> f64 {
-    k * 9.0 / 5.0 - 459.67
-}
-
-fn kelvin_to_rankine_scale(k: f64) -> f64 {
-    k * 9.0 / 5.0
-}
-
-fn rankine_to_kelvin_scale(r: f64) -> f64 {
-    r * 5.0 / 9.0
-}
-
-fn celsius_to_rankine_scale(c: f64) -> f64 {
-    (c + 273.15) * 9.0 / 5.0
-}
-
-fn rankine_to_celsius_scale(r: f64) -> f64 {
-    (r - 491.67) * 5.0 / 9.0
-}
-
-fn fahrenheit_to_rankine_scale(f: f64) -> f64 {
-    f + 459.67
-}
-
-fn rankine_to_fahrenheit_scale(r: f64) -> f64 {
-    r - 459.67
-}
-
-// ===== Degree conversion functions =====
-// These only convert magnitudes (no zero offset adjustment)
-
-fn celsius_to_fahrenheit_degrees(c: f64) -> f64 {
-    c * 9.0 / 5.0
-}
-
-fn fahrenheit_to_celsius_degrees(f: f64) -> f64 {
-    f * 5.0 / 9.0
-}
-
-fn kelvin_to_fahrenheit_degrees(k: f64) -> f64 {
-    k * 9.0 / 5.0
-}
-
-fn fahrenheit_to_kelvin_degrees(f: f64) -> f64 {
-    f * 5.0 / 9.0
-}
-
-fn kelvin_to_rankine_degrees(k: f64) -> f64 {
-    k * 9.0 / 5.0
-}
-
-fn rankine_to_kelvin_degrees(r: f64) -> f64 {
-    r * 5.0 / 9.0
 }
 
 /// A quantity of temperature.
@@ -271,49 +204,18 @@ impl Temperature {
     }
 
     fn convert(&self, target: TemperatureScale, with_offset: bool) -> Temperature {
-        use TemperatureScale::*;
-
         if self.scale == target {
             return *self;
         }
 
-        let v = self.value;
-
-        if with_offset {
-            // Scale conversions (adjust for zero offset)
-            let converted = match (self.scale, target) {
-                (Celsius, Fahrenheit) => celsius_to_fahrenheit_scale(v),
-                (Fahrenheit, Celsius) => fahrenheit_to_celsius_scale(v),
-                (Celsius, Kelvin) => celsius_to_kelvin_scale(v),
-                (Kelvin, Celsius) => kelvin_to_celsius_scale(v),
-                (Fahrenheit, Kelvin) => fahrenheit_to_kelvin_scale(v),
-                (Kelvin, Fahrenheit) => kelvin_to_fahrenheit_scale(v),
-                (Kelvin, Rankine) => kelvin_to_rankine_scale(v),
-                (Rankine, Kelvin) => rankine_to_kelvin_scale(v),
-                (Celsius, Rankine) => celsius_to_rankine_scale(v),
-                (Rankine, Celsius) => rankine_to_celsius_scale(v),
-                (Fahrenheit, Rankine) => fahrenheit_to_rankine_scale(v),
-                (Rankine, Fahrenheit) => rankine_to_fahrenheit_scale(v),
-                _ => unreachable!(),
-            };
-            Temperature::new(converted, target)
+        let (source_ratio, source_offset) = self.scale.to_kelvin_params();
+        let (target_ratio, target_offset) = target.to_kelvin_params();
+        let converted = if with_offset {
+            ((self.value * source_ratio + source_offset) - target_offset) / target_ratio
         } else {
-            // Degree conversions (magnitude only)
-            let converted = match (self.scale, target) {
-                (Celsius, Fahrenheit) => celsius_to_fahrenheit_degrees(v),
-                (Fahrenheit, Celsius) => fahrenheit_to_celsius_degrees(v),
-                (Celsius, Kelvin) | (Kelvin, Celsius) => v, // 1:1 ratio
-                (Fahrenheit, Kelvin) => fahrenheit_to_kelvin_degrees(v),
-                (Kelvin, Fahrenheit) => kelvin_to_fahrenheit_degrees(v),
-                (Kelvin, Rankine) => kelvin_to_rankine_degrees(v),
-                (Rankine, Kelvin) => rankine_to_kelvin_degrees(v),
-                (Celsius, Rankine) => celsius_to_fahrenheit_degrees(v), // same ratio as C->F
-                (Rankine, Celsius) => fahrenheit_to_celsius_degrees(v), // same ratio as F->C
-                (Fahrenheit, Rankine) | (Rankine, Fahrenheit) => v, // 1:1 ratio
-                _ => unreachable!(),
-            };
-            Temperature::new(converted, target)
-        }
+            self.value * source_ratio / target_ratio
+        };
+        Temperature::new(converted, target)
     }
 }
 
@@ -334,8 +236,7 @@ impl PartialEq for Temperature {
 
 impl PartialOrd for Temperature {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_kelvin_scale()
-            .partial_cmp(&other.to_kelvin_scale())
+        self.to_kelvin_scale().partial_cmp(&other.to_kelvin_scale())
     }
 }
 

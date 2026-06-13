@@ -107,15 +107,6 @@ pub trait UnitOfMeasure: Debug + Clone + Copy + PartialEq + Eq + Hash + Display 
     }
 }
 
-/// Marker trait for SI base units.
-pub trait SiBaseUnit: UnitOfMeasure {}
-
-/// Marker trait for SI derived units.
-pub trait SiUnit: UnitOfMeasure {}
-
-/// Marker trait for the primary (reference) unit of a dimension.
-pub trait PrimaryUnit: UnitOfMeasure {}
-
 #[cfg(test)]
 mod tests {
     use super::*;

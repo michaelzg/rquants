@@ -163,6 +163,12 @@ macro_rules! quantity {
             }
         }
 
+        impl ::std::ops::AddAssign for $quantity {
+            fn add_assign(&mut self, rhs: Self) {
+                *self = *self + rhs;
+            }
+        }
+
         impl ::std::ops::Sub for $quantity {
             type Output = $quantity;
 
@@ -172,11 +178,23 @@ macro_rules! quantity {
             }
         }
 
+        impl ::std::ops::SubAssign for $quantity {
+            fn sub_assign(&mut self, rhs: Self) {
+                *self = *self - rhs;
+            }
+        }
+
         impl ::std::ops::Mul<f64> for $quantity {
             type Output = $quantity;
 
             fn mul(self, rhs: f64) -> Self::Output {
                 <$quantity as $crate::core::Quantity>::new(self.value * rhs, self.unit)
+            }
+        }
+
+        impl ::std::ops::MulAssign<f64> for $quantity {
+            fn mul_assign(&mut self, rhs: f64) {
+                self.value *= rhs;
             }
         }
 
@@ -196,6 +214,12 @@ macro_rules! quantity {
             }
         }
 
+        impl ::std::ops::DivAssign<f64> for $quantity {
+            fn div_assign(&mut self, rhs: f64) {
+                self.value /= rhs;
+            }
+        }
+
         impl ::std::ops::Div<$quantity> for $quantity {
             type Output = f64;
 
@@ -210,6 +234,54 @@ macro_rules! quantity {
 
             fn neg(self) -> Self::Output {
                 <$quantity as $crate::core::Quantity>::new(-self.value, self.unit)
+            }
+        }
+
+        impl ::std::iter::Sum for $quantity {
+            fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+                let total = iter.fold(0.0, |total, quantity| {
+                    total + $crate::core::Quantity::to_primary(&quantity)
+                });
+                <$quantity as $crate::core::Quantity>::new(
+                    total,
+                    <$dimension as $crate::core::Dimension>::primary_unit(),
+                )
+            }
+        }
+
+        impl<'a> ::std::iter::Sum<&'a $quantity> for $quantity {
+            fn sum<I: Iterator<Item = &'a $quantity>>(iter: I) -> Self {
+                iter.copied().sum()
+            }
+        }
+
+        impl ::std::str::FromStr for $quantity {
+            type Err = $crate::core::error::QuantityParseError;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                <$dimension as $crate::core::Dimension>::parse(s)
+            }
+        }
+
+        #[cfg(feature = "serde")]
+        impl ::serde::Serialize for $quantity {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: ::serde::Serializer,
+            {
+                serializer.serialize_str(&self.to_string())
+            }
+        }
+
+        #[cfg(feature = "serde")]
+        impl<'de> ::serde::Deserialize<'de> for $quantity {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: ::serde::Deserializer<'de>,
+            {
+                let s = <::std::string::String as ::serde::Deserialize>::deserialize(deserializer)?;
+                <Self as ::std::str::FromStr>::from_str(&s)
+                    .map_err(::serde::de::Error::custom)
             }
         }
 

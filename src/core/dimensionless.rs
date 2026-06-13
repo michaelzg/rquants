@@ -6,7 +6,7 @@
 use crate::core::{Dimension, Quantity, UnitOfMeasure};
 use std::cmp::Ordering;
 use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Units of dimensionless measurement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -61,6 +61,10 @@ impl UnitOfMeasure for DimensionlessUnit {
         }
     }
 
+    fn is_primary(&self) -> bool {
+        matches!(self, DimensionlessUnit::Each)
+    }
+
     fn is_si(&self) -> bool {
         matches!(self, DimensionlessUnit::Each)
     }
@@ -70,6 +74,9 @@ impl UnitOfMeasure for DimensionlessUnit {
 ///
 /// This may represent counts or other discrete amounts,
 /// or ratios between like quantities where units cancel out.
+/// Dividing one quantity by another of the same dimension returns a bare `f64`
+/// for ergonomic ratio arithmetic; use `Dimensionless` when that ratio should
+/// carry an explicit unit such as percent or dozen.
 ///
 /// # Example
 ///
@@ -203,8 +210,14 @@ impl Add for Dimensionless {
     type Output = Dimensionless;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Dimensionless::new(self.unit.convert_from_primary(sum), self.unit)
+        let rhs_value = rhs.to(self.unit);
+        Dimensionless::new(self.value + rhs_value, self.unit)
+    }
+}
+
+impl AddAssign for Dimensionless {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
     }
 }
 
@@ -220,8 +233,14 @@ impl Sub for Dimensionless {
     type Output = Dimensionless;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Dimensionless::new(self.unit.convert_from_primary(diff), self.unit)
+        let rhs_value = rhs.to(self.unit);
+        Dimensionless::new(self.value - rhs_value, self.unit)
+    }
+}
+
+impl SubAssign for Dimensionless {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
     }
 }
 
@@ -238,6 +257,12 @@ impl Mul<f64> for Dimensionless {
 
     fn mul(self, rhs: f64) -> Self::Output {
         Dimensionless::new(self.value * rhs, self.unit)
+    }
+}
+
+impl MulAssign<f64> for Dimensionless {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.value *= rhs;
     }
 }
 
@@ -266,6 +291,12 @@ impl Div<f64> for Dimensionless {
     }
 }
 
+impl DivAssign<f64> for Dimensionless {
+    fn div_assign(&mut self, rhs: f64) {
+        self.value /= rhs;
+    }
+}
+
 impl Div<Dimensionless> for Dimensionless {
     type Output = f64;
 
@@ -279,6 +310,48 @@ impl Neg for Dimensionless {
 
     fn neg(self) -> Self::Output {
         Dimensionless::new(-self.value, self.unit)
+    }
+}
+
+impl std::iter::Sum for Dimensionless {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        let total = iter.fold(0.0, |total, quantity| total + quantity.to_primary());
+        Dimensionless::new(total, DimensionlessUnit::Each)
+    }
+}
+
+impl<'a> std::iter::Sum<&'a Dimensionless> for Dimensionless {
+    fn sum<I: Iterator<Item = &'a Dimensionless>>(iter: I) -> Self {
+        iter.copied().sum()
+    }
+}
+
+impl std::str::FromStr for Dimensionless {
+    type Err = crate::core::error::QuantityParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        DimensionlessDimension::parse(s)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Dimensionless {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Dimensionless {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        <Self as std::str::FromStr>::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
@@ -344,8 +417,6 @@ impl DimensionlessConversions for f64 {
         Dimensionless::gross(self)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
