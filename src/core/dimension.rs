@@ -79,7 +79,7 @@ pub trait Dimension {
 
         // Try to find the split between value and unit
         // Handle formats like "10m", "10 m", "10.5 m", "-10.5 m"
-        let (value_str, unit_str) = parse_value_and_unit(s)?;
+        let (value_str, unit_str) = parse_value_and_unit(s, Self::name())?;
 
         let value: f64 = value_str.parse().map_err(|_| QuantityParseError {
             dimension: Self::name().to_string(),
@@ -96,61 +96,28 @@ pub trait Dimension {
 }
 
 /// Helper function to parse a value and unit from a string.
-fn parse_value_and_unit(s: &str) -> Result<(&str, &str), QuantityParseError> {
-    // Find where the numeric part ends
-    let mut value_end = 0;
-    let chars: Vec<char> = s.chars().collect();
+fn parse_value_and_unit<'a>(
+    s: &'a str,
+    dimension: &str,
+) -> Result<(&'a str, &'a str), QuantityParseError> {
+    let s = s.trim_start();
+    let value_end = s
+        .find(|c: char| !(c.is_ascii_digit() || matches!(c, '+' | '-' | '.' | 'e' | 'E')))
+        .unwrap_or(s.len());
 
-    // Skip leading whitespace
-    while value_end < chars.len() && chars[value_end].is_whitespace() {
-        value_end += 1;
-    }
-
-    let start = value_end;
-
-    // Handle optional sign
-    if value_end < chars.len() && (chars[value_end] == '-' || chars[value_end] == '+') {
-        value_end += 1;
-    }
-
-    // Parse digits and decimal point
-    let mut has_decimal = false;
-    let mut has_exponent = false;
-
-    while value_end < chars.len() {
-        let c = chars[value_end];
-        if c.is_ascii_digit() {
-            value_end += 1;
-        } else if c == '.' && !has_decimal && !has_exponent {
-            has_decimal = true;
-            value_end += 1;
-        } else if (c == 'e' || c == 'E') && !has_exponent {
-            has_exponent = true;
-            value_end += 1;
-            // Handle optional sign after exponent
-            if value_end < chars.len()
-                && (chars[value_end] == '-' || chars[value_end] == '+')
-            {
-                value_end += 1;
-            }
-        } else {
-            break;
-        }
-    }
-
-    if value_end == start {
+    if value_end == 0 {
         return Err(QuantityParseError {
-            dimension: "Unknown".to_string(),
+            dimension: dimension.to_string(),
             input: s.to_string(),
         });
     }
 
-    let value_str = &s[start..value_end];
-    let unit_str = s[value_end..].trim();
+    let (value_str, unit_str) = s.split_at(value_end);
+    let unit_str = unit_str.trim();
 
     if unit_str.is_empty() {
         return Err(QuantityParseError {
-            dimension: "Unknown".to_string(),
+            dimension: dimension.to_string(),
             input: s.to_string(),
         });
     }
@@ -164,17 +131,29 @@ mod tests {
 
     #[test]
     fn test_parse_value_and_unit() {
-        assert_eq!(parse_value_and_unit("10 m").unwrap(), ("10", "m"));
-        assert_eq!(parse_value_and_unit("10m").unwrap(), ("10", "m"));
-        assert_eq!(parse_value_and_unit("-10.5 kg").unwrap(), ("-10.5", "kg"));
-        assert_eq!(parse_value_and_unit("1.5e10 m").unwrap(), ("1.5e10", "m"));
-        assert_eq!(parse_value_and_unit("1.5E-10 m").unwrap(), ("1.5E-10", "m"));
+        assert_eq!(parse_value_and_unit("10 m", "Test").unwrap(), ("10", "m"));
+        assert_eq!(parse_value_and_unit("10m", "Test").unwrap(), ("10", "m"));
+        assert_eq!(
+            parse_value_and_unit("-10.5 kg", "Test").unwrap(),
+            ("-10.5", "kg")
+        );
+        assert_eq!(
+            parse_value_and_unit("1.5e10 m", "Test").unwrap(),
+            ("1.5e10", "m")
+        );
+        assert_eq!(
+            parse_value_and_unit("1.5E-10 m", "Test").unwrap(),
+            ("1.5E-10", "m")
+        );
+        assert_eq!(parse_value_and_unit("10µm", "Test").unwrap(), ("10", "µm"));
     }
 
     #[test]
     fn test_parse_value_and_unit_errors() {
-        assert!(parse_value_and_unit("m").is_err()); // No value
-        assert!(parse_value_and_unit("10").is_err()); // No unit
-        assert!(parse_value_and_unit("").is_err()); // Empty
+        let err = parse_value_and_unit("m", "Length").unwrap_err();
+        assert_eq!(err.dimension, "Length");
+
+        assert!(parse_value_and_unit("10", "Length").is_err()); // No unit
+        assert!(parse_value_and_unit("", "Length").is_err()); // Empty
     }
 }

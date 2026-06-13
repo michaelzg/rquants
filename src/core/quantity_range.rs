@@ -61,9 +61,14 @@ impl<Q: Quantity> QuantityRange<Q> {
 
     /// Creates a new quantity range without checking bounds.
     ///
-    /// # Safety
+    /// # Invariants
+    ///
     /// Caller must ensure lower < upper.
     pub fn new_unchecked(lower: Q, upper: Q) -> Self {
+        debug_assert!(
+            lower < upper,
+            "QuantityRange::new_unchecked requires lower < upper"
+        );
         Self { lower, upper }
     }
 
@@ -80,7 +85,10 @@ impl<Q: Quantity> QuantityRange<Q> {
     /// Returns the size of the range (upper - lower) as a quantity.
     pub fn size(&self) -> Q {
         let diff = self.upper.to_primary() - self.lower.to_primary();
-        Q::new(self.lower.unit().convert_from_primary(diff), self.lower.unit())
+        Q::new(
+            self.lower.unit().convert_from_primary(diff),
+            self.lower.unit(),
+        )
     }
 
     /// Returns true if the quantity is contained within this range.

@@ -180,13 +180,13 @@ crate::quantity! {
 }
 impl Length {
     /// Returns the squared length (this * this).
-    pub fn squared(&self) -> Area {
-        *self * *self
+    pub fn squared(self) -> Area {
+        self * self
     }
 
     /// Returns the cubed length (this * this * this).
-    pub fn cubed(&self) -> Volume {
-        self.squared() * *self
+    pub fn cubed(self) -> Volume {
+        self.squared() * self
     }
 }
 // Length * Length = Area

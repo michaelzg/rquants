@@ -4,7 +4,6 @@
 //! enabling conversions between related quantities.
 
 use crate::core::{Quantity, UnitOfMeasure};
-use std::marker::PhantomData;
 
 /// A ratio between two quantities of potentially different types.
 ///
@@ -173,7 +172,6 @@ impl<A: Quantity> LikeRatio<A> for LikeQuantityRatio<A> {}
 pub struct Rate<N: Quantity, D: Quantity> {
     numerator: N,
     denominator: D,
-    _marker: PhantomData<(N, D)>,
 }
 
 impl<N: Quantity, D: Quantity> Rate<N, D> {
@@ -182,7 +180,6 @@ impl<N: Quantity, D: Quantity> Rate<N, D> {
         Self {
             numerator,
             denominator,
-            _marker: PhantomData,
         }
     }
 

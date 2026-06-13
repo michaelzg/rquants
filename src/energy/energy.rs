@@ -17,8 +17,8 @@ const JOULE_TO_WH: f64 = 1.0 / SECONDS_PER_HOUR;
 // BTU conversion (1 BTU ≈ 0.293071 Wh)
 const BTU_TO_WH: f64 = 0.2930710701722222;
 
-// Electron-volt (1 eV ≈ 1.602176565e-19 J)
-const EV_TO_J: f64 = 1.602176565e-19;
+// Electron-volt (1 eV = 1.602176634e-19 J exactly)
+const EV_TO_J: f64 = 1.602176634e-19;
 const EV_TO_WH: f64 = EV_TO_J * JOULE_TO_WH;
 
 // Calorie (1 cal = 4.184 J)
@@ -28,6 +28,8 @@ crate::quantity! {
     /// A quantity of energy.
     ///
     /// Energy represents the capacity to do work.
+    /// Watt-hours are the primary storage unit for compatibility with squants'
+    /// energy-market lineage; Joules remain the SI unit.
     ///
     /// # Relationships
     ///
