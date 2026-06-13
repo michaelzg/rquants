@@ -1,260 +1,85 @@
 //! Electric potential (voltage) quantity and units.
+use crate::core::Quantity;
+use std::ops::{Div, Mul};
+crate::quantity! {
+    /// A quantity of electric potential (voltage).
+    ///
+    /// Electric potential is the electric potential energy per unit charge.
+    /// It represents the work needed to move a unit charge from a reference point
+    /// to a specific point in an electric field.
+    ///
+    /// # Relationships
+    ///
+    /// - Potential / Current = Resistance (R = V/I, Ohm's law)
+    /// - Potential / Resistance = Current (I = V/R)
+    /// - Potential × Current = Power (P = VI)
+    /// - Potential × Charge = Energy (E = VQ)
+    /// - Potential × Time = MagneticFlux (Wb = V·s)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let voltage = ElectricPotential::volts(12.0);
+    /// let current = ElectricCurrent::amperes(2.0);
+    ///
+    /// // Power = Voltage × Current
+    /// let power = voltage * current;
+    /// assert!((power.to_watts() - 24.0).abs() < 1e-10);
+    /// ```
+    pub quantity ElectricPotential {
+        unit: ElectricPotentialUnit;
+        dimension: ElectricPotentialDimension;
+        conversions: ElectricPotentialConversions;
+        name: "ElectricPotential";
+        primary: Volts;
+        si: Volts;
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of electric potential measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ElectricPotentialUnit {
-    /// Volts (V) - SI unit
-    Volts,
-    /// Microvolts (µV)
-    Microvolts,
-    /// Millivolts (mV)
-    Millivolts,
-    /// Kilovolts (kV)
-    Kilovolts,
-    /// Megavolts (MV)
-    Megavolts,
-}
-
-impl ElectricPotentialUnit {
-    /// All available electric potential units.
-    pub const ALL: &'static [ElectricPotentialUnit] = &[
-        ElectricPotentialUnit::Volts,
-        ElectricPotentialUnit::Microvolts,
-        ElectricPotentialUnit::Millivolts,
-        ElectricPotentialUnit::Kilovolts,
-        ElectricPotentialUnit::Megavolts,
-    ];
-}
-
-impl fmt::Display for ElectricPotentialUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for ElectricPotentialUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            ElectricPotentialUnit::Volts => "V",
-            ElectricPotentialUnit::Microvolts => "µV",
-            ElectricPotentialUnit::Millivolts => "mV",
-            ElectricPotentialUnit::Kilovolts => "kV",
-            ElectricPotentialUnit::Megavolts => "MV",
+        units {
+            /// Volts (V) - SI unit
+            Volts {
+                symbol: "V",
+                factor: 1.0,
+                ctor: volts,
+                to: to_volts,
+                si: true
+            },
+            /// Microvolts (µV)
+            Microvolts {
+                symbol: "µV",
+                factor: 1e-6,
+                ctor: microvolts,
+                to: to_microvolts,
+                si: true
+            },
+            /// Millivolts (mV)
+            Millivolts {
+                symbol: "mV",
+                factor: 1e-3,
+                ctor: millivolts,
+                to: to_millivolts,
+                si: true
+            },
+            /// Kilovolts (kV)
+            Kilovolts {
+                symbol: "kV",
+                factor: 1e3,
+                ctor: kilovolts,
+                to: to_kilovolts,
+                si: true
+            },
+            /// Megavolts (MV)
+            Megavolts {
+                symbol: "MV",
+                factor: 1e6,
+                ctor: megavolts,
+                to: to_megavolts,
+                si: true
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            ElectricPotentialUnit::Volts => 1.0,
-            ElectricPotentialUnit::Microvolts => 1e-6,
-            ElectricPotentialUnit::Millivolts => 1e-3,
-            ElectricPotentialUnit::Kilovolts => 1e3,
-            ElectricPotentialUnit::Megavolts => 1e6,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(
-            self,
-            ElectricPotentialUnit::Volts
-                | ElectricPotentialUnit::Microvolts
-                | ElectricPotentialUnit::Millivolts
-                | ElectricPotentialUnit::Kilovolts
-                | ElectricPotentialUnit::Megavolts
-        )
-    }
 }
-
-/// A quantity of electric potential (voltage).
-///
-/// Electric potential is the electric potential energy per unit charge.
-/// It represents the work needed to move a unit charge from a reference point
-/// to a specific point in an electric field.
-///
-/// # Relationships
-///
-/// - Potential / Current = Resistance (R = V/I, Ohm's law)
-/// - Potential / Resistance = Current (I = V/R)
-/// - Potential × Current = Power (P = VI)
-/// - Potential × Charge = Energy (E = VQ)
-/// - Potential × Time = MagneticFlux (Wb = V·s)
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let voltage = ElectricPotential::volts(12.0);
-/// let current = ElectricCurrent::amperes(2.0);
-///
-/// // Power = Voltage × Current
-/// let power = voltage * current;
-/// assert!((power.to_watts() - 24.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ElectricPotential {
-    value: f64,
-    unit: ElectricPotentialUnit,
-}
-
-impl ElectricPotential {
-    /// Creates a new ElectricPotential quantity.
-    pub const fn new_const(value: f64, unit: ElectricPotentialUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates an ElectricPotential in volts.
-    pub fn volts(value: f64) -> Self {
-        Self::new(value, ElectricPotentialUnit::Volts)
-    }
-
-    /// Creates an ElectricPotential in microvolts.
-    pub fn microvolts(value: f64) -> Self {
-        Self::new(value, ElectricPotentialUnit::Microvolts)
-    }
-
-    /// Creates an ElectricPotential in millivolts.
-    pub fn millivolts(value: f64) -> Self {
-        Self::new(value, ElectricPotentialUnit::Millivolts)
-    }
-
-    /// Creates an ElectricPotential in kilovolts.
-    pub fn kilovolts(value: f64) -> Self {
-        Self::new(value, ElectricPotentialUnit::Kilovolts)
-    }
-
-    /// Creates an ElectricPotential in megavolts.
-    pub fn megavolts(value: f64) -> Self {
-        Self::new(value, ElectricPotentialUnit::Megavolts)
-    }
-
-    // Conversion methods
-    /// Converts to volts.
-    pub fn to_volts(&self) -> f64 {
-        self.to(ElectricPotentialUnit::Volts)
-    }
-
-    /// Converts to microvolts.
-    pub fn to_microvolts(&self) -> f64 {
-        self.to(ElectricPotentialUnit::Microvolts)
-    }
-
-    /// Converts to millivolts.
-    pub fn to_millivolts(&self) -> f64 {
-        self.to(ElectricPotentialUnit::Millivolts)
-    }
-
-    /// Converts to kilovolts.
-    pub fn to_kilovolts(&self) -> f64 {
-        self.to(ElectricPotentialUnit::Kilovolts)
-    }
-
-    /// Converts to megavolts.
-    pub fn to_megavolts(&self) -> f64 {
-        self.to(ElectricPotentialUnit::Megavolts)
-    }
-}
-
-impl fmt::Display for ElectricPotential {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for ElectricPotential {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for ElectricPotential {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for ElectricPotential {
-    type Unit = ElectricPotentialUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        ElectricPotential::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        ElectricPotential::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        ElectricPotential::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<ElectricPotential> for f64 {
-    type Output = ElectricPotential;
-
-    fn mul(self, rhs: ElectricPotential) -> Self::Output {
-        ElectricPotential::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        ElectricPotential::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<ElectricPotential> for ElectricPotential {
-    type Output = f64;
-
-    fn div(self, rhs: ElectricPotential) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for ElectricPotential {
-    type Output = ElectricPotential;
-
-    fn neg(self) -> Self::Output {
-        ElectricPotential::new(-self.value, self.unit)
-    }
-}
-
 // Cross-quantity operations
 use super::electric_charge::{ElectricCharge, ElectricChargeUnit};
 use super::electric_current::{ElectricCurrent, ElectricCurrentUnit};
@@ -332,66 +157,10 @@ impl Mul<ElectricPotential> for Time {
         MagneticFlux::new(webers, MagneticFluxUnit::Webers)
     }
 }
-
-/// Dimension for ElectricPotential.
-pub struct ElectricPotentialDimension;
-
-impl Dimension for ElectricPotentialDimension {
-    type Quantity = ElectricPotential;
-    type Unit = ElectricPotentialUnit;
-
-    fn name() -> &'static str {
-        "ElectricPotential"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        ElectricPotentialUnit::Volts
-    }
-
-    fn si_unit() -> Self::Unit {
-        ElectricPotentialUnit::Volts
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        ElectricPotentialUnit::ALL
-    }
-}
-
-/// Extension trait for creating ElectricPotential quantities from numeric types.
-pub trait ElectricPotentialConversions {
-    /// Creates an ElectricPotential in volts.
-    fn volts(self) -> ElectricPotential;
-    /// Creates an ElectricPotential in microvolts.
-    fn microvolts(self) -> ElectricPotential;
-    /// Creates an ElectricPotential in millivolts.
-    fn millivolts(self) -> ElectricPotential;
-    /// Creates an ElectricPotential in kilovolts.
-    fn kilovolts(self) -> ElectricPotential;
-    /// Creates an ElectricPotential in megavolts.
-    fn megavolts(self) -> ElectricPotential;
-}
-
-impl ElectricPotentialConversions for f64 {
-    fn volts(self) -> ElectricPotential {
-        ElectricPotential::volts(self)
-    }
-    fn microvolts(self) -> ElectricPotential {
-        ElectricPotential::microvolts(self)
-    }
-    fn millivolts(self) -> ElectricPotential {
-        ElectricPotential::millivolts(self)
-    }
-    fn kilovolts(self) -> ElectricPotential {
-        ElectricPotential::kilovolts(self)
-    }
-    fn megavolts(self) -> ElectricPotential {
-        ElectricPotential::megavolts(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_potential_creation() {

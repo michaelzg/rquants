@@ -1,70 +1,6 @@
 //! Volume quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
 use crate::systems::metric::{CENTI, DECI, KILO, MILLI};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of volume measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum VolumeUnit {
-    // SI metric units
-    /// Cubic millimeters (mm³)
-    CubicMillimeters,
-    /// Cubic centimeters (cm³) - same as milliliters
-    CubicCentimeters,
-    /// Cubic meters (m³) - SI derived unit
-    CubicMeters,
-    /// Cubic kilometers (km³)
-    CubicKilometers,
-
-    // Liters
-    /// Milliliters (mL)
-    Milliliters,
-    /// Liters (L)
-    Liters,
-
-    // Imperial/US units
-    /// Cubic inches (in³)
-    CubicInches,
-    /// Cubic feet (ft³)
-    CubicFeet,
-    /// Cubic yards (yd³)
-    CubicYards,
-
-    // US fluid measures
-    /// US fluid ounces
-    UsFluidOunces,
-    /// US cups
-    UsCups,
-    /// US pints
-    UsPints,
-    /// US quarts
-    UsQuarts,
-    /// US gallons
-    UsGallons,
-}
-
-impl VolumeUnit {
-    /// All available volume units.
-    pub const ALL: &'static [VolumeUnit] = &[
-        VolumeUnit::CubicMillimeters,
-        VolumeUnit::CubicCentimeters,
-        VolumeUnit::CubicMeters,
-        VolumeUnit::CubicKilometers,
-        VolumeUnit::Milliliters,
-        VolumeUnit::Liters,
-        VolumeUnit::CubicInches,
-        VolumeUnit::CubicFeet,
-        VolumeUnit::CubicYards,
-        VolumeUnit::UsFluidOunces,
-        VolumeUnit::UsCups,
-        VolumeUnit::UsPints,
-        VolumeUnit::UsQuarts,
-        VolumeUnit::UsGallons,
-    ];
-}
 
 /// Conversion factors
 const CUBIC_INCH_TO_CUBIC_METER: f64 = 1.6387064e-5;
@@ -75,433 +11,150 @@ const US_QUART_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 4.0;
 const US_PINT_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 8.0;
 const US_CUP_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 16.0;
 const US_FL_OZ_TO_CUBIC_METER: f64 = US_GALLON_TO_CUBIC_METER / 128.0;
+crate::quantity! {
+    /// A quantity of volume.
+    ///
+    /// Volume represents a three-dimensional extent, the product of three lengths.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let v1 = Volume::liters(1000.0);
+    /// let v2 = Volume::cubic_meters(1.0);
+    ///
+    /// // These represent the same volume
+    /// assert!((v1.to_cubic_meters() - v2.to_cubic_meters()).abs() < 1e-10);
+    /// ```
+    pub quantity Volume {
+        unit: VolumeUnit;
+        dimension: VolumeDimension;
+        conversions: VolumeConversions;
+        name: "Volume";
+        primary: CubicMeters;
+        si: CubicMeters;
 
-impl fmt::Display for VolumeUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for VolumeUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            VolumeUnit::CubicMillimeters => "mm³",
-            VolumeUnit::CubicCentimeters => "cm³",
-            VolumeUnit::CubicMeters => "m³",
-            VolumeUnit::CubicKilometers => "km³",
-            VolumeUnit::Milliliters => "mL",
-            VolumeUnit::Liters => "L",
-            VolumeUnit::CubicInches => "in³",
-            VolumeUnit::CubicFeet => "ft³",
-            VolumeUnit::CubicYards => "yd³",
-            VolumeUnit::UsFluidOunces => "fl oz",
-            VolumeUnit::UsCups => "cup",
-            VolumeUnit::UsPints => "pt",
-            VolumeUnit::UsQuarts => "qt",
-            VolumeUnit::UsGallons => "gal",
+        units {
+            /// Cubic millimeters (mm³)
+            CubicMillimeters {
+                symbol: "mm³",
+                factor: MILLI * MILLI * MILLI,
+                ctor: cubic_millimeters,
+                to: to_cubic_millimeters,
+                si: true
+            },
+            /// Cubic centimeters (cm³) - same as milliliters
+            CubicCentimeters {
+                symbol: "cm³",
+                factor: CENTI * CENTI * CENTI,
+                ctor: cubic_centimeters,
+                to: to_cubic_centimeters,
+                si: true
+            },
+            /// Cubic meters (m³) - SI derived unit
+            CubicMeters {
+                symbol: "m³",
+                factor: 1.0,
+                ctor: cubic_meters,
+                to: to_cubic_meters,
+                si: true
+            },
+            /// Cubic kilometers (km³)
+            CubicKilometers {
+                symbol: "km³",
+                factor: KILO * KILO * KILO,
+                ctor: cubic_kilometers,
+                to: to_cubic_kilometers,
+                si: true
+            },
+            /// Milliliters (mL)
+            Milliliters {
+                symbol: "mL",
+                factor: CENTI * CENTI * CENTI,
+                ctor: milliliters,
+                to: to_milliliters,
+                si: true
+            },
+            /// Liters (L)
+            Liters {
+                symbol: "L",
+                factor: DECI * DECI * DECI,
+                ctor: liters,
+                to: to_liters,
+                si: true
+            },
+            /// Cubic inches (in³)
+            CubicInches {
+                symbol: "in³",
+                factor: CUBIC_INCH_TO_CUBIC_METER,
+                ctor: cubic_inches,
+                to: to_cubic_inches,
+                si: false
+            },
+            /// Cubic feet (ft³)
+            CubicFeet {
+                symbol: "ft³",
+                factor: CUBIC_FOOT_TO_CUBIC_METER,
+                ctor: cubic_feet,
+                to: to_cubic_feet,
+                si: false
+            },
+            /// Cubic yards (yd³)
+            CubicYards {
+                symbol: "yd³",
+                factor: CUBIC_YARD_TO_CUBIC_METER,
+                ctor: cubic_yards,
+                to: to_cubic_yards,
+                si: false
+            },
+            /// US fluid ounces
+            UsFluidOunces {
+                symbol: "fl oz",
+                factor: US_FL_OZ_TO_CUBIC_METER,
+                ctor: us_fluid_ounces,
+                to: to_us_fluid_ounces,
+                si: false
+            },
+            /// US cups
+            UsCups {
+                symbol: "cup",
+                factor: US_CUP_TO_CUBIC_METER,
+                ctor: us_cups,
+                to: to_us_cups,
+                si: false
+            },
+            /// US pints
+            UsPints {
+                symbol: "pt",
+                factor: US_PINT_TO_CUBIC_METER,
+                ctor: us_pints,
+                to: to_us_pints,
+                si: false
+            },
+            /// US quarts
+            UsQuarts {
+                symbol: "qt",
+                factor: US_QUART_TO_CUBIC_METER,
+                ctor: us_quarts,
+                to: to_us_quarts,
+                si: false
+            },
+            /// US gallons
+            UsGallons {
+                symbol: "gal",
+                factor: US_GALLON_TO_CUBIC_METER,
+                ctor: us_gallons,
+                to: to_us_gallons,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            VolumeUnit::CubicMillimeters => MILLI * MILLI * MILLI,
-            VolumeUnit::CubicCentimeters => CENTI * CENTI * CENTI, // = 1e-6
-            VolumeUnit::CubicMeters => 1.0,
-            VolumeUnit::CubicKilometers => KILO * KILO * KILO,
-            VolumeUnit::Milliliters => CENTI * CENTI * CENTI, // 1 mL = 1 cm³
-            VolumeUnit::Liters => DECI * DECI * DECI,         // 1 L = 1 dm³ = 0.001 m³
-            VolumeUnit::CubicInches => CUBIC_INCH_TO_CUBIC_METER,
-            VolumeUnit::CubicFeet => CUBIC_FOOT_TO_CUBIC_METER,
-            VolumeUnit::CubicYards => CUBIC_YARD_TO_CUBIC_METER,
-            VolumeUnit::UsFluidOunces => US_FL_OZ_TO_CUBIC_METER,
-            VolumeUnit::UsCups => US_CUP_TO_CUBIC_METER,
-            VolumeUnit::UsPints => US_PINT_TO_CUBIC_METER,
-            VolumeUnit::UsQuarts => US_QUART_TO_CUBIC_METER,
-            VolumeUnit::UsGallons => US_GALLON_TO_CUBIC_METER,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(
-            self,
-            VolumeUnit::CubicMillimeters
-                | VolumeUnit::CubicCentimeters
-                | VolumeUnit::CubicMeters
-                | VolumeUnit::CubicKilometers
-                | VolumeUnit::Milliliters
-                | VolumeUnit::Liters
-        )
-    }
 }
-
-/// A quantity of volume.
-///
-/// Volume represents a three-dimensional extent, the product of three lengths.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let v1 = Volume::liters(1000.0);
-/// let v2 = Volume::cubic_meters(1.0);
-///
-/// // These represent the same volume
-/// assert!((v1.to_cubic_meters() - v2.to_cubic_meters()).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Volume {
-    value: f64,
-    unit: VolumeUnit,
-}
-
-impl Volume {
-    /// Creates a new Volume quantity.
-    pub const fn new_const(value: f64, unit: VolumeUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates a Volume in cubic millimeters.
-    pub fn cubic_millimeters(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicMillimeters)
-    }
-
-    /// Creates a Volume in cubic centimeters.
-    pub fn cubic_centimeters(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicCentimeters)
-    }
-
-    /// Creates a Volume in cubic meters.
-    pub fn cubic_meters(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicMeters)
-    }
-
-    /// Creates a Volume in cubic kilometers.
-    pub fn cubic_kilometers(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicKilometers)
-    }
-
-    /// Creates a Volume in milliliters.
-    pub fn milliliters(value: f64) -> Self {
-        Self::new(value, VolumeUnit::Milliliters)
-    }
-
-    /// Creates a Volume in liters.
-    pub fn liters(value: f64) -> Self {
-        Self::new(value, VolumeUnit::Liters)
-    }
-
-    /// Creates a Volume in cubic inches.
-    pub fn cubic_inches(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicInches)
-    }
-
-    /// Creates a Volume in cubic feet.
-    pub fn cubic_feet(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicFeet)
-    }
-
-    /// Creates a Volume in cubic yards.
-    pub fn cubic_yards(value: f64) -> Self {
-        Self::new(value, VolumeUnit::CubicYards)
-    }
-
-    /// Creates a Volume in US fluid ounces.
-    pub fn us_fluid_ounces(value: f64) -> Self {
-        Self::new(value, VolumeUnit::UsFluidOunces)
-    }
-
-    /// Creates a Volume in US cups.
-    pub fn us_cups(value: f64) -> Self {
-        Self::new(value, VolumeUnit::UsCups)
-    }
-
-    /// Creates a Volume in US pints.
-    pub fn us_pints(value: f64) -> Self {
-        Self::new(value, VolumeUnit::UsPints)
-    }
-
-    /// Creates a Volume in US quarts.
-    pub fn us_quarts(value: f64) -> Self {
-        Self::new(value, VolumeUnit::UsQuarts)
-    }
-
-    /// Creates a Volume in US gallons.
-    pub fn us_gallons(value: f64) -> Self {
-        Self::new(value, VolumeUnit::UsGallons)
-    }
-
-    // Conversion methods
-    /// Converts to cubic meters.
-    pub fn to_cubic_meters(&self) -> f64 {
-        self.to(VolumeUnit::CubicMeters)
-    }
-
-    /// Converts to liters.
-    pub fn to_liters(&self) -> f64 {
-        self.to(VolumeUnit::Liters)
-    }
-
-    /// Converts to milliliters.
-    pub fn to_milliliters(&self) -> f64 {
-        self.to(VolumeUnit::Milliliters)
-    }
-
-    /// Converts to cubic feet.
-    pub fn to_cubic_feet(&self) -> f64 {
-        self.to(VolumeUnit::CubicFeet)
-    }
-
-    /// Converts to US gallons.
-    pub fn to_us_gallons(&self) -> f64 {
-        self.to(VolumeUnit::UsGallons)
-    }
-
-    /// Converts to cubic millimeters.
-    pub fn to_cubic_millimeters(&self) -> f64 {
-        self.to(VolumeUnit::CubicMillimeters)
-    }
-
-    /// Converts to cubic centimeters.
-    pub fn to_cubic_centimeters(&self) -> f64 {
-        self.to(VolumeUnit::CubicCentimeters)
-    }
-
-    /// Converts to cubic kilometers.
-    pub fn to_cubic_kilometers(&self) -> f64 {
-        self.to(VolumeUnit::CubicKilometers)
-    }
-
-    /// Converts to cubic inches.
-    pub fn to_cubic_inches(&self) -> f64 {
-        self.to(VolumeUnit::CubicInches)
-    }
-
-    /// Converts to cubic yards.
-    pub fn to_cubic_yards(&self) -> f64 {
-        self.to(VolumeUnit::CubicYards)
-    }
-
-    /// Converts to US fluid ounces.
-    pub fn to_us_fluid_ounces(&self) -> f64 {
-        self.to(VolumeUnit::UsFluidOunces)
-    }
-
-    /// Converts to US cups.
-    pub fn to_us_cups(&self) -> f64 {
-        self.to(VolumeUnit::UsCups)
-    }
-
-    /// Converts to US pints.
-    pub fn to_us_pints(&self) -> f64 {
-        self.to(VolumeUnit::UsPints)
-    }
-
-    /// Converts to US quarts.
-    pub fn to_us_quarts(&self) -> f64 {
-        self.to(VolumeUnit::UsQuarts)
-    }
-}
-
-impl fmt::Display for Volume {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Volume {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Volume {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Volume {
-    type Unit = VolumeUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Volume {
-    type Output = Volume;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Volume::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Volume {
-    type Output = Volume;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Volume::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Volume {
-    type Output = Volume;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Volume::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Volume> for f64 {
-    type Output = Volume;
-
-    fn mul(self, rhs: Volume) -> Self::Output {
-        Volume::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Volume {
-    type Output = Volume;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Volume::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Volume> for Volume {
-    type Output = f64;
-
-    fn div(self, rhs: Volume) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Volume {
-    type Output = Volume;
-
-    fn neg(self) -> Self::Output {
-        Volume::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Volume.
-pub struct VolumeDimension;
-
-impl Dimension for VolumeDimension {
-    type Quantity = Volume;
-    type Unit = VolumeUnit;
-
-    fn name() -> &'static str {
-        "Volume"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        VolumeUnit::CubicMeters
-    }
-
-    fn si_unit() -> Self::Unit {
-        VolumeUnit::CubicMeters
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        VolumeUnit::ALL
-    }
-}
-
-/// Extension trait for creating Volume quantities from numeric types.
-pub trait VolumeConversions {
-    /// Creates a Volume in cubic millimeters.
-    fn cubic_millimeters(self) -> Volume;
-    /// Creates a Volume in cubic centimeters.
-    fn cubic_centimeters(self) -> Volume;
-    /// Creates a Volume in cubic meters.
-    fn cubic_meters(self) -> Volume;
-    /// Creates a Volume in cubic kilometers.
-    fn cubic_kilometers(self) -> Volume;
-    /// Creates a Volume in milliliters.
-    fn milliliters(self) -> Volume;
-    /// Creates a Volume in liters.
-    fn liters(self) -> Volume;
-    /// Creates a Volume in cubic inches.
-    fn cubic_inches(self) -> Volume;
-    /// Creates a Volume in cubic feet.
-    fn cubic_feet(self) -> Volume;
-    /// Creates a Volume in cubic yards.
-    fn cubic_yards(self) -> Volume;
-    /// Creates a Volume in US fluid ounces.
-    fn us_fluid_ounces(self) -> Volume;
-    /// Creates a Volume in US cups.
-    fn us_cups(self) -> Volume;
-    /// Creates a Volume in US pints.
-    fn us_pints(self) -> Volume;
-    /// Creates a Volume in US quarts.
-    fn us_quarts(self) -> Volume;
-    /// Creates a Volume in US gallons.
-    fn us_gallons(self) -> Volume;
-}
-
-impl VolumeConversions for f64 {
-    fn cubic_millimeters(self) -> Volume {
-        Volume::cubic_millimeters(self)
-    }
-    fn cubic_centimeters(self) -> Volume {
-        Volume::cubic_centimeters(self)
-    }
-    fn cubic_meters(self) -> Volume {
-        Volume::cubic_meters(self)
-    }
-    fn cubic_kilometers(self) -> Volume {
-        Volume::cubic_kilometers(self)
-    }
-    fn milliliters(self) -> Volume {
-        Volume::milliliters(self)
-    }
-    fn liters(self) -> Volume {
-        Volume::liters(self)
-    }
-    fn cubic_inches(self) -> Volume {
-        Volume::cubic_inches(self)
-    }
-    fn cubic_feet(self) -> Volume {
-        Volume::cubic_feet(self)
-    }
-    fn cubic_yards(self) -> Volume {
-        Volume::cubic_yards(self)
-    }
-    fn us_fluid_ounces(self) -> Volume {
-        Volume::us_fluid_ounces(self)
-    }
-    fn us_cups(self) -> Volume {
-        Volume::us_cups(self)
-    }
-    fn us_pints(self) -> Volume {
-        Volume::us_pints(self)
-    }
-    fn us_quarts(self) -> Volume {
-        Volume::us_quarts(self)
-    }
-    fn us_gallons(self) -> Volume {
-        Volume::us_gallons(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_volume_creation() {

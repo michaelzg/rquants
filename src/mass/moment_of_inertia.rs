@@ -1,114 +1,64 @@
 //! Moment of inertia (rotational inertia) quantity and units.
 
 use super::mass::{Mass, MassUnit};
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
+use crate::core::Quantity;
 use crate::space::area::Area;
 use crate::space::length::Length;
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of moment of inertia measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum MomentOfInertiaUnit {
-    /// Kilogram-meters squared (kg·m²) - SI unit
-    KilogramMetersSquared,
-    /// Pound-feet squared (lb·ft²)
-    PoundFeetSquared,
-}
-
-impl MomentOfInertiaUnit {
-    /// All available moment of inertia units.
-    pub const ALL: &'static [MomentOfInertiaUnit] = &[
-        MomentOfInertiaUnit::KilogramMetersSquared,
-        MomentOfInertiaUnit::PoundFeetSquared,
-    ];
-}
+use std::ops::{Div, Mul};
 
 // Conversion factors to kg·m² (primary unit)
 // 1 lb = 0.45359237 kg, 1 ft = 0.3048 m
 // 1 lb·ft² = 0.45359237 * 0.3048² kg·m² ≈ 0.0421401 kg·m²
 const LB_FT2_FACTOR: f64 = 0.45359237 * 0.3048 * 0.3048;
+crate::quantity! {
+    /// A quantity of moment of inertia (rotational inertia).
+    ///
+    /// Moment of inertia represents the resistance of an object to rotational
+    /// acceleration about an axis. It depends on both the mass and its
+    /// distribution relative to the axis.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// // Moment of inertia of a point mass at a given radius
+    /// let mass = Mass::kilograms(2.0);
+    /// let radius = Length::meters(3.0);
+    /// let inertia = mass.on_radius(radius);
+    ///
+    /// // I = m * r² = 2 * 9 = 18 kg·m²
+    /// assert!((inertia.to_kilogram_meters_squared() - 18.0).abs() < 1e-10);
+    /// ```
+    pub quantity MomentOfInertia {
+        unit: MomentOfInertiaUnit;
+        dimension: MomentOfInertiaDimension;
+        conversions: MomentOfInertiaConversions;
+        name: "MomentOfInertia";
+        primary: KilogramMetersSquared;
+        si: KilogramMetersSquared;
 
-impl fmt::Display for MomentOfInertiaUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for MomentOfInertiaUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            MomentOfInertiaUnit::KilogramMetersSquared => "kg·m²",
-            MomentOfInertiaUnit::PoundFeetSquared => "lb·ft²",
+        units {
+            /// Kilogram-meters squared (kg·m²) - SI unit
+            KilogramMetersSquared {
+                symbol: "kg·m²",
+                factor: 1.0,
+                ctor: kilogram_meters_squared,
+                to: to_kilogram_meters_squared,
+                si: true
+            },
+            /// Pound-feet squared (lb·ft²)
+            PoundFeetSquared {
+                symbol: "lb·ft²",
+                factor: LB_FT2_FACTOR,
+                ctor: pound_feet_squared,
+                to: to_pound_feet_squared,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            MomentOfInertiaUnit::KilogramMetersSquared => 1.0,
-            MomentOfInertiaUnit::PoundFeetSquared => LB_FT2_FACTOR,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(self, MomentOfInertiaUnit::KilogramMetersSquared)
-    }
 }
-
-/// A quantity of moment of inertia (rotational inertia).
-///
-/// Moment of inertia represents the resistance of an object to rotational
-/// acceleration about an axis. It depends on both the mass and its
-/// distribution relative to the axis.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// // Moment of inertia of a point mass at a given radius
-/// let mass = Mass::kilograms(2.0);
-/// let radius = Length::meters(3.0);
-/// let inertia = mass.on_radius(radius);
-///
-/// // I = m * r² = 2 * 9 = 18 kg·m²
-/// assert!((inertia.to_kilogram_meters_squared() - 18.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct MomentOfInertia {
-    value: f64,
-    unit: MomentOfInertiaUnit,
-}
-
 impl MomentOfInertia {
-    /// Creates a new MomentOfInertia quantity.
-    pub const fn new_const(value: f64, unit: MomentOfInertiaUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates a MomentOfInertia in kg·m².
-    pub fn kilogram_meters_squared(value: f64) -> Self {
-        Self::new(value, MomentOfInertiaUnit::KilogramMetersSquared)
-    }
-
-    /// Creates a MomentOfInertia in lb·ft².
-    pub fn pound_feet_squared(value: f64) -> Self {
-        Self::new(value, MomentOfInertiaUnit::PoundFeetSquared)
-    }
-
-    // Conversion methods
-    /// Converts to kg·m².
-    pub fn to_kilogram_meters_squared(&self) -> f64 {
-        self.to(MomentOfInertiaUnit::KilogramMetersSquared)
-    }
-
-    /// Converts to lb·ft².
-    pub fn to_pound_feet_squared(&self) -> f64 {
-        self.to(MomentOfInertiaUnit::PoundFeetSquared)
-    }
-
     /// Returns the mass of a point mass at the given radius that would
     /// have this moment of inertia.
     ///
@@ -131,92 +81,6 @@ impl MomentOfInertia {
     }
 }
 
-impl fmt::Display for MomentOfInertia {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for MomentOfInertia {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for MomentOfInertia {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for MomentOfInertia {
-    type Unit = MomentOfInertiaUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        MomentOfInertia::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        MomentOfInertia::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        MomentOfInertia::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<MomentOfInertia> for f64 {
-    type Output = MomentOfInertia;
-
-    fn mul(self, rhs: MomentOfInertia) -> Self::Output {
-        MomentOfInertia::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        MomentOfInertia::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<MomentOfInertia> for MomentOfInertia {
-    type Output = f64;
-
-    fn div(self, rhs: MomentOfInertia) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
 // MomentOfInertia / Area = Mass
 impl Div<Area> for MomentOfInertia {
     type Output = Mass;
@@ -224,14 +88,6 @@ impl Div<Area> for MomentOfInertia {
     fn div(self, rhs: Area) -> Self::Output {
         let mass_kg = self.to_kilogram_meters_squared() / rhs.to_square_meters();
         Mass::new(mass_kg, MassUnit::Kilograms)
-    }
-}
-
-impl Neg for MomentOfInertia {
-    type Output = MomentOfInertia;
-
-    fn neg(self) -> Self::Output {
-        MomentOfInertia::new(-self.value, self.unit)
     }
 }
 
@@ -268,51 +124,10 @@ impl Mass {
         MomentOfInertia::new(inertia, MomentOfInertiaUnit::KilogramMetersSquared)
     }
 }
-
-/// Dimension for MomentOfInertia.
-pub struct MomentOfInertiaDimension;
-
-impl Dimension for MomentOfInertiaDimension {
-    type Quantity = MomentOfInertia;
-    type Unit = MomentOfInertiaUnit;
-
-    fn name() -> &'static str {
-        "MomentOfInertia"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        MomentOfInertiaUnit::KilogramMetersSquared
-    }
-
-    fn si_unit() -> Self::Unit {
-        MomentOfInertiaUnit::KilogramMetersSquared
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        MomentOfInertiaUnit::ALL
-    }
-}
-
-/// Extension trait for creating MomentOfInertia quantities from numeric types.
-pub trait MomentOfInertiaConversions {
-    /// Creates a MomentOfInertia in kg·m².
-    fn kilogram_meters_squared(self) -> MomentOfInertia;
-    /// Creates a MomentOfInertia in lb·ft².
-    fn pound_feet_squared(self) -> MomentOfInertia;
-}
-
-impl MomentOfInertiaConversions for f64 {
-    fn kilogram_meters_squared(self) -> MomentOfInertia {
-        MomentOfInertia::kilogram_meters_squared(self)
-    }
-    fn pound_feet_squared(self) -> MomentOfInertia {
-        MomentOfInertia::pound_feet_squared(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_moment_of_inertia_creation() {

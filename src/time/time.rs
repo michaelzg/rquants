@@ -1,10 +1,6 @@
 //! Time quantity and units.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
 use crate::systems::metric::{MICRO, MILLI, NANO};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Time conversion constants.
 pub mod constants {
@@ -27,353 +23,104 @@ pub mod constants {
 }
 
 use constants::*;
+crate::quantity! {
+    /// A quantity of time.
+    ///
+    /// Time is one of the seven SI base quantities, with the second as its SI base unit.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let t1 = Time::seconds(60.0);
+    /// let t2 = Time::minutes(1.0);
+    ///
+    /// // These represent the same duration
+    /// assert!((t1.to(TimeUnit::Seconds) - t2.to(TimeUnit::Seconds)).abs() < 1e-10);
+    ///
+    /// // Arithmetic operations
+    /// let t3 = t1 + t2;
+    /// assert_eq!(t3.to(TimeUnit::Seconds), 120.0);
+    /// ```
+    pub quantity Time {
+        unit: TimeUnit;
+        dimension: TimeDimension;
+        conversions: TimeConversions;
+        name: "Time";
+        primary: Seconds;
+        si: Seconds;
 
-/// Units of time measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TimeUnit {
-    /// Nanoseconds (ns) - 10^-9 seconds
-    Nanoseconds,
-    /// Microseconds (µs) - 10^-6 seconds
-    Microseconds,
-    /// Milliseconds (ms) - 10^-3 seconds
-    Milliseconds,
-    /// Seconds (s) - SI base unit
-    Seconds,
-    /// Minutes (min) - 60 seconds
-    Minutes,
-    /// Hours (h) - 3600 seconds
-    Hours,
-    /// Days (d) - 86400 seconds
-    Days,
-}
-
-impl TimeUnit {
-    /// All available time units.
-    pub const ALL: &'static [TimeUnit] = &[
-        TimeUnit::Nanoseconds,
-        TimeUnit::Microseconds,
-        TimeUnit::Milliseconds,
-        TimeUnit::Seconds,
-        TimeUnit::Minutes,
-        TimeUnit::Hours,
-        TimeUnit::Days,
-    ];
-}
-
-impl fmt::Display for TimeUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for TimeUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            TimeUnit::Nanoseconds => "ns",
-            TimeUnit::Microseconds => "µs",
-            TimeUnit::Milliseconds => "ms",
-            TimeUnit::Seconds => "s",
-            TimeUnit::Minutes => "min",
-            TimeUnit::Hours => "h",
-            TimeUnit::Days => "d",
+        units {
+            /// Nanoseconds (ns) - 10^-9 seconds
+            Nanoseconds {
+                symbol: "ns",
+                factor: NANO,
+                ctor: nanoseconds,
+                to: to_nanoseconds,
+                si: true
+            },
+            /// Microseconds (µs) - 10^-6 seconds
+            Microseconds {
+                symbol: "µs",
+                factor: MICRO,
+                ctor: microseconds,
+                to: to_microseconds,
+                si: true
+            },
+            /// Milliseconds (ms) - 10^-3 seconds
+            Milliseconds {
+                symbol: "ms",
+                factor: MILLI,
+                ctor: milliseconds,
+                to: to_milliseconds,
+                si: true
+            },
+            /// Seconds (s) - SI base unit
+            Seconds {
+                symbol: "s",
+                factor: 1.0,
+                ctor: seconds,
+                to: to_seconds,
+                si: true
+            },
+            /// Minutes (min) - 60 seconds
+            Minutes {
+                symbol: "min",
+                factor: SECONDS_PER_MINUTE,
+                ctor: minutes,
+                to: to_minutes,
+                si: false
+            },
+            /// Hours (h) - 3600 seconds
+            Hours {
+                symbol: "h",
+                factor: SECONDS_PER_HOUR,
+                ctor: hours,
+                to: to_hours,
+                si: false
+            },
+            /// Days (d) - 86400 seconds
+            Days {
+                symbol: "d",
+                factor: SECONDS_PER_DAY,
+                ctor: days,
+                to: to_days,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            TimeUnit::Nanoseconds => NANO,
-            TimeUnit::Microseconds => MICRO,
-            TimeUnit::Milliseconds => MILLI,
-            TimeUnit::Seconds => 1.0,
-            TimeUnit::Minutes => SECONDS_PER_MINUTE,
-            TimeUnit::Hours => SECONDS_PER_HOUR,
-            TimeUnit::Days => SECONDS_PER_DAY,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(
-            self,
-            TimeUnit::Nanoseconds
-                | TimeUnit::Microseconds
-                | TimeUnit::Milliseconds
-                | TimeUnit::Seconds
-        )
-    }
 }
-
-/// A quantity of time.
-///
-/// Time is one of the seven SI base quantities, with the second as its SI base unit.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let t1 = Time::seconds(60.0);
-/// let t2 = Time::minutes(1.0);
-///
-/// // These represent the same duration
-/// assert!((t1.to(TimeUnit::Seconds) - t2.to(TimeUnit::Seconds)).abs() < 1e-10);
-///
-/// // Arithmetic operations
-/// let t3 = t1 + t2;
-/// assert_eq!(t3.to(TimeUnit::Seconds), 120.0);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Time {
-    value: f64,
-    unit: TimeUnit,
-}
-
 impl Time {
-    /// Creates a new Time quantity.
-    pub const fn new_const(value: f64, unit: TimeUnit) -> Self {
-        Self { value, unit }
-    }
-
-    /// Creates a Time in nanoseconds.
-    pub fn nanoseconds(value: f64) -> Self {
-        Self::new(value, TimeUnit::Nanoseconds)
-    }
-
-    /// Creates a Time in microseconds.
-    pub fn microseconds(value: f64) -> Self {
-        Self::new(value, TimeUnit::Microseconds)
-    }
-
-    /// Creates a Time in milliseconds.
-    pub fn milliseconds(value: f64) -> Self {
-        Self::new(value, TimeUnit::Milliseconds)
-    }
-
-    /// Creates a Time in seconds.
-    pub fn seconds(value: f64) -> Self {
-        Self::new(value, TimeUnit::Seconds)
-    }
-
-    /// Creates a Time in minutes.
-    pub fn minutes(value: f64) -> Self {
-        Self::new(value, TimeUnit::Minutes)
-    }
-
-    /// Creates a Time in hours.
-    pub fn hours(value: f64) -> Self {
-        Self::new(value, TimeUnit::Hours)
-    }
-
-    /// Creates a Time in days.
-    pub fn days(value: f64) -> Self {
-        Self::new(value, TimeUnit::Days)
-    }
-
-    /// Converts this time to nanoseconds.
-    pub fn to_nanoseconds(&self) -> f64 {
-        self.to(TimeUnit::Nanoseconds)
-    }
-
-    /// Converts this time to microseconds.
-    pub fn to_microseconds(&self) -> f64 {
-        self.to(TimeUnit::Microseconds)
-    }
-
-    /// Converts this time to milliseconds.
-    pub fn to_milliseconds(&self) -> f64 {
-        self.to(TimeUnit::Milliseconds)
-    }
-
-    /// Converts this time to seconds.
-    pub fn to_seconds(&self) -> f64 {
-        self.to(TimeUnit::Seconds)
-    }
-
-    /// Converts this time to minutes.
-    pub fn to_minutes(&self) -> f64 {
-        self.to(TimeUnit::Minutes)
-    }
-
-    /// Converts this time to hours.
-    pub fn to_hours(&self) -> f64 {
-        self.to(TimeUnit::Hours)
-    }
-
-    /// Converts this time to days.
-    pub fn to_days(&self) -> f64 {
-        self.to(TimeUnit::Days)
-    }
-
     /// Returns the value in milliseconds as a long (truncated).
     pub fn millis(&self) -> i64 {
         self.to_milliseconds() as i64
     }
 }
-
-impl fmt::Display for Time {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Time {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Time {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Time {
-    type Unit = TimeUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Time {
-    type Output = Time;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Time::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Time {
-    type Output = Time;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Time::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Time {
-    type Output = Time;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Time::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Time> for f64 {
-    type Output = Time;
-
-    fn mul(self, rhs: Time) -> Self::Output {
-        Time::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Time {
-    type Output = Time;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Time::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Time> for Time {
-    type Output = f64;
-
-    fn div(self, rhs: Time) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Time {
-    type Output = Time;
-
-    fn neg(self) -> Self::Output {
-        Time::new(-self.value, self.unit)
-    }
-}
-
-/// Dimension for Time.
-pub struct TimeDimension;
-
-impl Dimension for TimeDimension {
-    type Quantity = Time;
-    type Unit = TimeUnit;
-
-    fn name() -> &'static str {
-        "Time"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        TimeUnit::Seconds
-    }
-
-    fn si_unit() -> Self::Unit {
-        TimeUnit::Seconds
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        TimeUnit::ALL
-    }
-}
-
-/// Extension trait for creating Time quantities from numeric types.
-pub trait TimeConversions {
-    /// Creates a Time in nanoseconds.
-    fn nanoseconds(self) -> Time;
-    /// Creates a Time in microseconds.
-    fn microseconds(self) -> Time;
-    /// Creates a Time in milliseconds.
-    fn milliseconds(self) -> Time;
-    /// Creates a Time in seconds.
-    fn seconds(self) -> Time;
-    /// Creates a Time in minutes.
-    fn minutes(self) -> Time;
-    /// Creates a Time in hours.
-    fn hours(self) -> Time;
-    /// Creates a Time in days.
-    fn days(self) -> Time;
-}
-
-impl TimeConversions for f64 {
-    fn nanoseconds(self) -> Time {
-        Time::nanoseconds(self)
-    }
-    fn microseconds(self) -> Time {
-        Time::microseconds(self)
-    }
-    fn milliseconds(self) -> Time {
-        Time::milliseconds(self)
-    }
-    fn seconds(self) -> Time {
-        Time::seconds(self)
-    }
-    fn minutes(self) -> Time {
-        Time::minutes(self)
-    }
-    fn hours(self) -> Time {
-        Time::hours(self)
-    }
-    fn days(self) -> Time {
-        Time::days(self)
-    }
-}
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_time_creation() {

@@ -1,447 +1,179 @@
 //! Information quantity and units.
-
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-/// Units of information measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum InformationUnit {
-    /// Bytes (B) - primary unit
-    Bytes,
-    /// Bits (bit)
-    Bits,
-    /// Kilobytes (KB) - 1000 bytes
-    Kilobytes,
-    /// Megabytes (MB) - 1000² bytes
-    Megabytes,
-    /// Gigabytes (GB) - 1000³ bytes
-    Gigabytes,
-    /// Terabytes (TB) - 1000⁴ bytes
-    Terabytes,
-    /// Petabytes (PB) - 1000⁵ bytes
-    Petabytes,
-    /// Exabytes (EB) - 1000⁶ bytes
-    Exabytes,
-    /// Kibibytes (KiB) - 1024 bytes
-    Kibibytes,
-    /// Mebibytes (MiB) - 1024² bytes
-    Mebibytes,
-    /// Gibibytes (GiB) - 1024³ bytes
-    Gibibytes,
-    /// Tebibytes (TiB) - 1024⁴ bytes
-    Tebibytes,
-    /// Pebibytes (PiB) - 1024⁵ bytes
-    Pebibytes,
-    /// Exbibytes (EiB) - 1024⁶ bytes
-    Exbibytes,
-    /// Kilobits (Kbit) - 1000 bits
-    Kilobits,
-    /// Megabits (Mbit) - 1000² bits
-    Megabits,
-    /// Gigabits (Gbit) - 1000³ bits
-    Gigabits,
-    /// Terabits (Tbit) - 1000⁴ bits
-    Terabits,
-}
-
-impl InformationUnit {
-    /// All available information units.
-    pub const ALL: &'static [InformationUnit] = &[
-        InformationUnit::Bytes,
-        InformationUnit::Bits,
-        InformationUnit::Kilobytes,
-        InformationUnit::Megabytes,
-        InformationUnit::Gigabytes,
-        InformationUnit::Terabytes,
-        InformationUnit::Petabytes,
-        InformationUnit::Exabytes,
-        InformationUnit::Kibibytes,
-        InformationUnit::Mebibytes,
-        InformationUnit::Gibibytes,
-        InformationUnit::Tebibytes,
-        InformationUnit::Pebibytes,
-        InformationUnit::Exbibytes,
-        InformationUnit::Kilobits,
-        InformationUnit::Megabits,
-        InformationUnit::Gigabits,
-        InformationUnit::Terabits,
-    ];
-}
+use crate::core::Quantity;
+use std::ops::Div;
 
 // Conversion factors relative to Bytes
 const BITS_PER_BYTE: f64 = 8.0;
+crate::quantity! {
+    /// A quantity of information.
+    ///
+    /// Information represents digital data quantity.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let data = Information::megabytes(100.0);
+    /// let bits = data.to_bits();
+    /// assert_eq!(bits, 800_000_000.0);
+    /// ```
+    pub quantity Information {
+        unit: InformationUnit;
+        dimension: InformationDimension;
+        conversions: InformationConversions;
+        name: "Information";
+        primary: Bytes;
+        si: Bytes;
 
-impl fmt::Display for InformationUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for InformationUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            InformationUnit::Bytes => "B",
-            InformationUnit::Bits => "bit",
-            InformationUnit::Kilobytes => "KB",
-            InformationUnit::Megabytes => "MB",
-            InformationUnit::Gigabytes => "GB",
-            InformationUnit::Terabytes => "TB",
-            InformationUnit::Petabytes => "PB",
-            InformationUnit::Exabytes => "EB",
-            InformationUnit::Kibibytes => "KiB",
-            InformationUnit::Mebibytes => "MiB",
-            InformationUnit::Gibibytes => "GiB",
-            InformationUnit::Tebibytes => "TiB",
-            InformationUnit::Pebibytes => "PiB",
-            InformationUnit::Exbibytes => "EiB",
-            InformationUnit::Kilobits => "Kbit",
-            InformationUnit::Megabits => "Mbit",
-            InformationUnit::Gigabits => "Gbit",
-            InformationUnit::Terabits => "Tbit",
+        units {
+            /// Bytes (B) - primary unit
+            Bytes {
+                symbol: "B",
+                factor: 1.0,
+                ctor: bytes,
+                to: to_bytes,
+                si: true
+            },
+            /// Bits (bit)
+            Bits {
+                symbol: "bit",
+                factor: 1.0 / BITS_PER_BYTE,
+                ctor: bits,
+                to: to_bits,
+                si: false
+            },
+            /// Kilobytes (KB) - 1000 bytes
+            Kilobytes {
+                symbol: "KB",
+                factor: 1e3,
+                ctor: kilobytes,
+                to: to_kilobytes,
+                si: true
+            },
+            /// Megabytes (MB) - 1000² bytes
+            Megabytes {
+                symbol: "MB",
+                factor: 1e6,
+                ctor: megabytes,
+                to: to_megabytes,
+                si: true
+            },
+            /// Gigabytes (GB) - 1000³ bytes
+            Gigabytes {
+                symbol: "GB",
+                factor: 1e9,
+                ctor: gigabytes,
+                to: to_gigabytes,
+                si: true
+            },
+            /// Terabytes (TB) - 1000⁴ bytes
+            Terabytes {
+                symbol: "TB",
+                factor: 1e12,
+                ctor: terabytes,
+                to: to_terabytes,
+                si: true
+            },
+            /// Petabytes (PB) - 1000⁵ bytes
+            Petabytes {
+                symbol: "PB",
+                factor: 1e15,
+                ctor: petabytes,
+                to: to_petabytes,
+                si: true
+            },
+            /// Exabytes (EB) - 1000⁶ bytes
+            Exabytes {
+                symbol: "EB",
+                factor: 1e18,
+                ctor: exabytes,
+                to: to_exabytes,
+                si: true
+            },
+            /// Kibibytes (KiB) - 1024 bytes
+            Kibibytes {
+                symbol: "KiB",
+                factor: 1024.0,
+                ctor: kibibytes,
+                to: to_kibibytes,
+                si: false
+            },
+            /// Mebibytes (MiB) - 1024² bytes
+            Mebibytes {
+                symbol: "MiB",
+                factor: 1024.0 * 1024.0,
+                ctor: mebibytes,
+                to: to_mebibytes,
+                si: false
+            },
+            /// Gibibytes (GiB) - 1024³ bytes
+            Gibibytes {
+                symbol: "GiB",
+                factor: 1024.0 * 1024.0 * 1024.0,
+                ctor: gibibytes,
+                to: to_gibibytes,
+                si: false
+            },
+            /// Tebibytes (TiB) - 1024⁴ bytes
+            Tebibytes {
+                symbol: "TiB",
+                factor: 1024.0 * 1024.0 * 1024.0 * 1024.0,
+                ctor: tebibytes,
+                to: to_tebibytes,
+                si: false
+            },
+            /// Pebibytes (PiB) - 1024⁵ bytes
+            Pebibytes {
+                symbol: "PiB",
+                factor: 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0,
+                ctor: pebibytes,
+                to: to_pebibytes,
+                si: false
+            },
+            /// Exbibytes (EiB) - 1024⁶ bytes
+            Exbibytes {
+                symbol: "EiB",
+                factor: 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0,
+                ctor: exbibytes,
+                to: to_exbibytes,
+                si: false
+            },
+            /// Kilobits (Kbit) - 1000 bits
+            Kilobits {
+                symbol: "Kbit",
+                factor: 1e3 / BITS_PER_BYTE,
+                ctor: kilobits,
+                to: to_kilobits,
+                si: false
+            },
+            /// Megabits (Mbit) - 1000² bits
+            Megabits {
+                symbol: "Mbit",
+                factor: 1e6 / BITS_PER_BYTE,
+                ctor: megabits,
+                to: to_megabits,
+                si: false
+            },
+            /// Gigabits (Gbit) - 1000³ bits
+            Gigabits {
+                symbol: "Gbit",
+                factor: 1e9 / BITS_PER_BYTE,
+                ctor: gigabits,
+                to: to_gigabits,
+                si: false
+            },
+            /// Terabits (Tbit) - 1000⁴ bits
+            Terabits {
+                symbol: "Tbit",
+                factor: 1e12 / BITS_PER_BYTE,
+                ctor: terabits,
+                to: to_terabits,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            InformationUnit::Bytes => 1.0,
-            InformationUnit::Bits => 1.0 / BITS_PER_BYTE,
-            InformationUnit::Kilobytes => 1e3,
-            InformationUnit::Megabytes => 1e6,
-            InformationUnit::Gigabytes => 1e9,
-            InformationUnit::Terabytes => 1e12,
-            InformationUnit::Petabytes => 1e15,
-            InformationUnit::Exabytes => 1e18,
-            InformationUnit::Kibibytes => 1024.0,
-            InformationUnit::Mebibytes => 1024.0 * 1024.0,
-            InformationUnit::Gibibytes => 1024.0 * 1024.0 * 1024.0,
-            InformationUnit::Tebibytes => 1024.0 * 1024.0 * 1024.0 * 1024.0,
-            InformationUnit::Pebibytes => 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0,
-            InformationUnit::Exbibytes => 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0,
-            InformationUnit::Kilobits => 1e3 / BITS_PER_BYTE,
-            InformationUnit::Megabits => 1e6 / BITS_PER_BYTE,
-            InformationUnit::Gigabits => 1e9 / BITS_PER_BYTE,
-            InformationUnit::Terabits => 1e12 / BITS_PER_BYTE,
-        }
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(
-            self,
-            InformationUnit::Bytes
-                | InformationUnit::Kilobytes
-                | InformationUnit::Megabytes
-                | InformationUnit::Gigabytes
-                | InformationUnit::Terabytes
-                | InformationUnit::Petabytes
-                | InformationUnit::Exabytes
-        )
-    }
 }
-
-/// A quantity of information.
-///
-/// Information represents digital data quantity.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let data = Information::megabytes(100.0);
-/// let bits = data.to_bits();
-/// assert_eq!(bits, 800_000_000.0);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Information {
-    value: f64,
-    unit: InformationUnit,
-}
-
-impl Information {
-    /// Creates a new Information quantity.
-    pub const fn new_const(value: f64, unit: InformationUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors for byte-based units
-    /// Creates Information in bytes.
-    pub fn bytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Bytes)
-    }
-
-    /// Creates Information in bits.
-    pub fn bits(value: f64) -> Self {
-        Self::new(value, InformationUnit::Bits)
-    }
-
-    /// Creates Information in kilobytes.
-    pub fn kilobytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Kilobytes)
-    }
-
-    /// Creates Information in megabytes.
-    pub fn megabytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Megabytes)
-    }
-
-    /// Creates Information in gigabytes.
-    pub fn gigabytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Gigabytes)
-    }
-
-    /// Creates Information in terabytes.
-    pub fn terabytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Terabytes)
-    }
-
-    /// Creates Information in petabytes.
-    pub fn petabytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Petabytes)
-    }
-
-    /// Creates Information in exabytes.
-    pub fn exabytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Exabytes)
-    }
-
-    /// Creates Information in kibibytes.
-    pub fn kibibytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Kibibytes)
-    }
-
-    /// Creates Information in mebibytes.
-    pub fn mebibytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Mebibytes)
-    }
-
-    /// Creates Information in gibibytes.
-    pub fn gibibytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Gibibytes)
-    }
-
-    /// Creates Information in tebibytes.
-    pub fn tebibytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Tebibytes)
-    }
-
-    /// Creates Information in pebibytes.
-    pub fn pebibytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Pebibytes)
-    }
-
-    /// Creates Information in exbibytes.
-    pub fn exbibytes(value: f64) -> Self {
-        Self::new(value, InformationUnit::Exbibytes)
-    }
-
-    /// Creates Information in kilobits.
-    pub fn kilobits(value: f64) -> Self {
-        Self::new(value, InformationUnit::Kilobits)
-    }
-
-    /// Creates Information in megabits.
-    pub fn megabits(value: f64) -> Self {
-        Self::new(value, InformationUnit::Megabits)
-    }
-
-    /// Creates Information in gigabits.
-    pub fn gigabits(value: f64) -> Self {
-        Self::new(value, InformationUnit::Gigabits)
-    }
-
-    /// Creates Information in terabits.
-    pub fn terabits(value: f64) -> Self {
-        Self::new(value, InformationUnit::Terabits)
-    }
-
-    // Conversion methods
-    /// Converts to bytes.
-    pub fn to_bytes(&self) -> f64 {
-        self.to(InformationUnit::Bytes)
-    }
-
-    /// Converts to bits.
-    pub fn to_bits(&self) -> f64 {
-        self.to(InformationUnit::Bits)
-    }
-
-    /// Converts to kilobytes.
-    pub fn to_kilobytes(&self) -> f64 {
-        self.to(InformationUnit::Kilobytes)
-    }
-
-    /// Converts to megabytes.
-    pub fn to_megabytes(&self) -> f64 {
-        self.to(InformationUnit::Megabytes)
-    }
-
-    /// Converts to gigabytes.
-    pub fn to_gigabytes(&self) -> f64 {
-        self.to(InformationUnit::Gigabytes)
-    }
-
-    /// Converts to terabytes.
-    pub fn to_terabytes(&self) -> f64 {
-        self.to(InformationUnit::Terabytes)
-    }
-
-    /// Converts to petabytes.
-    pub fn to_petabytes(&self) -> f64 {
-        self.to(InformationUnit::Petabytes)
-    }
-
-    /// Converts to exabytes.
-    pub fn to_exabytes(&self) -> f64 {
-        self.to(InformationUnit::Exabytes)
-    }
-
-    /// Converts to kibibytes.
-    pub fn to_kibibytes(&self) -> f64 {
-        self.to(InformationUnit::Kibibytes)
-    }
-
-    /// Converts to mebibytes.
-    pub fn to_mebibytes(&self) -> f64 {
-        self.to(InformationUnit::Mebibytes)
-    }
-
-    /// Converts to gibibytes.
-    pub fn to_gibibytes(&self) -> f64 {
-        self.to(InformationUnit::Gibibytes)
-    }
-
-    /// Converts to tebibytes.
-    pub fn to_tebibytes(&self) -> f64 {
-        self.to(InformationUnit::Tebibytes)
-    }
-
-    /// Converts to pebibytes.
-    pub fn to_pebibytes(&self) -> f64 {
-        self.to(InformationUnit::Pebibytes)
-    }
-
-    /// Converts to exbibytes.
-    pub fn to_exbibytes(&self) -> f64 {
-        self.to(InformationUnit::Exbibytes)
-    }
-
-    /// Converts to kilobits.
-    pub fn to_kilobits(&self) -> f64 {
-        self.to(InformationUnit::Kilobits)
-    }
-
-    /// Converts to megabits.
-    pub fn to_megabits(&self) -> f64 {
-        self.to(InformationUnit::Megabits)
-    }
-
-    /// Converts to gigabits.
-    pub fn to_gigabits(&self) -> f64 {
-        self.to(InformationUnit::Gigabits)
-    }
-
-    /// Converts to terabits.
-    pub fn to_terabits(&self) -> f64 {
-        self.to(InformationUnit::Terabits)
-    }
-}
-
-impl fmt::Display for Information {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Information {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Information {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Information {
-    type Unit = InformationUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Information {
-    type Output = Information;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let sum = self.to_primary() + rhs.to_primary();
-        Information::new(self.unit.convert_from_primary(sum), self.unit)
-    }
-}
-
-impl Sub for Information {
-    type Output = Information;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let diff = self.to_primary() - rhs.to_primary();
-        Information::new(self.unit.convert_from_primary(diff), self.unit)
-    }
-}
-
-impl Mul<f64> for Information {
-    type Output = Information;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Information::new(self.value * rhs, self.unit)
-    }
-}
-
-impl Mul<Information> for f64 {
-    type Output = Information;
-
-    fn mul(self, rhs: Information) -> Self::Output {
-        Information::new(self * rhs.value, rhs.unit)
-    }
-}
-
-impl Div<f64> for Information {
-    type Output = Information;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Information::new(self.value / rhs, self.unit)
-    }
-}
-
-impl Div<Information> for Information {
-    type Output = f64;
-
-    fn div(self, rhs: Information) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Information {
-    type Output = Information;
-
-    fn neg(self) -> Self::Output {
-        Information::new(-self.value, self.unit)
-    }
-}
-
 // Cross-quantity operations
 use super::data_rate::{DataRate, DataRateUnit};
 use crate::time::Time;
@@ -455,131 +187,10 @@ impl Div<Time> for Information {
         DataRate::new(bps, DataRateUnit::BytesPerSecond)
     }
 }
-
-/// Dimension for Information.
-pub struct InformationDimension;
-
-impl Dimension for InformationDimension {
-    type Quantity = Information;
-    type Unit = InformationUnit;
-
-    fn name() -> &'static str {
-        "Information"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        InformationUnit::Bytes
-    }
-
-    fn si_unit() -> Self::Unit {
-        InformationUnit::Bytes
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        InformationUnit::ALL
-    }
-}
-
-/// Extension trait for creating Information quantities from numeric types.
-pub trait InformationConversions {
-    /// Creates Information in bytes.
-    fn bytes(self) -> Information;
-    /// Creates Information in bits.
-    fn bits(self) -> Information;
-    /// Creates Information in kilobytes.
-    fn kilobytes(self) -> Information;
-    /// Creates Information in megabytes.
-    fn megabytes(self) -> Information;
-    /// Creates Information in gigabytes.
-    fn gigabytes(self) -> Information;
-    /// Creates Information in terabytes.
-    fn terabytes(self) -> Information;
-    /// Creates Information in petabytes.
-    fn petabytes(self) -> Information;
-    /// Creates Information in exabytes.
-    fn exabytes(self) -> Information;
-    /// Creates Information in kibibytes.
-    fn kibibytes(self) -> Information;
-    /// Creates Information in mebibytes.
-    fn mebibytes(self) -> Information;
-    /// Creates Information in gibibytes.
-    fn gibibytes(self) -> Information;
-    /// Creates Information in tebibytes.
-    fn tebibytes(self) -> Information;
-    /// Creates Information in pebibytes.
-    fn pebibytes(self) -> Information;
-    /// Creates Information in exbibytes.
-    fn exbibytes(self) -> Information;
-    /// Creates Information in kilobits.
-    fn kilobits(self) -> Information;
-    /// Creates Information in megabits.
-    fn megabits(self) -> Information;
-    /// Creates Information in gigabits.
-    fn gigabits(self) -> Information;
-    /// Creates Information in terabits.
-    fn terabits(self) -> Information;
-}
-
-impl InformationConversions for f64 {
-    fn bytes(self) -> Information {
-        Information::bytes(self)
-    }
-    fn bits(self) -> Information {
-        Information::bits(self)
-    }
-    fn kilobytes(self) -> Information {
-        Information::kilobytes(self)
-    }
-    fn megabytes(self) -> Information {
-        Information::megabytes(self)
-    }
-    fn gigabytes(self) -> Information {
-        Information::gigabytes(self)
-    }
-    fn terabytes(self) -> Information {
-        Information::terabytes(self)
-    }
-    fn petabytes(self) -> Information {
-        Information::petabytes(self)
-    }
-    fn exabytes(self) -> Information {
-        Information::exabytes(self)
-    }
-    fn kibibytes(self) -> Information {
-        Information::kibibytes(self)
-    }
-    fn mebibytes(self) -> Information {
-        Information::mebibytes(self)
-    }
-    fn gibibytes(self) -> Information {
-        Information::gibibytes(self)
-    }
-    fn tebibytes(self) -> Information {
-        Information::tebibytes(self)
-    }
-    fn pebibytes(self) -> Information {
-        Information::pebibytes(self)
-    }
-    fn exbibytes(self) -> Information {
-        Information::exbibytes(self)
-    }
-    fn kilobits(self) -> Information {
-        Information::kilobits(self)
-    }
-    fn megabits(self) -> Information {
-        Information::megabits(self)
-    }
-    fn gigabits(self) -> Information {
-        Information::gigabits(self)
-    }
-    fn terabits(self) -> Information {
-        Information::terabits(self)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_information_creation() {
