@@ -1,7 +1,8 @@
 [package]
 name = "rquants"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.98"
 description = "A Rust library for quantities, units of measure, and dimensional analysis"
 license = "Apache-2.0"
 repository = "https://github.com/michaelzg/rquants"

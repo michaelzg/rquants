@@ -54,10 +54,7 @@ fn lengths_at_every_scale() {
 
     // Distance to the Sun: 1 AU
     let sun = Length::astronomical_units(1.0);
-    println!(
-        "Earth to Sun: 1 AU = {:.0} km",
-        sun.to_kilometers()
-    );
+    println!("Earth to Sun: 1 AU = {:.0} km", sun.to_kilometers());
 
     // Nearest star (Proxima Centauri): ~4.24 light-years = ~40.14 trillion km
     let proxima = Length::light_years(4.24);
@@ -204,10 +201,7 @@ fn frequency() {
 
     // Middle C on a piano: 261.63 Hz
     let middle_c = Frequency::hertz(261.63);
-    println!(
-        "Middle C (piano): {:.2} Hz",
-        middle_c.to_hertz()
-    );
+    println!("Middle C (piano): {:.2} Hz", middle_c.to_hertz());
 
     // FM radio: ~100 MHz
     let fm = Frequency::megahertz(100.0);

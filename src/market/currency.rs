@@ -111,19 +111,10 @@ impl Currency {
 
     /// Attempts to parse a currency from a code string.
     pub fn from_code(code: &str) -> Option<Currency> {
-        match code {
-            "USD" => Some(Currency::USD),
-            "EUR" => Some(Currency::EUR),
-            "GBP" => Some(Currency::GBP),
-            "JPY" => Some(Currency::JPY),
-            "CHF" => Some(Currency::CHF),
-            "CAD" => Some(Currency::CAD),
-            "AUD" => Some(Currency::AUD),
-            "CNY" => Some(Currency::CNY),
-            "INR" => Some(Currency::INR),
-            "BTC" => Some(Currency::BTC),
-            _ => None,
-        }
+        Self::ALL
+            .iter()
+            .find(|currency| currency.code() == code)
+            .copied()
     }
 }
 
@@ -150,8 +141,10 @@ mod tests {
 
     #[test]
     fn test_currency_from_code() {
-        assert_eq!(Currency::from_code("USD"), Some(Currency::USD));
-        assert_eq!(Currency::from_code("EUR"), Some(Currency::EUR));
+        for currency in Currency::ALL {
+            assert_eq!(Currency::from_code(currency.code()), Some(*currency));
+        }
+        assert_eq!(Currency::from_code("usd"), None);
         assert_eq!(Currency::from_code("INVALID"), None);
     }
 

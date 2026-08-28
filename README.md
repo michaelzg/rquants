@@ -188,16 +188,16 @@ pub enum LengthUnit { Meters, Kilometers, Feet, ... }
 
 **Scala**: Cross-currency operations use an implicit `MoneyContext` carrying exchange rates, allowing `usd + eur` if a context is in scope.
 
-**Rust**: Cross-currency arithmetic panics. Currency conversion requires an explicit `CurrencyExchangeRate::convert()` call.
+**Rust**: Cross-currency arithmetic returns a `Result`. Currency conversion requires an explicit `CurrencyExchangeRate::convert()` call.
 
 ```rust
-// This panics in Rust:
-// let _ = Money::usd(100.0) + Money::eur(50.0);
+let invalid = Money::usd(100.0) + Money::eur(50.0);
+assert!(invalid.is_err());
 
 // Use explicit conversion instead:
 let rate = CurrencyExchangeRate::new(Currency::USD, Currency::EUR, 0.85);
 let eur_as_usd = rate.convert(Money::eur(50.0)).unwrap();
-let total = Money::usd(100.0) + eur_as_usd;
+let total = (Money::usd(100.0) + eur_as_usd).unwrap();
 ```
 
 **Why**: Rust has no implicit parameters. Passing a context explicitly is the idiomatic approach and avoids hidden dependencies. This makes the code clearer about when and how currency conversion happens.
@@ -233,13 +233,13 @@ let t = 5.0.seconds();
 
 **Why**: Rust's `impl Trait for f64` is the equivalent of Scala's implicit class pattern. Both achieve `5.0.meters()` syntax. The prelude re-exports all conversion traits for convenience.
 
-### 7. Operator Panics for Invalid Cross-Type Operations
+### 7. Money operators return results
 
 **Scala**: Some operations return `Try[A]` or use implicit contexts.
 
-**Rust**: Invalid operations (e.g., adding different currencies) panic via `unwrap()` in the `Add` impl.
+**Rust**: `Money + Money`, `Money - Money`, and `Money / Money` return `Result`. Scalar multiplication and division remain infallible.
 
-**Why**: Rust's `std::ops::Add` requires `type Output`, not `Result<Output>`. Returning `Result` from `+` would break ergonomics. The trade-off is a runtime panic for programmer errors (mixing currencies), which is caught by tests. Future versions could explore a `checked_add` method returning `Result`.
+**Why**: A currency mismatch is a runtime error. Returning `Result` makes callers handle it without a panic or hidden conversion.
 
 ### 8. Temperature Does Not Implement the Quantity Trait
 
@@ -277,11 +277,11 @@ let t = 5.0.seconds();
 
 Module names like `energy::energy`, `mass::mass`, `time::time` intentionally mirror the Scala package structure (`squants.energy.Energy`, `squants.mass.Mass`). Clippy's `module_inception` lint is suppressed at the crate level for this reason.
 
-### 13. No Serialization by Default
+### 13. Serialization is opt-in
 
 **Scala squants**: Extends `Serializable` (JVM serialization).
 
-**Rust rquants**: No built-in serialization. Users can implement serialization as needed for their use case.
+**Rust rquants**: The default build has no serialization dependency. Enable the `serde` feature to serialize generated quantities and `Dimensionless` as unit-bearing strings such as `"100 m"`.
 
 ### 14. Missing Quantities vs. Scala squants
 
@@ -304,9 +304,10 @@ Run `cargo doc --open` to browse the full API documentation locally.
 ## Testing
 
 ```bash
-cargo test          # 320 unit tests + 83 doc tests
-cargo clippy        # zero warnings
-cargo doc --no-deps # zero warnings
+cargo test --all-targets --all-features
+cargo test --doc --all-features
+cargo clippy --all-targets --all-features -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --all-features --no-deps
 ```
 
 ## License

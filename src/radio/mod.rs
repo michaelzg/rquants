@@ -17,5 +17,7 @@ pub use irradiance::{Irradiance, IrradianceConversions, IrradianceUnit};
 pub use particle_flux::{ParticleFlux, ParticleFluxConversions, ParticleFluxUnit};
 pub use radiance::{Radiance, RadianceConversions, RadianceUnit};
 pub use radiant_intensity::{RadiantIntensity, RadiantIntensityConversions, RadiantIntensityUnit};
-pub use spectral_irradiance::{SpectralIrradiance, SpectralIrradianceConversions, SpectralIrradianceUnit};
+pub use spectral_irradiance::{
+    SpectralIrradiance, SpectralIrradianceConversions, SpectralIrradianceUnit,
+};
 pub use spectral_power::{SpectralPower, SpectralPowerConversions, SpectralPowerUnit};

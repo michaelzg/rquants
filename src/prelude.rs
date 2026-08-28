@@ -97,10 +97,9 @@ pub use crate::electro::resistivity::ResistivityConversions;
 pub use crate::electro::{
     Capacitance, CapacitanceUnit, Conductivity, ConductivityUnit, ElectricCharge,
     ElectricChargeUnit, ElectricCurrent, ElectricCurrentUnit, ElectricPotential,
-    ElectricPotentialUnit, ElectricalConductance, ElectricalConductanceUnit,
-    ElectricalResistance, ElectricalResistanceUnit, Inductance, InductanceUnit, MagneticFlux,
-    MagneticFluxDensity, MagneticFluxDensityUnit, MagneticFluxUnit, Resistivity,
-    ResistivityUnit,
+    ElectricPotentialUnit, ElectricalConductance, ElectricalConductanceUnit, ElectricalResistance,
+    ElectricalResistanceUnit, Inductance, InductanceUnit, MagneticFlux, MagneticFluxDensity,
+    MagneticFluxDensityUnit, MagneticFluxUnit, Resistivity, ResistivityUnit,
 };
 
 // Radio quantities

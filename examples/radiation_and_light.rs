@@ -133,24 +133,15 @@ fn everyday_light() {
 
     // Sunlight outdoors: ~100,000 lux
     let sunlight = Illuminance::lux(100_000.0);
-    println!(
-        "Direct sunlight: {:.0} lux",
-        sunlight.to_lux()
-    );
+    println!("Direct sunlight: {:.0} lux", sunlight.to_lux());
 
     // Overcast day: ~1,000 lux
     let overcast = Illuminance::lux(1_000.0);
-    println!(
-        "Overcast day: {:.0} lux",
-        overcast.to_lux()
-    );
+    println!("Overcast day: {:.0} lux", overcast.to_lux());
 
     // Office lighting: ~500 lux
     let office = Illuminance::lux(500.0);
-    println!(
-        "Office: {:.0} lux (enough for reading)",
-        office.to_lux()
-    );
+    println!("Office: {:.0} lux (enough for reading)", office.to_lux());
 
     // Candlelight: ~10 lux
     let candle = Illuminance::lux(10.0);
@@ -161,16 +152,11 @@ fn everyday_light() {
 
     // Full moon: ~0.25 lux
     let moonlight = Illuminance::lux(0.25);
-    println!(
-        "Full moon: {:.2} lux",
-        moonlight.to_lux()
-    );
+    println!("Full moon: {:.2} lux", moonlight.to_lux());
 
     // Ratio: sunlight is how many times brighter than moonlight?
     let ratio = sunlight.to_lux() / moonlight.to_lux();
-    println!(
-        "Sunlight is {:.0}x brighter than moonlight", ratio
-    );
+    println!("Sunlight is {:.0}x brighter than moonlight", ratio);
 
     // Screen brightness: a phone at max ~700 cd/m²
     let phone_screen = Luminance::candelas_per_square_meter(700.0);
@@ -183,10 +169,7 @@ fn everyday_light() {
 
     // A 60W-equivalent LED bulb: ~800 lumens
     let led_bulb = LuminousFlux::lumens(800.0);
-    println!(
-        "60W-equivalent LED: {:.0} lumens",
-        led_bulb.to_lumens()
-    );
+    println!("60W-equivalent LED: {:.0} lumens", led_bulb.to_lumens());
 
     // Candela: a regular candle is ~1 cd
     let candle_intensity = LuminousIntensity::candelas(1.0);

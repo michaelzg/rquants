@@ -3,221 +3,96 @@
 //! Represents quantities with no physical dimension, such as counts,
 //! percentages, and ratios between like quantities.
 
-use crate::core::{Dimension, Quantity, UnitOfMeasure};
-use std::cmp::Ordering;
-use std::fmt;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, Mul, Sub};
 
-/// Units of dimensionless measurement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum DimensionlessUnit {
-    /// Each - single units
-    Each,
-    /// Percent - hundredths (0.01)
-    Percent,
-    /// Dozen - 12 units
-    Dozen,
-    /// Score - 20 units
-    Score,
-    /// Gross - 144 units (12 dozen)
-    Gross,
-}
+crate::quantity! {
+    /// A dimensionless quantity such as a count, percentage, or ratio.
+    ///
+    /// Dividing quantities of the same dimension returns a bare `f64` for
+    /// ergonomic ratio arithmetic. Use `Dimensionless` when the result should
+    /// retain an explicit unit such as percent or dozen.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rquants::prelude::*;
+    ///
+    /// let percentage = Dimensionless::percent(50.0);
+    /// let count = Dimensionless::each(100.0);
+    /// let result = count.to_each() * percentage.to_each();
+    ///
+    /// assert!((result - 50.0).abs() < 1e-10);
+    /// ```
+    pub quantity Dimensionless {
+        /// Units of dimensionless measurement.
+        unit: DimensionlessUnit;
+        /// Dimension marker for dimensionless quantities.
+        dimension: DimensionlessDimension;
+        /// Extension trait for creating dimensionless quantities from `f64`.
+        conversions: DimensionlessConversions;
+        name: "Dimensionless";
+        primary: Each;
+        si: Each;
 
-impl DimensionlessUnit {
-    /// All available dimensionless units.
-    pub const ALL: &'static [DimensionlessUnit] = &[
-        DimensionlessUnit::Each,
-        DimensionlessUnit::Percent,
-        DimensionlessUnit::Dozen,
-        DimensionlessUnit::Score,
-        DimensionlessUnit::Gross,
-    ];
-}
-
-impl fmt::Display for DimensionlessUnit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
-    }
-}
-
-impl UnitOfMeasure for DimensionlessUnit {
-    fn symbol(&self) -> &'static str {
-        match self {
-            DimensionlessUnit::Each => "ea",
-            DimensionlessUnit::Percent => "%",
-            DimensionlessUnit::Dozen => "dz",
-            DimensionlessUnit::Score => "score",
-            DimensionlessUnit::Gross => "gr",
+        units {
+            /// Single units.
+            Each {
+                symbol: "ea",
+                factor: 1.0,
+                ctor: each,
+                to: to_each,
+                si: true
+            },
+            /// Hundredths.
+            Percent {
+                symbol: "%",
+                factor: 0.01,
+                ctor: percent,
+                to: to_percent,
+                si: false
+            },
+            /// Groups of 12.
+            Dozen {
+                symbol: "dz",
+                factor: 12.0,
+                ctor: dozen,
+                to: to_dozen,
+                si: false
+            },
+            /// Groups of 20.
+            Score {
+                symbol: "score",
+                factor: 20.0,
+                ctor: score,
+                to: to_score,
+                si: false
+            },
+            /// Groups of 144.
+            Gross {
+                symbol: "gr",
+                factor: 144.0,
+                ctor: gross,
+                to: to_gross,
+                si: false
+            }
         }
     }
-
-    fn conversion_factor(&self) -> f64 {
-        match self {
-            DimensionlessUnit::Each => 1.0,
-            DimensionlessUnit::Percent => 0.01,
-            DimensionlessUnit::Dozen => 12.0,
-            DimensionlessUnit::Score => 20.0,
-            DimensionlessUnit::Gross => 144.0,
-        }
-    }
-
-    fn is_primary(&self) -> bool {
-        matches!(self, DimensionlessUnit::Each)
-    }
-
-    fn is_si(&self) -> bool {
-        matches!(self, DimensionlessUnit::Each)
-    }
-}
-
-/// A dimensionless quantity (counts, percentages, ratios).
-///
-/// This may represent counts or other discrete amounts,
-/// or ratios between like quantities where units cancel out.
-/// Dividing one quantity by another of the same dimension returns a bare `f64`
-/// for ergonomic ratio arithmetic; use `Dimensionless` when that ratio should
-/// carry an explicit unit such as percent or dozen.
-///
-/// # Example
-///
-/// ```rust
-/// use rquants::prelude::*;
-///
-/// let percentage = Dimensionless::percent(50.0);
-/// let count = Dimensionless::each(100.0);
-///
-/// // 50% of 100 = 50
-/// let result = count.to_each() * percentage.to_each();
-/// assert!((result - 50.0).abs() < 1e-10);
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Dimensionless {
-    value: f64,
-    unit: DimensionlessUnit,
 }
 
 impl Dimensionless {
-    /// Creates a new Dimensionless quantity.
-    pub const fn new_const(value: f64, unit: DimensionlessUnit) -> Self {
-        Self { value, unit }
-    }
-
-    // Constructors
-    /// Creates a Dimensionless quantity in "each" units.
-    pub fn each(value: f64) -> Self {
-        Self::new(value, DimensionlessUnit::Each)
-    }
-
-    /// Creates a Dimensionless quantity in percent.
-    pub fn percent(value: f64) -> Self {
-        Self::new(value, DimensionlessUnit::Percent)
-    }
-
-    /// Creates a Dimensionless quantity in dozens.
-    pub fn dozen(value: f64) -> Self {
-        Self::new(value, DimensionlessUnit::Dozen)
-    }
-
-    /// Creates a Dimensionless quantity in score (20 units).
-    pub fn score(value: f64) -> Self {
-        Self::new(value, DimensionlessUnit::Score)
-    }
-
-    /// Creates a Dimensionless quantity in gross (144 units).
-    pub fn gross(value: f64) -> Self {
-        Self::new(value, DimensionlessUnit::Gross)
-    }
-
-    /// Creates a Dimensionless quantity of 100 "each".
+    /// Creates a dimensionless quantity of 100 each.
     pub fn hundred(value: f64) -> Self {
         Self::each(value * 100.0)
     }
 
-    /// Creates a Dimensionless quantity of 1000 "each".
+    /// Creates a dimensionless quantity of 1,000 each.
     pub fn thousand(value: f64) -> Self {
-        Self::each(value * 1000.0)
+        Self::each(value * 1_000.0)
     }
 
-    /// Creates a Dimensionless quantity of 1,000,000 "each".
+    /// Creates a dimensionless quantity of 1,000,000 each.
     pub fn million(value: f64) -> Self {
         Self::each(value * 1_000_000.0)
-    }
-
-    // Conversion methods
-    /// Converts to "each" units.
-    pub fn to_each(&self) -> f64 {
-        self.to(DimensionlessUnit::Each)
-    }
-
-    /// Converts to percent.
-    pub fn to_percent(&self) -> f64 {
-        self.to(DimensionlessUnit::Percent)
-    }
-
-    /// Converts to dozens.
-    pub fn to_dozen(&self) -> f64 {
-        self.to(DimensionlessUnit::Dozen)
-    }
-
-    /// Converts to score.
-    pub fn to_score(&self) -> f64 {
-        self.to(DimensionlessUnit::Score)
-    }
-
-    /// Converts to gross.
-    pub fn to_gross(&self) -> f64 {
-        self.to(DimensionlessUnit::Gross)
-    }
-}
-
-impl fmt::Display for Dimensionless {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.value, self.unit.symbol())
-    }
-}
-
-impl PartialEq for Dimensionless {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_primary() == other.to_primary()
-    }
-}
-
-impl PartialOrd for Dimensionless {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.to_primary().partial_cmp(&other.to_primary())
-    }
-}
-
-impl Quantity for Dimensionless {
-    type Unit = DimensionlessUnit;
-
-    fn new(value: f64, unit: Self::Unit) -> Self {
-        Self { value, unit }
-    }
-
-    fn value(&self) -> f64 {
-        self.value
-    }
-
-    fn unit(&self) -> Self::Unit {
-        self.unit
-    }
-}
-
-// Arithmetic operations
-
-impl Add for Dimensionless {
-    type Output = Dimensionless;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let rhs_value = rhs.to(self.unit);
-        Dimensionless::new(self.value + rhs_value, self.unit)
-    }
-}
-
-impl AddAssign for Dimensionless {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs;
     }
 }
 
@@ -229,21 +104,6 @@ impl Add<f64> for Dimensionless {
     }
 }
 
-impl Sub for Dimensionless {
-    type Output = Dimensionless;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let rhs_value = rhs.to(self.unit);
-        Dimensionless::new(self.value - rhs_value, self.unit)
-    }
-}
-
-impl SubAssign for Dimensionless {
-    fn sub_assign(&mut self, rhs: Self) {
-        *self = *self - rhs;
-    }
-}
-
 impl Sub<f64> for Dimensionless {
     type Output = Dimensionless;
 
@@ -252,29 +112,6 @@ impl Sub<f64> for Dimensionless {
     }
 }
 
-impl Mul<f64> for Dimensionless {
-    type Output = Dimensionless;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Dimensionless::new(self.value * rhs, self.unit)
-    }
-}
-
-impl MulAssign<f64> for Dimensionless {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.value *= rhs;
-    }
-}
-
-impl Mul<Dimensionless> for f64 {
-    type Output = Dimensionless;
-
-    fn mul(self, rhs: Dimensionless) -> Self::Output {
-        Dimensionless::new(self * rhs.value, rhs.unit)
-    }
-}
-
-// Dimensionless * Dimensionless = Dimensionless
 impl Mul<Dimensionless> for Dimensionless {
     type Output = Dimensionless;
 
@@ -283,205 +120,78 @@ impl Mul<Dimensionless> for Dimensionless {
     }
 }
 
-impl Div<f64> for Dimensionless {
-    type Output = Dimensionless;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Dimensionless::new(self.value / rhs, self.unit)
-    }
-}
-
-impl DivAssign<f64> for Dimensionless {
-    fn div_assign(&mut self, rhs: f64) {
-        self.value /= rhs;
-    }
-}
-
-impl Div<Dimensionless> for Dimensionless {
-    type Output = f64;
-
-    fn div(self, rhs: Dimensionless) -> Self::Output {
-        self.to_primary() / rhs.to_primary()
-    }
-}
-
-impl Neg for Dimensionless {
-    type Output = Dimensionless;
-
-    fn neg(self) -> Self::Output {
-        Dimensionless::new(-self.value, self.unit)
-    }
-}
-
-impl std::iter::Sum for Dimensionless {
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        let total = iter.fold(0.0, |total, quantity| total + quantity.to_primary());
-        Dimensionless::new(total, DimensionlessUnit::Each)
-    }
-}
-
-impl<'a> std::iter::Sum<&'a Dimensionless> for Dimensionless {
-    fn sum<I: Iterator<Item = &'a Dimensionless>>(iter: I) -> Self {
-        iter.copied().sum()
-    }
-}
-
-impl std::str::FromStr for Dimensionless {
-    type Err = crate::core::error::QuantityParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        DimensionlessDimension::parse(s)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl serde::Serialize for Dimensionless {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&self.to_string())
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for Dimensionless {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
-        <Self as std::str::FromStr>::from_str(&s).map_err(serde::de::Error::custom)
-    }
-}
-
-/// Implicit conversion from Dimensionless to f64.
 impl From<Dimensionless> for f64 {
-    fn from(d: Dimensionless) -> Self {
-        d.to_each()
-    }
-}
-
-/// Dimension for Dimensionless.
-pub struct DimensionlessDimension;
-
-impl Dimension for DimensionlessDimension {
-    type Quantity = Dimensionless;
-    type Unit = DimensionlessUnit;
-
-    fn name() -> &'static str {
-        "Dimensionless"
-    }
-
-    fn primary_unit() -> Self::Unit {
-        DimensionlessUnit::Each
-    }
-
-    fn si_unit() -> Self::Unit {
-        DimensionlessUnit::Each
-    }
-
-    fn units() -> &'static [Self::Unit] {
-        DimensionlessUnit::ALL
-    }
-}
-
-/// Extension trait for creating Dimensionless quantities from numeric types.
-pub trait DimensionlessConversions {
-    /// Creates a Dimensionless quantity in "each" units.
-    fn each(self) -> Dimensionless;
-    /// Creates a Dimensionless quantity in percent.
-    fn percent(self) -> Dimensionless;
-    /// Creates a Dimensionless quantity in dozens.
-    fn dozen(self) -> Dimensionless;
-    /// Creates a Dimensionless quantity in score.
-    fn score(self) -> Dimensionless;
-    /// Creates a Dimensionless quantity in gross.
-    fn gross(self) -> Dimensionless;
-}
-
-impl DimensionlessConversions for f64 {
-    fn each(self) -> Dimensionless {
-        Dimensionless::each(self)
-    }
-    fn percent(self) -> Dimensionless {
-        Dimensionless::percent(self)
-    }
-    fn dozen(self) -> Dimensionless {
-        Dimensionless::dozen(self)
-    }
-    fn score(self) -> Dimensionless {
-        Dimensionless::score(self)
-    }
-    fn gross(self) -> Dimensionless {
-        Dimensionless::gross(self)
+    fn from(dimensionless: Dimensionless) -> Self {
+        dimensionless.to_each()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Quantity;
 
     #[test]
     fn test_dimensionless_creation() {
-        let d = Dimensionless::each(10.0);
-        assert_eq!(d.value(), 10.0);
-        assert_eq!(d.unit(), DimensionlessUnit::Each);
+        let dimensionless = Dimensionless::each(10.0);
+        assert_eq!(dimensionless.value(), 10.0);
+        assert_eq!(dimensionless.unit(), DimensionlessUnit::Each);
     }
 
     #[test]
     fn test_percent_conversion() {
-        let d = Dimensionless::percent(50.0);
-        assert_eq!(d.to_each(), 0.5);
-
-        let d2 = Dimensionless::each(0.25);
-        assert_eq!(d2.to_percent(), 25.0);
+        assert_eq!(Dimensionless::percent(50.0).to_each(), 0.5);
+        assert_eq!(Dimensionless::each(0.25).to_percent(), 25.0);
     }
 
     #[test]
-    fn test_dozen_conversion() {
-        let d = Dimensionless::dozen(2.0);
-        assert_eq!(d.to_each(), 24.0);
+    fn test_group_conversions() {
+        assert_eq!(Dimensionless::dozen(2.0).to_each(), 24.0);
+        assert_eq!(Dimensionless::gross(1.0).to_each(), 144.0);
+        assert_eq!(Dimensionless::gross(1.0).to_dozen(), 12.0);
     }
 
     #[test]
-    fn test_gross_conversion() {
-        let d = Dimensionless::gross(1.0);
-        assert_eq!(d.to_each(), 144.0);
-        assert_eq!(d.to_dozen(), 12.0);
+    fn test_scalar_arithmetic_retains_left_unit() {
+        let sum = Dimensionless::percent(50.0) + 1.0;
+        assert_eq!(sum.unit(), DimensionlessUnit::Percent);
+        assert_eq!(sum.to_percent(), 150.0);
+
+        let difference = sum - 0.5;
+        assert_eq!(difference.unit(), DimensionlessUnit::Percent);
+        assert_eq!(difference.to_percent(), 100.0);
     }
 
     #[test]
-    fn test_dimensionless_multiplication() {
-        let d1 = Dimensionless::each(3.0);
-        let d2 = Dimensionless::each(4.0);
-        let result = d1 * d2;
-        assert_eq!(result.to_each(), 12.0);
+    fn test_dimensionless_multiplication_normalizes_to_each() {
+        let product = Dimensionless::percent(50.0) * Dimensionless::dozen(2.0);
+        assert_eq!(product.unit(), DimensionlessUnit::Each);
+        assert_eq!(product.to_each(), 12.0);
     }
 
     #[test]
-    fn test_add_scalar() {
-        let d = Dimensionless::each(5.0);
-        let result = d + 3.0;
-        assert_eq!(result.to_each(), 8.0);
+    fn test_dimensionless_division_returns_scalar() {
+        let ratio: f64 = Dimensionless::gross(1.0) / Dimensionless::dozen(1.0);
+        assert_eq!(ratio, 12.0);
     }
 
     #[test]
     fn test_hundred_thousand_million() {
-        let h = Dimensionless::hundred(1.0);
-        assert_eq!(h.to_each(), 100.0);
+        let values = [
+            (Dimensionless::hundred(1.0), 100.0),
+            (Dimensionless::thousand(1.0), 1_000.0),
+            (Dimensionless::million(1.0), 1_000_000.0),
+        ];
 
-        let t = Dimensionless::thousand(1.0);
-        assert_eq!(t.to_each(), 1000.0);
-
-        let m = Dimensionless::million(1.0);
-        assert_eq!(m.to_each(), 1_000_000.0);
+        for (dimensionless, expected) in values {
+            assert_eq!(dimensionless.unit(), DimensionlessUnit::Each);
+            assert_eq!(dimensionless.to_each(), expected);
+        }
     }
 
     #[test]
-    fn test_conversion_to_f64() {
-        let d = Dimensionless::dozen(2.0);
-        let value: f64 = d.into();
+    fn test_conversion_to_f64_uses_primary_unit() {
+        let value: f64 = Dimensionless::dozen(2.0).into();
         assert_eq!(value, 24.0);
     }
 }

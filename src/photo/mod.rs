@@ -23,4 +23,6 @@ pub use luminance::{Luminance, LuminanceConversions, LuminanceUnit};
 pub use luminous_energy::{LuminousEnergy, LuminousEnergyConversions, LuminousEnergyUnit};
 pub use luminous_exposure::{LuminousExposure, LuminousExposureConversions, LuminousExposureUnit};
 pub use luminous_flux::{LuminousFlux, LuminousFluxConversions, LuminousFluxUnit};
-pub use luminous_intensity::{LuminousIntensity, LuminousIntensityConversions, LuminousIntensityUnit};
+pub use luminous_intensity::{
+    LuminousIntensity, LuminousIntensityConversions, LuminousIntensityUnit,
+};
