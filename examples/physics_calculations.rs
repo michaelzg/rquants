@@ -44,7 +44,8 @@ fn kinematics() {
     // ISS orbital speed: ~27,600 km/h
     let iss_speed = Velocity::kilometers_per_hour(27_600.0);
     let orbit_circumference = Length::kilometers(42_600.0);
-    let orbit_time = Time::hours(orbit_circumference.to_kilometers() / iss_speed.to_kilometers_per_hour());
+    let orbit_time =
+        Time::hours(orbit_circumference.to_kilometers() / iss_speed.to_kilometers_per_hour());
     println!(
         "ISS orbits Earth: {:.0} km at {:.0} km/h = {:.0} min per orbit",
         orbit_circumference.to_kilometers(),
@@ -180,7 +181,8 @@ fn electromagnetism() {
     let power = voltage * current;
     println!(
         "USB charger: {} x {} = {:.0} W",
-        voltage, current,
+        voltage,
+        current,
         power.to_watts()
     );
 
@@ -190,7 +192,8 @@ fn electromagnetism() {
     let i = v / r;
     println!(
         "LED circuit: {} / {} = {:.1} mA",
-        v, r,
+        v,
+        r,
         i.to_amperes() * 1000.0
     );
 

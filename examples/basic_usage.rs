@@ -25,7 +25,8 @@ fn creating_quantities() {
     let speed = distance / time;
     println!(
         "Usain Bolt: {} in {} = {:.2} m/s ({:.2} km/h)",
-        distance, time,
+        distance,
+        time,
         speed.to_meters_per_second(),
         speed.to_kilometers_per_hour()
     );
@@ -60,7 +61,8 @@ fn dsl_syntax() {
     let court = length * width;
     println!(
         "NBA court: {} x {} = {:.0} m² = {:.0} ft²",
-        length, width,
+        length,
+        width,
         court.to_square_meters(),
         court.to_square_feet()
     );

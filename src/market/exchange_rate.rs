@@ -74,8 +74,7 @@ impl CurrencyExchangeRate {
     ///
     /// Panics if base and counter currencies are the same or if rate is invalid.
     pub fn new(base: Currency, counter: Currency, rate: f64) -> Self {
-        Self::try_new(base, counter, rate)
-            .unwrap_or_else(|e| panic!("Invalid exchange rate: {e}"))
+        Self::try_new(base, counter, rate).unwrap_or_else(|e| panic!("Invalid exchange rate: {e}"))
     }
 
     /// Returns the base currency.
@@ -194,12 +193,16 @@ mod tests {
         assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::USD, 1.0).is_err());
         assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, 0.0).is_err());
         assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, -1.0).is_err());
-        assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, f64::INFINITY).is_err());
+        assert!(
+            CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, f64::INFINITY).is_err()
+        );
         assert!(CurrencyExchangeRate::try_new(Currency::USD, Currency::EUR, f64::NAN).is_err());
     }
 
     #[test]
-    #[should_panic(expected = "Invalid exchange rate: Unsupported operation: Cannot create exchange rate with the same base and counter currency")]
+    #[should_panic(
+        expected = "Invalid exchange rate: Unsupported operation: Cannot create exchange rate with the same base and counter currency"
+    )]
     fn test_exchange_rate_same_currency() {
         CurrencyExchangeRate::new(Currency::USD, Currency::USD, 1.0);
     }

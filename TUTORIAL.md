@@ -64,7 +64,7 @@ Edit `Cargo.toml` (this is your `build.sbt`):
 [package]
 name = "my_project"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 rquants = { path = "../rquants" }  # or from crates.io when published
@@ -519,18 +519,18 @@ let euros = 25.00.eur();
 let a = Money::usd(100.0);
 let b = Money::usd(30.0);
 
-let total = a + b;           // $130
-let diff = a - b;            // $70
+let total = (a + b).unwrap(); // $130
+let diff = (a - b).unwrap();  // $70
 let doubled = a * 2.0;       // $200
 let split = a / 4.0;         // $25
-let ratio = a / b;           // 3.333... (f64)
+let ratio = (a / b).unwrap(); // 3.333... (f64)
 ```
 
-Adding different currencies panics:
+Adding different currencies returns an error:
 
 ```rust
-// PANICS at runtime:
-// let _ = Money::usd(100.0) + Money::eur(50.0);
+let result = Money::usd(100.0) + Money::eur(50.0);
+assert!(result.is_err());
 ```
 
 ### Currency Exchange
@@ -701,10 +701,7 @@ let readings = vec![
     Length::meters(30.0),
 ];
 
-// Sum (using fold since Rust doesn't have a built-in sum for custom types)
-let total = readings.iter()
-    .copied()
-    .fold(Length::meters(0.0), |acc, x| acc + x);
+let total: Length = readings.iter().copied().sum();
 println!("Total: {}", total);  // "60 m"
 
 // Find max

@@ -19,10 +19,18 @@ pub use capacitance::{Capacitance, CapacitanceConversions, CapacitanceUnit};
 pub use conductivity::{Conductivity, ConductivityConversions, ConductivityUnit};
 pub use electric_charge::{ElectricCharge, ElectricChargeConversions, ElectricChargeUnit};
 pub use electric_current::{ElectricCurrent, ElectricCurrentConversions, ElectricCurrentUnit};
-pub use electric_potential::{ElectricPotential, ElectricPotentialConversions, ElectricPotentialUnit};
-pub use electrical_conductance::{ElectricalConductance, ElectricalConductanceConversions, ElectricalConductanceUnit};
-pub use electrical_resistance::{ElectricalResistance, ElectricalResistanceConversions, ElectricalResistanceUnit};
+pub use electric_potential::{
+    ElectricPotential, ElectricPotentialConversions, ElectricPotentialUnit,
+};
+pub use electrical_conductance::{
+    ElectricalConductance, ElectricalConductanceConversions, ElectricalConductanceUnit,
+};
+pub use electrical_resistance::{
+    ElectricalResistance, ElectricalResistanceConversions, ElectricalResistanceUnit,
+};
 pub use inductance::{Inductance, InductanceConversions, InductanceUnit};
 pub use magnetic_flux::{MagneticFlux, MagneticFluxConversions, MagneticFluxUnit};
-pub use magnetic_flux_density::{MagneticFluxDensity, MagneticFluxDensityConversions, MagneticFluxDensityUnit};
+pub use magnetic_flux_density::{
+    MagneticFluxDensity, MagneticFluxDensityConversions, MagneticFluxDensityUnit,
+};
 pub use resistivity::{Resistivity, ResistivityConversions, ResistivityUnit};

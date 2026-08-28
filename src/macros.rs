@@ -6,8 +6,11 @@ macro_rules! quantity {
     (
         $(#[$quantity_meta:meta])*
         pub quantity $quantity:ident {
+            $(#[$unit_type_meta:meta])*
             unit: $unit:ident;
+            $(#[$dimension_meta:meta])*
             dimension: $dimension:ident;
+            $(#[$conversions_meta:meta])*
             conversions: $conversions:ident;
             name: $name:expr;
             primary: $primary:ident;
@@ -27,6 +30,7 @@ macro_rules! quantity {
             }
         }
     ) => {
+        $(#[$unit_type_meta])*
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub enum $unit {
             $(
@@ -285,6 +289,7 @@ macro_rules! quantity {
             }
         }
 
+        $(#[$dimension_meta])*
         pub struct $dimension;
 
         impl $crate::core::Dimension for $dimension {
@@ -308,6 +313,7 @@ macro_rules! quantity {
             }
         }
 
+        $(#[$conversions_meta])*
         pub trait $conversions {
             $(
                 $(#[$unit_meta])*

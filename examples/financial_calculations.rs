@@ -41,10 +41,7 @@ fn money_basics() {
     let ps5 = Money::usd(499.99);
     let discount = ps5 * 0.30;
     let sale_price = (ps5 - discount).unwrap();
-    println!(
-        "PS5 on sale: {} - 30% ({}) = {}",
-        ps5, discount, sale_price
-    );
+    println!("PS5 on sale: {} - 30% ({}) = {}", ps5, discount, sale_price);
 
     // Saving up: $50/week for 52 weeks
     let weekly = Money::usd(50.0);
